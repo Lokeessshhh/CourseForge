@@ -1,0 +1,94 @@
+# ─────────────────────────────────────────────────────────
+# LearnAI Django Backend - Git Ignore
+# ─────────────────────────────────────────────────────────
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ── Virtual Environments ──────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+.env.local
+
+# ── Django ────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+
+# ── Environment Variables ─────────────────────────────────
+.env
+.env.production
+.env.*.local
+
+# ── IDE ──────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ── OS ───────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Testing ──────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+
+# ── Celery ───────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── Jupyter ──────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── mypy ─────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ── Ruff ─────────────────────────────────────────────────
+.ruff_cache/
+
+# ── Secrets & Credentials ────────────────────────────────
+*.pem
+*.key
+secrets.json
+credentials.json

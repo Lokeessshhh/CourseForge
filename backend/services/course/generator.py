@@ -1,0 +1,951 @@
+"""
+Course generation service.
+Uses LangGraph flows for multi-step generation with validation.
+Integrates with vLLM server via services/llm/client.py.
+"""
+import asyncio
+import logging
+import re
+from typing import Any, Dict, List, Tuple
+
+logger = logging.getLogger(__name__)
+
+# Predefined structure rules
+DAYS_PER_WEEK = 5
+WEEKS_PER_MONTH = 4
+
+
+def parse_duration(duration_input: str) -> int:
+    """
+    Parse duration input string to number of weeks.
+
+    Examples:
+        "1 month"   → 4
+        "2 months"  → 8
+        "3 months"  → 12
+        "1 week"    → 1
+        "6 weeks"   → 6
+        "10 weeks"  → 10
+
+    Args:
+        duration_input: Duration string like "1 month", "2 weeks", etc.
+
+    Returns:
+        Number of weeks
+    """
+    if not duration_input:
+        return 4  # Default to 1 month
+
+    duration_input = duration_input.lower().strip()
+
+    # Handle typos and variations
+    duration_input = duration_input.replace("months", "month").replace("weeks", "week")
+    duration_input = duration_input.replace("moths", "month").replace("wks", "week")
+    duration_input = duration_input.replace("mth", "month").replace("wk", "week")
+
+    # Extract number
+    match = re.search(r"(\d+)", duration_input)
+    number = int(match.group(1)) if match else 1
+
+    # Determine unit
+    if "month" in duration_input:
+        return number * WEEKS_PER_MONTH
+    elif "week" in duration_input:
+        return number
+    else:
+        # Default interpretation
+        return number if number > 12 else number * WEEKS_PER_MONTH
+
+
+def build_skeleton(
+    duration_weeks: int,
+    topic: str,
+    skill_level: str,
+) -> Dict[str, Any]:
+    """
+    Build empty course skeleton with predefined structure.
+
+    Args:
+        duration_weeks: Number of weeks
+        topic: Course topic
+        skill_level: Skill level (beginner/intermediate/advanced)
+
+    Returns:
+        Empty skeleton dict with null values for AI to fill
+    """
+    total_days = duration_weeks * DAYS_PER_WEEK
+
+    skeleton = {
+        "topic": topic,
+        "skill_level": skill_level,
+        "total_weeks": duration_weeks,
+        "total_days": total_days,
+        "weeks": [],
+    }
+
+    for week_num in range(1, duration_weeks + 1):
+        week = {
+            "week_number": week_num,
+            "theme": None,  # AI will fill
+            "objectives": [],  # AI will fill
+            "is_completed": False,
+            "days": [],
+        }
+
+        for day_num in range(1, DAYS_PER_WEEK + 1):
+            day = {
+                "day_number": day_num,
+                "title": None,  # AI will fill
+                "tasks": None,  # AI will fill
+                "content": None,  # AI will fill
+                "is_completed": False,
+                "is_locked": not (week_num == 1 and day_num == 1),  # Only day 1 week 1 unlocked
+                "content_generated": False,
+                "quiz_generated": False,
+            }
+            week["days"].append(day)
+
+        skeleton["weeks"].append(week)
+
+    return skeleton
+
+
+class CourseGenerator:
+    """
+    Course generator that fills skeleton with AI-generated content.
+    Uses vLLM client from services/llm/client.py.
+    """
+
+    def __init__(self, llm_client=None):
+        """
+        Initialize generator.
+
+        Args:
+            llm_client: Optional LLM client (uses default vLLM client)
+        """
+        self._llm = llm_client
+
+    @property
+    def llm(self):
+        """Lazy-load LLM client."""
+        if self._llm is None:
+            # Import here to avoid circular imports
+            from services.llm.client import generate, safe_json_generate
+            
+            # Async version for use in async methods
+            async def _generate_json_async(self, prompt: str, max_tokens: int = 2000) -> dict:
+                """Async wrapper for safe_json_generate."""
+                return await safe_json_generate(prompt, "course_generator", "course")
+            
+            self._llm = type('LLMClient', (), {
+                'generate': generate,
+                'safe_json_generate': safe_json_generate,
+                '_generate_json': _generate_json_async,
+            })()
+        return self._llm
+
+    async def _generate_week_theme(
+        self,
+        week_number: int,
+        total_weeks: int,
+        topic: str,
+        skill_level: str,
+        goals: List[str],
+        previous_themes: List[str],
+    ) -> Tuple[str, List[str]]:
+        """
+        Generate theme and objectives for a week.
+
+        Args:
+            week_number: Current week number
+            total_weeks: Total weeks in course
+            topic: Course topic
+            skill_level: Skill level
+            goals: Course goals
+            previous_themes: Themes of previous weeks
+
+        Returns:
+            Tuple of (theme, objectives_list)
+        """
+        from services.llm.client import safe_json_generate
+
+        goals_str = "\n".join(f"- {g}" for g in goals) if goals else "General mastery"
+        previous_str = ", ".join(previous_themes) if previous_themes else "None"
+
+        prompt = f"""You are a curriculum designer. Generate a week theme and objectives for a {skill_level} {topic} course.
+
+Week {week_number} of {total_weeks} total weeks.
+Course goals:
+{goals_str}
+Previous weeks covered: {previous_str}
+
+Return ONLY valid JSON:
+{{
+  "theme": "Week {week_number}: <theme name>",
+  "objectives": ["objective 1", "objective 2", "objective 3"]
+}}"""
+
+        result = await safe_json_generate(
+            prompt,
+            system_type="course_generator",
+            param_type="course",
+            expected_keys=["theme", "objectives"],
+        )
+
+        if "error" in result:
+            logger.warning("Week theme generation failed: %s", result.get("error"))
+            return f"Week {week_number}: {topic} - Part {week_number}", []
+
+        theme = result.get("theme", f"Week {week_number}: {topic}")
+        objectives = result.get("objectives", [])
+
+        return theme, objectives
+
+    async def _generate_day_title_tasks(
+        self,
+        day_number: int,
+        week_theme: str,
+        topic: str,
+        skill_level: str,
+        previous_titles: List[str],
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Generate title and tasks for a day.
+
+        Args:
+            day_number: Day number (1-5)
+            week_theme: Theme of the current week
+            topic: Course topic
+            skill_level: Skill level
+            previous_titles: Titles of previous days in this week
+
+        Returns:
+            Tuple of (title, tasks_dict)
+        """
+        from services.llm.client import safe_json_generate
+
+        previous_str = ", ".join(previous_titles) if previous_titles else "None"
+
+        prompt = f"""You are a curriculum designer for a {skill_level} {topic} course.
+
+Week theme: {week_theme}
+Day {day_number} of 5 in this week.
+Previously covered days: {previous_str}
+
+Generate the day title and tasks.
+Return ONLY valid JSON:
+{{
+  "title": "Day {day_number}: <specific topic>",
+  "tasks": {{
+    "concepts": ["concept 1", "concept 2"],
+    "key_points": ["point 1", "point 2"],
+    "practice": "what to practice"
+  }}
+}}"""
+
+        result = await safe_json_generate(
+            prompt,
+            system_type="course_generator",
+            param_type="course",
+            expected_keys=["title", "tasks"],
+        )
+
+        if "error" in result:
+            logger.warning("Day title/tasks generation failed: %s", result.get("error"))
+            return f"Day {day_number}: {week_theme}", {}
+
+        title = result.get("title", f"Day {day_number}")
+        tasks = result.get("tasks", {})
+
+        return title, tasks
+
+    async def _generate_theory_content(
+        self,
+        day_title: str,
+        week_theme: str,
+        topic: str,
+        skill_level: str,
+    ) -> str:
+        """
+        Generate theory content for a day (no code).
+
+        Returns:
+            Markdown theory content
+        """
+        from services.llm.client import generate
+
+        prompt = f"""Generate a theory lesson for "{day_title}" in a {skill_level} {topic} course.
+
+Week context: {week_theme}
+
+Requirements:
+1. Explain concepts clearly with analogies
+2. Use simple language appropriate for {skill_level} learners
+3. Include a summary at the end
+4. DO NOT include any code examples or code blocks
+5. Focus on conceptual understanding only
+6. Use markdown formatting (headers, lists, bold for key terms)
+
+Return plain markdown text."""
+
+        content = await generate(
+            prompt,
+            system_type="tutor",
+            param_type="content",
+        )
+
+        return content
+
+    async def _generate_code_content(
+        self,
+        day_title: str,
+        week_theme: str,
+        topic: str,
+        skill_level: str,
+    ) -> str:
+        """
+        Generate code examples and explanations for a day.
+
+        Returns:
+            Markdown code content with examples
+        """
+        from services.llm.client import generate
+
+        prompt = f"""Generate code examples for "{day_title}" in a {skill_level} {topic} course.
+
+Week context: {week_theme}
+
+Requirements:
+1. Provide 2-3 complete, runnable code examples
+2. Explain each example step by step
+3. Show expected output for each example
+4. Point out common mistakes to avoid
+5. Include a practice exercise at the end
+6. Use proper markdown code blocks with language tags
+
+Return markdown with properly formatted code blocks."""
+
+        content = await generate(
+            prompt,
+            system_type="code_teacher",
+            param_type="code",
+        )
+
+        return content
+
+    async def _generate_quiz_questions(
+        self,
+        day_title: str,
+        topic: str,
+        skill_level: str,
+    ) -> Dict[str, Any]:
+        """
+        Generate 3 MCQ quiz questions for a day.
+
+        Returns:
+            Dict with quizzes list
+        """
+        from services.llm.client import safe_json_generate
+
+        prompt = f"""Generate 3 MCQ quizzes for "{day_title}" in a {skill_level} {topic} course.
+
+Each question must:
+1. Test understanding, not just memory
+2. Have 4 plausible options (a, b, c, d)
+3. Include an explanation that teaches
+
+Return ONLY this exact JSON structure:
+{{
+  "quizzes": [
+    {{
+      "question_number": 1,
+      "question_text": "Question here?",
+      "options": {{
+        "a": "Option A",
+        "b": "Option B",
+        "c": "Option C",
+        "d": "Option D"
+      }},
+      "correct_answer": "a",
+      "explanation": "Explanation here..."
+    }}
+  ]
+}}"""
+
+        result = await safe_json_generate(
+            prompt,
+            system_type="quiz_generator",
+            param_type="quiz",
+            expected_keys=["quizzes"],
+        )
+
+        if "error" in result or "quizzes" not in result:
+            logger.warning("Quiz generation failed for %s: %s", day_title, result.get("error", "No quizzes key"))
+            return {"quizzes": [], "raw": "{}"}
+
+        return result
+
+    async def fill_week(
+        self,
+        week_data: Dict[str, Any],
+        week_number: int,
+        total_weeks: int,
+        topic: str,
+        skill_level: str,
+        goals: List[str],
+        course_id: str = None,
+    ) -> Dict[str, Any]:
+        """
+        Async: Fill a single week with theme, objectives, and day content.
+        All steps run sequentially within this week task.
+
+        Steps:
+        1. Generate week theme + objectives (1 LLM call)
+        2. For each of 5 days, generate:
+           - Day title + tasks (1 LLM call)
+           - Theory content (1 LLM call)
+           - Code content (1 LLM call)
+           - Quiz questions (1 LLM call)
+           = 4 LLM calls per day × 5 days = 20 LLM calls
+
+        Args:
+            week_data: Empty week skeleton
+            week_number: Week number
+            total_weeks: Total weeks
+            topic: Course topic
+            skill_level: Skill level
+            goals: Course goals
+            course_id: Course ID for DB updates
+
+        Returns:
+            Filled week data
+        """
+        # Step 1: Generate week theme and objectives
+        theme, objectives = await self._generate_week_theme(
+            week_number, total_weeks, topic, skill_level, goals, []
+        )
+        week_data["theme"] = theme
+        week_data["objectives"] = objectives
+
+        # Step 2: For each day, generate title + 3 content types
+        previous_titles = []
+        for day in week_data["days"]:
+            day_num = day["day_number"]
+            logger.info("Generating content for Week %d Day %d", week_number, day_num)
+
+            # 2a: Generate day title and tasks
+            title, tasks = await self._generate_day_title_tasks(
+                day_num, theme, topic, skill_level, previous_titles
+            )
+            day["title"] = title
+            day["tasks"] = tasks
+            previous_titles.append(title)
+
+            # 2b: Generate theory content (no code)
+            theory = await self._generate_theory_content(title, theme, topic, skill_level)
+            day["theory_content"] = theory
+            day["theory_generated"] = True
+
+            # 2c: Generate code content (examples + explanations)
+            code = await self._generate_code_content(title, theme, topic, skill_level)
+            day["code_content"] = code
+            day["code_generated"] = True
+
+            # 2d: Generate quiz questions (3 MCQs)
+            quiz_result = await self._generate_quiz_questions(title, topic, skill_level)
+            day["quiz_raw"] = quiz_result.get("raw", "{}") if "raw" in quiz_result else "{}"
+            day["quizzes"] = quiz_result.get("quizzes", [])
+            day["quiz_generated"] = len(quiz_result.get("quizzes", [])) > 0
+
+        # Save to DB immediately if course_id provided
+        if course_id:
+            await self._save_week_to_db(course_id, week_data)
+
+        return week_data
+
+    async def _save_week_to_db(self, course_id: str, week_data: Dict[str, Any]):
+        """
+        Save filled week data to database immediately.
+        Called as each parallel week task completes.
+        Also saves quiz questions to quiz_questions table.
+        """
+        from apps.courses.models import Course
+        from apps.quizzes.models import QuizQuestion
+
+        try:
+            course = Course.objects.get(id=course_id)
+            week = course.weeks.get(week_number=week_data["week_number"])
+
+            # Update week
+            week.theme = week_data["theme"]
+            week.objectives = week_data["objectives"]
+            week.save(update_fields=["theme", "objectives"])
+
+            # Update days
+            for day_data in week_data["days"]:
+                day = week.days.get(day_number=day_data["day_number"])
+                day.title = day_data["title"]
+                day.tasks = day_data["tasks"]
+                # New content fields
+                day.theory_content = day_data.get("theory_content", "")
+                day.code_content = day_data.get("code_content", "")
+                day.quiz_raw = day_data.get("quiz_raw", "{}")
+                day.theory_generated = day_data.get("theory_generated", False)
+                day.code_generated = day_data.get("code_generated", False)
+                day.quiz_generated = day_data.get("quiz_generated", False)
+                day.save(update_fields=[
+                    "title", "tasks",
+                    "theory_content", "code_content", "quiz_raw",
+                    "theory_generated", "code_generated", "quiz_generated",
+                ])
+
+                # Save quiz questions to quiz_questions table
+                quizzes = day_data.get("quizzes", [])
+                if quizzes:
+                    # Clear existing questions for this day
+                    QuizQuestion.objects.filter(day_plan=day).delete()
+
+                    for quiz in quizzes:
+                        QuizQuestion.objects.create(
+                            day_plan=day,
+                            course=course,
+                            question_number=quiz.get("question_number", 1),
+                            question_text=quiz.get("question_text", ""),
+                            options=quiz.get("options", {}),
+                            correct_answer=quiz.get("correct_answer", "a"),
+                            explanation=quiz.get("explanation", ""),
+                        )
+
+            logger.info("Saved week %d to DB for course %s", week_data["week_number"], course_id)
+
+        except Exception as exc:
+            logger.exception("Failed to save week %d to DB: %s", week_data["week_number"], exc)
+
+    async def fill_skeleton_with_ai_async(
+        self,
+        skeleton: Dict[str, Any],
+        skill_level: str,
+        goals: List[str],
+        course_id: str = None,
+    ) -> Dict[str, Any]:
+        """
+        Async: Fill skeleton with AI-generated content.
+        All weeks run in PARALLEL using asyncio.gather().
+
+        Args:
+            skeleton: Empty course skeleton
+            skill_level: Skill level
+            goals: Course goals
+            course_id: Course ID for immediate DB saves
+
+        Returns:
+            Filled skeleton
+        """
+        topic = skeleton["topic"]
+        total_weeks = skeleton["total_weeks"]
+
+        # Create parallel tasks for all weeks
+        tasks = [
+            self.fill_week(
+                week_data=week_data,
+                week_number=week_data["week_number"],
+                total_weeks=total_weeks,
+                topic=topic,
+                skill_level=skill_level,
+                goals=goals,
+                course_id=course_id,
+            )
+            for week_data in skeleton["weeks"]
+        ]
+
+        # Run all week tasks in parallel
+        logger.info("Starting parallel generation for %d weeks", total_weeks)
+        filled_weeks = await asyncio.gather(*tasks)
+
+        # Update skeleton with filled weeks
+        skeleton["weeks"] = list(filled_weeks)
+
+        return skeleton
+
+    def fill_skeleton_with_ai(
+        self,
+        skeleton: Dict[str, Any],
+        skill_level: str,
+        goals: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Fill skeleton with AI-generated content.
+        Processes weeks sequentially to maintain context.
+
+        Args:
+            skeleton: Empty course skeleton
+            skill_level: Skill level
+            goals: Course goals
+
+        Returns:
+            Filled skeleton
+        """
+        topic = skeleton["topic"]
+        total_weeks = skeleton["total_weeks"]
+        previous_themes = []
+
+        for week_data in skeleton["weeks"]:
+            week_num = week_data["week_number"]
+            logger.info("Filling week %d/%d for course: %s", week_num, total_weeks, topic)
+
+            filled_week = self.fill_week_async(
+                week_data, week_num, total_weeks, topic, skill_level, goals, previous_themes
+            )
+
+            skeleton["weeks"][week_num - 1] = filled_week
+            previous_themes.append(filled_week["theme"])
+
+        return skeleton
+
+    def generate_day_content_for_day(
+        self,
+        day_data: Dict[str, Any],
+        week_theme: str,
+        topic: str,
+        skill_level: str,
+        goals: List[str],
+    ) -> str:
+        """
+        Generate full content for a single day.
+
+        Args:
+            day_data: Day data with title
+            week_theme: Week theme
+            topic: Course topic
+            skill_level: Skill level
+            goals: Course goals
+
+        Returns:
+            Generated content string
+        """
+        return self._generate_day_content(
+            day_data["title"], week_theme, topic, skill_level, goals
+        )
+
+    async def generate_weekly_test(
+        self,
+        course_id: str,
+        week_number: int,
+    ) -> Dict[str, Any]:
+        """
+        Generate a weekly test covering all 5 days of a week.
+        10 MCQ questions covering entire week content.
+
+        Args:
+            course_id: Course ID
+            week_number: Week number
+
+        Returns:
+            Dict with test data
+        """
+        from asgiref.sync import sync_to_async
+        from apps.courses.models import Course, WeekPlan, WeeklyTest
+
+        try:
+            course = await sync_to_async(Course.objects.get)(id=course_id)
+            week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+
+            # Get all 5 days content
+            days = await sync_to_async(list)(week.days.all().order_by("day_number"))
+            if len(days) != 5:
+                logger.warning("Week %d does not have 5 days", week_number)
+                return {"error": "Week incomplete"}
+
+            # Build context from all days
+            day_titles = [d.title or f"Day {d.day_number}" for d in days]
+
+            prompt = f"""You are an expert {course.topic} instructor.
+
+Week {week_number} theme: {week.theme or 'Course Content'}
+This week covered these topics:
+Day 1: {day_titles[0]}
+Day 2: {day_titles[1]}
+Day 3: {day_titles[2]}
+Day 4: {day_titles[3]}
+Day 5: {day_titles[4]}
+
+Generate a 10-question MCQ test. Difficulty: 4 easy, 4 medium, 2 hard.
+
+IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep explanations brief (max 20 words).
+
+JSON format:
+{{"week_test": [{{"question_number": 1, "question_text": "Question?", "difficulty": "easy", "day_reference": 1, "options": {{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}, "correct_answer": "a", "explanation": "Brief explanation"}}]}}"""
+
+            result = await self.llm._generate_json(prompt, max_tokens=4000)
+
+            if "error" in result or "week_test" not in result:
+                logger.warning("Weekly test generation failed: %s", result.get("error"))
+                return {"error": "Generation failed", "questions": []}
+
+            questions = result.get("week_test", [])
+
+            # Save to database
+            @sync_to_async
+            def save_test():
+                test, created = WeeklyTest.objects.update_or_create(
+                    course=course,
+                    week_number=week_number,
+                    defaults={
+                        "questions": questions,
+                        "total_questions": len(questions),
+                    }
+                )
+                week.test_generated = True
+                week.save(update_fields=["test_generated"])
+                return test
+
+            test = await save_test()
+
+            logger.info("Generated weekly test for Week %d in course %s", week_number, course_id)
+
+            return {
+                "success": True,
+                "test_id": str(test.id),
+                "week_number": week_number,
+                "total_questions": len(questions),
+            }
+
+        except Exception as exc:
+            logger.exception("Error generating weekly test: %s", exc)
+            return {"error": str(exc)}
+
+    async def generate_coding_test(
+        self,
+        course_id: str,
+        week_number: int,
+    ) -> Dict[str, Any]:
+        """
+        Generate a weekly coding test with 2 coding problems.
+        Problems are based on the week's content and difficulty matches course level.
+
+        Args:
+            course_id: Course ID
+            week_number: Week number
+
+        Returns:
+            Dict with test data
+        """
+        from asgiref.sync import sync_to_async
+        from apps.courses.models import Course, WeekPlan, CodingTest
+
+        try:
+            course = await sync_to_async(Course.objects.get)(id=course_id)
+            week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+
+            # Get all 5 days content
+            days = await sync_to_async(list)(week.days.all().order_by("day_number"))
+            day_titles = [d.title or f"Day {d.day_number}" for d in days]
+
+            # Determine difficulty based on course level
+            difficulty_map = {
+                "beginner": ["easy", "easy"],
+                "intermediate": ["easy", "medium"],
+                "advanced": ["medium", "hard"],
+            }
+            difficulties = difficulty_map.get(course.level, ["easy", "medium"])
+
+            prompt = f"""You are an expert {course.topic} instructor creating coding challenges.
+
+Week {week_number} theme: {week.theme or 'Course Content'}
+Topics: {', '.join(day_titles)}
+Level: {course.level}
+
+Generate 2 coding problems. Difficulty: {difficulties[0]}, {difficulties[1]}.
+
+IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep descriptions concise.
+
+JSON format:
+{{"coding_problems": [{{"problem_number": 1, "title": "Title", "description": "Brief description", "difficulty": "{difficulties[0]}", "starter_code": "def solve():", "test_cases": [{{"input": "input", "expected_output": "output", "is_hidden": false}}], "hints": ["Hint 1"], "solution": "def solve(): pass", "time_limit_seconds": 30, "memory_limit_mb": 256}}]}}"""
+
+            result = await self.llm._generate_json(prompt, max_tokens=5000)
+
+            if "error" in result or "coding_problems" not in result:
+                logger.warning("Coding test generation failed: %s", result.get("error"))
+                return {"error": "Generation failed", "problems": []}
+
+            problems = result.get("coding_problems", [])
+
+            # Save to database
+            @sync_to_async
+            def save_test():
+                test, created = CodingTest.objects.update_or_create(
+                    course=course,
+                    week_number=week_number,
+                    defaults={
+                        "problems": problems,
+                        "total_problems": len(problems),
+                    }
+                )
+                return test
+
+            test = await save_test()
+
+            logger.info("Generated coding test for Week %d in course %s", week_number, course_id)
+
+            return {
+                "success": True,
+                "test_id": str(test.id),
+                "week_number": week_number,
+                "total_problems": len(problems),
+            }
+
+        except Exception as exc:
+            logger.exception("Error generating coding test: %s", exc)
+            return {"error": str(exc)}
+
+
+def generate_full_course(
+    course_name: str,
+    duration_input: str,
+    level: str,
+    user_id: str,
+    hours_per_day: int = 2,
+    goals: List[str] = None,
+) -> Dict[str, Any]:
+    """
+    Main orchestration function for course generation.
+    Creates skeleton, saves to DB, triggers async content generation.
+
+    Args:
+        course_name: User-defined course name/title
+        duration_input: Duration string ("1 month", "2 weeks", etc.)
+        level: Course level (beginner/intermediate/advanced)
+        user_id: User ID
+        hours_per_day: Hours per day
+        goals: Learning goals (optional)
+
+    Returns:
+        Dict with course_id and skeleton
+    """
+    from apps.courses.models import Course, WeekPlan, DayPlan
+
+    if goals is None:
+        goals = []
+
+    # Parse duration
+    duration_weeks = parse_duration(duration_input)
+
+    # Detect topic from course_name using LLM (skip for obvious names)
+    topic = _detect_topic_from_name(course_name, level)
+
+    # Build skeleton
+    skeleton = build_skeleton(duration_weeks, topic, level)
+
+    # Create course record with new fields
+    course = Course.objects.create(
+        user_id=user_id,
+        course_name=course_name,
+        topic=topic,
+        level=level,
+        duration_weeks=duration_weeks,
+        hours_per_day=hours_per_day,
+        goals=goals,
+        status="generating",
+        generation_status="pending",
+        generation_progress=0,
+    )
+
+    # Create week and day records from skeleton
+    total_days = duration_weeks * DAYS_PER_WEEK
+    for week_data in skeleton["weeks"]:
+        week = WeekPlan.objects.create(
+            course=course,
+            week_number=week_data["week_number"],
+            theme=None,  # Will be filled by AI
+            objectives=[],
+        )
+
+        for day_data in week_data["days"]:
+            DayPlan.objects.create(
+                week_plan=week,
+                day_number=day_data["day_number"],
+                title=None,  # Will be filled by AI
+                tasks={},
+                is_locked=day_data["is_locked"],
+                quiz_generated=False,
+            )
+
+    # Trigger async generation via Celery
+    from apps.courses.tasks import generate_course_content_task
+    generate_course_content_task.delay(
+        str(course.id),
+        course_name,
+        duration_weeks,
+        level,
+        goals,
+    )
+
+    # Return skeleton with course_id
+    skeleton["course_id"] = str(course.id)
+    skeleton["status"] = "generating"
+
+    return {
+        "course_id": str(course.id),
+        "course_name": course_name,
+        "topic": topic,
+        "level": level,
+        "total_weeks": duration_weeks,
+        "total_days": total_days,
+        "status": "generating",
+        "skeleton": skeleton,
+    }
+
+
+def _detect_topic_from_name(course_name: str, level: str) -> str:
+    """
+    Use LLM to detect/extract the main topic from course name.
+    Returns a clean topic string for course generation.
+    Skips LLM call for obvious course names.
+    """
+    # Skip LLM for obvious course names - just clean them up
+    obvious_keywords = [
+        "python", "java", "javascript", "typescript", "sql", "html", "css", "react",
+        "angular", "vue", "node", "django", "flask", "fastapi", "spring", "docker",
+        "kubernetes", "aws", "azure", "gcp", "machine learning", "deep learning",
+        "data science", "ai", "artificial intelligence", "cybersecurity", "security",
+        "devops", "git", "linux", "mongodb", "postgresql", "mysql", "redis",
+        "graphql", "rest api", "microservices", "agile", "scrum", "testing",
+    ]
+    
+    course_lower = course_name.lower()
+    for keyword in obvious_keywords:
+        if keyword in course_lower:
+            # Extract topic from course name directly
+            # Capitalize first letter of each word
+            return ' '.join(word.capitalize() for word in course_name.split()[:4])
+    
+    # Only use LLM for ambiguous course names
+    from services.llm.qwen_client import QwenClient
+
+    try:
+        llm = QwenClient()
+        prompt = f"""Analyze this course name and extract the main subject/topic.
+Course name: "{course_name}"
+Level: {level}
+
+Return ONLY the main topic as a short phrase (2-4 words).
+Examples:
+- "Python for Data Science" → "Python Data Science"
+- "Learn React from scratch" → "React Web Development"
+- "Machine Learning basics" → "Machine Learning"
+- "Advanced JavaScript patterns" → "JavaScript Design Patterns"
+
+Topic:"""
+
+        topic = llm.generate(prompt, max_tokens=50).strip()
+        # Clean up the response
+        topic = topic.replace('"', '').replace("'", '').strip()
+        if topic.startswith("[Error:"):
+            raise ValueError(topic)
+        if len(topic) > 100:
+            topic = topic[:100]
+        return topic or course_name
+
+    except Exception as exc:
+        logger.warning("Could not detect topic from name: %s, using name as topic", exc)
+        return course_name
