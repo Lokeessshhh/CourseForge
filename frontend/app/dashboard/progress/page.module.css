@@ -1,0 +1,410 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.labelIcon {
+  font-size: 10px;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  border: 2px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+/* Calendar */
+.calendarCard {
+  padding: 24px;
+  border: 2px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+  overflow-x: auto;
+}
+
+.monthLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-left: 30px;
+}
+
+.monthLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  opacity: 0.5;
+}
+
+.monthLabel.currentMonth {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.calendarGrid {
+  display: flex;
+  gap: 3px;
+}
+
+.weekColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.calendarDay {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--black);
+  background-color: var(--white);
+}
+
+.calendarDay.studied {
+  background-color: var(--black);
+}
+
+.calendarDay.today {
+  border-width: 2px;
+}
+
+.dayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: absolute;
+  left: 0;
+  top: 40px;
+}
+
+.dayLabels span {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
+
+/* Course Progress */
+.coursesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.courseCard {
+  padding: 24px;
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  background-color: var(--white);
+}
+
+.courseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.courseName {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.courseTopic {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.courseProgressBar {
+  height: 10px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  margin-bottom: 8px;
+}
+
+.courseProgressFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+.courseProgressText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.weekBreakdown {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--black);
+}
+
+.weekItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekNum {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  width: 20px;
+}
+
+.weekMiniBar {
+  width: 60px;
+  height: 6px;
+  border: 1px solid var(--black);
+  background-color: var(--white);
+}
+
+.weekMiniFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+.weekTestScore {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+/* Concept Mastery */
+.conceptControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filterBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.filterBtn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  background-color: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filterBtn:hover {
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+.filterBtn.active {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.sortToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.sortToggle input {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.conceptList {
+  padding: 20px;
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  background-color: var(--white);
+}
+
+.conceptRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--black);
+}
+
+.conceptRow:last-child {
+  border-bottom: none;
+}
+
+.conceptName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  width: 100px;
+}
+
+.conceptBar {
+  flex: 1;
+  height: 8px;
+  border: 1px solid var(--black);
+  background-color: var(--white);
+}
+
+.conceptFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+.conceptFill.weak {
+  opacity: 0.4;
+}
+
+.conceptPercent {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  width: 40px;
+  text-align: right;
+}
+
+.conceptPracticed {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.6;
+  width: 100px;
+}
+
+/* Quiz History */
+.quizTable {
+  border: 2px solid var(--black);
+}
+
+.tableHeader,
+.tableRow {
+  display: grid;
+  grid-template-columns: 100px 100px 80px 60px 80px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.tableHeader {
+  background-color: var(--black);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.tableRow {
+  border-top: 1px solid var(--black);
+}
+
+.passed {
+  color: var(--black);
+  font-weight: 700;
+}
+
+.failed {
+  color: var(--black);
+  font-weight: 700;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statBox {
+    padding: 20px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  .weekBreakdown {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendarCard {
+    padding: 16px;
+  }
+
+  .conceptControls {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .conceptRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 80px 80px 60px 50px 60px;
+    font-size: 10px;
+    padding: 10px 12px;
+  }
+}

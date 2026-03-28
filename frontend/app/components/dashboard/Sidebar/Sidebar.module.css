@@ -1,0 +1,199 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 16px;
+}
+
+/* Logo */
+.logo {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.logo a {
+  color: var(--black);
+  text-decoration: none;
+}
+
+/* User Info */
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.userName {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.userEmail {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.skillBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border: 2px solid var(--black);
+  width: fit-content;
+}
+
+/* Streak Badge */
+.streakBadge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 12px;
+  border: 2px solid var(--black);
+  margin-bottom: 32px;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.navLink {
+  text-decoration: none;
+  color: var(--black);
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.navIcon {
+  font-size: 8px;
+  opacity: 0.5;
+}
+
+.navLabel {
+  flex: 1;
+}
+
+.navItem.active {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.navItem.active .navIcon {
+  opacity: 1;
+}
+
+.activeIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--black);
+}
+
+.navItem.active .activeIndicator {
+  background-color: var(--white);
+}
+
+/* Model Status */
+.statusBox {
+  margin-top: auto;
+  padding: 12px;
+  border: 2px solid var(--black);
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.statusDot {
+  font-size: 8px;
+}
+
+.statusDot.online {
+  color: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+.statusDot.offline {
+  color: #ef4444;
+}
+
+.statusText {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.statusInfo {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+/* Sign Out */
+.signOutBtn {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.signOutBtn:hover {
+  background: var(--black);
+  color: var(--white);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar {
+    padding: 20px 16px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .navItem {
+    padding: 14px 16px;
+  }
+}

@@ -1,0 +1,14 @@
+"""
+Judge0 API Configuration
+Add these settings to your backend/.env file
+"""
+
+# Judge0 API Configuration (Optional - for code execution)
+# Get your API key from: https://rapidapi.com/judge0-ce-judge0-ce-judge0-ce-default/api/judge0-ce
+JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
+JUDGE0_API_KEY=your_rapidapi_key_here
+JUDGE0_API_HOST=judge0-ce.p.rapidapi.com
+
+# Judge0 Timeout Settings (Optional)
+JUDGE0_SUBMISSION_TIMEOUT=30  # seconds for initial submission
+JUDGE0_RESULT_TIMEOUT=60  # seconds to wait for results

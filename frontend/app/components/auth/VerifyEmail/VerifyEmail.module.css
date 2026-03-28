@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  text-align: center;
+}
+
+.label {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.text {
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.text strong {
+  font-weight: 700;
+  color: #000;
+}
+
+.verifyBtn {
+  width: 100%;
+  padding: 16px;
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #000;
+  transition: all 0.1s;
+}
+
+.verifyBtn:hover:not(:disabled) {
+  box-shadow: 6px 6px 0 #000;
+  transform: translate(-2px, -2px);
+}
+
+.verifyBtn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.resend {
+  text-align: center;
+}
+
+.cooldown {
+  font-size: 12px;
+  color: #999;
+  font-weight: 600;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.resendBtn:hover {
+  color: #666;
+}

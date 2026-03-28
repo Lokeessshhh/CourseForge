@@ -1,6 +1,8 @@
 """Courses app URL patterns — /api/courses/"""
 from django.urls import path
 from . import views
+from . import views_coding_test
+from . import views_debug
 
 urlpatterns = [
     # Course CRUD
@@ -24,10 +26,13 @@ urlpatterns = [
     path("<uuid:course_id>/weeks/<int:week_number>/test/",          views.week_test,       name="week-test"),
     path("<uuid:course_id>/weeks/<int:week_number>/test/submit/",   views.week_test_submit, name="week-test-submit"),
     path("<uuid:course_id>/weeks/<int:week_number>/test/results/",  views.week_test_results, name="week-test-results"),
-    # Weekly Coding Test (2 problems)
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/",          views.week_coding_test,         name="week-coding-test"),
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/submit/",   views.week_coding_test_submit,  name="week-coding-test-submit"),
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/results/",  views.week_coding_test_results, name="week-coding-test-results"),
+    # DEBUG: Manually unlock weekly test
+    path("<uuid:course_id>/weeks/<int:week_number>/test/unlock/",   views_debug.unlock_weekly_test, name="week-test-unlock"),
+    # Weekly Coding Test with Judge0 integration
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/",          views_coding_test.get_coding_test,         name="coding-test"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/start/",   views_coding_test.start_coding_test,        name="coding-test-start"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/execute/", views_coding_test.execute_coding_challenge, name="coding-test-execute"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/submit/",   views_coding_test.submit_coding_test,       name="coding-test-submit"),
     # Progress & Certificate
     path("<uuid:course_id>/progress/",                             views.course_progress, name="course-progress"),
     path("<uuid:course_id>/certificate/",                          views.course_certificate, name="course-certificate"),

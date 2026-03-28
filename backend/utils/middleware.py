@@ -32,15 +32,18 @@ class SecurityHeadersMiddleware:
         response["X-Frame-Options"] = "DENY"
         response["X-XSS-Protection"] = "1; mode=block"
         response["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "font-src 'self'; "
-            "connect-src 'self'; "
-            "frame-ancestors 'none';"
-        )
+        csp = getattr(settings, "SECURITY_HEADERS_CSP", None)
+        if not csp:
+            csp = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data:; "
+                "font-src 'self'; "
+                "connect-src 'self'; "
+                "frame-ancestors 'none';"
+            )
+        response["Content-Security-Policy"] = csp
         response["Permissions-Policy"] = (
             "geolocation=(), microphone=(), camera=(), "
             "payment=(), usb=(), magnetometer=(), gyroscope=()"
@@ -132,6 +135,10 @@ class RateLimitMiddleware:
         else:
             ip = request.META.get("REMOTE_ADDR", "")
 
+        # Skip localhost in DEBUG (development)
+        if getattr(settings, "DEBUG", False) and ip in ("127.0.0.1", "::1"):
+            return self.get_response(request)
+
         # Check if IP is blocked
         block_key = f"ratelimit:blocked:{ip}"
         if cache.get(block_key):
@@ -196,6 +203,10 @@ class AuthRateLimitMiddleware:
             ip = x_forwarded_for.split(",")[0].strip()
         else:
             ip = request.META.get("REMOTE_ADDR", "")
+
+        # Skip localhost in DEBUG (development)
+        if getattr(settings, "DEBUG", False) and ip in ("127.0.0.1", "::1"):
+            return self.get_response(request)
 
         # Check if blocked
         block_key = f"auth:blocked:{ip}"

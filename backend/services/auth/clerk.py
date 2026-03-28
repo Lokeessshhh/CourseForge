@@ -12,9 +12,8 @@ Webhook Verification:
   2. verify_clerk_webhook() validates signature using HMAC-SHA256
   3. Timestamp must be within 5 minutes (replay attack prevention)
 """
-import hashlib
-import hmac
 import logging
+import threading
 import time
 from typing import Optional, Tuple
 
@@ -22,6 +21,7 @@ import httpx
 from django.conf import settings
 from django.core.cache import cache
 from jose import jwt, JWTError
+from svix.webhooks import Webhook
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
@@ -29,6 +29,11 @@ from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
 
 logger = logging.getLogger(__name__)
+
+
+_CLERK_USER_CACHE: dict[str, tuple[float, dict]] = {}
+_CLERK_USER_CACHE_LOCK = threading.Lock()
+_CLERK_USER_CACHE_TTL_SECONDS = 300
 
 # ──────────────────────────────────────────────
 # JWKS cache (Redis-backed with 1-hour TTL)
@@ -195,16 +200,31 @@ class ClerkAuthentication(BaseAuthentication):
         email = payload.get("email", "") or _extract_email(payload)
         name = _extract_name(payload)
 
+        if (not email or not name) and clerk_user_id:
+            try:
+                profile = _fetch_clerk_user_profile(clerk_user_id)
+                email = email or _extract_email_from_clerk_user(profile)
+                name = name or _extract_name_from_clerk_user(profile)
+            except Exception:
+                # Don't break auth if Clerk lookup fails; fall back to blank fields.
+                logger.exception("Failed fetching Clerk profile for %s", clerk_user_id)
+
+        logger.info("JWT payload keys: %s", list(payload.keys()))
+        logger.info("Extracted email: %s, name: %s for clerk_id: %s", email, name, clerk_user_id)
+
         # Clerk user ID stored in the `clerk_id` field (added to our User model)
         user, created = User.objects.get_or_create(
             clerk_id=clerk_user_id,
-            defaults={"email": email, "name": name},
+            defaults={"email": email, "name": name, "skill_level": "beginner"},
         )
         if not created and (user.email != email or user.name != name):
             # Keep in sync with Clerk
             user.email = email
             user.name = name
             user.save(update_fields=["email", "name"])
+
+        if created:
+            logger.info("Auto-created user from JWT: %s (email: %s)", clerk_user_id, email)
 
         return user
 
@@ -233,6 +253,58 @@ def _extract_name(payload: dict) -> str:
     first = payload.get("first_name", "") or ""
     last = payload.get("last_name", "") or ""
     return f"{first} {last}".strip()
+
+
+def _fetch_clerk_user_profile(clerk_user_id: str) -> dict:
+    """Fetch Clerk user profile via Clerk Backend API.
+
+    This is used when the session JWT doesn't include email/name claims.
+    """
+    cached = None
+    now = time.time()
+    with _CLERK_USER_CACHE_LOCK:
+        cached = _CLERK_USER_CACHE.get(clerk_user_id)
+        if cached and (now - cached[0]) < _CLERK_USER_CACHE_TTL_SECONDS:
+            return cached[1]
+
+    secret = getattr(settings, "CLERK_SECRET_KEY", "")
+    if not secret:
+        raise RuntimeError("CLERK_SECRET_KEY not configured")
+
+    url = f"https://api.clerk.com/v1/users/{clerk_user_id}"
+    headers = {"Authorization": f"Bearer {secret}"}
+    timeout = 10
+    resp = httpx.get(url, headers=headers, timeout=timeout)
+    resp.raise_for_status()
+    data = resp.json()
+
+    with _CLERK_USER_CACHE_LOCK:
+        _CLERK_USER_CACHE[clerk_user_id] = (now, data)
+
+    return data
+
+
+def _extract_email_from_clerk_user(user: dict) -> str:
+    primary_id = user.get("primary_email_address_id")
+    emails = user.get("email_addresses") or []
+    if isinstance(emails, list):
+        if primary_id:
+            for item in emails:
+                if item.get("id") == primary_id:
+                    return item.get("email_address", "") or ""
+        if emails:
+            return emails[0].get("email_address", "") or ""
+    return ""
+
+
+def _extract_name_from_clerk_user(user: dict) -> str:
+    first = user.get("first_name") or ""
+    last = user.get("last_name") or ""
+    full = f"{first} {last}".strip()
+    if full:
+        return full
+    username = user.get("username") or ""
+    return username
 
 
 # ──────────────────────────────────────────────
@@ -290,74 +362,53 @@ def verify_clerk_webhook(request) -> dict:
     """
     from utils.exceptions import WebhookVerificationException
 
-    # Get headers
-    svix_id = request.META.get("HTTP_SVIX_ID", "")
-    svix_timestamp = request.META.get("HTTP_SVIX_TIMESTAMP", "")
-    svix_signature = request.META.get("HTTP_SVIX_SIGNATURE", "")
-
-    if not all([svix_id, svix_timestamp, svix_signature]):
-        logger.warning("Webhook missing required Svix headers")
-        raise WebhookVerificationException("Missing webhook verification headers")
-
-    # Verify timestamp (prevent replay attacks)
-    try:
-        timestamp = int(svix_timestamp)
-    except ValueError:
-        raise WebhookVerificationException("Invalid timestamp")
-
-    current_time = int(time.time())
-    if abs(current_time - timestamp) > 300:  # 5 minutes
-        logger.warning(
-            "Webhook timestamp outside valid window: %d vs %d",
-            timestamp, current_time
-        )
-        raise WebhookVerificationException("Webhook timestamp expired")
-
     # Get webhook secret
     secret = settings.CLERK_WEBHOOK_SECRET
     if not secret:
         logger.error("CLERK_WEBHOOK_SECRET not configured")
         raise WebhookVerificationException("Webhook secret not configured")
 
-    # Get raw body
-    if hasattr(request, "body"):
-        payload = request.body
-    elif hasattr(request, "data"):
+    # Build headers dict (Svix expects lowercase header keys)
+    headers = {
+        "svix-id": request.META.get("HTTP_SVIX_ID", ""),
+        "svix-timestamp": request.META.get("HTTP_SVIX_TIMESTAMP", ""),
+        "svix-signature": request.META.get("HTTP_SVIX_SIGNATURE", ""),
+    }
+
+    if not all(headers.values()):
+        logger.warning("Webhook missing required Svix headers")
+        raise WebhookVerificationException("Missing webhook verification headers")
+
+    # Get raw payload
+    payload_bytes = getattr(request, "body", b"")
+    if not payload_bytes and hasattr(request, "data"):
         import json
-        payload = json.dumps(request.data).encode()
-    else:
+
+        payload_bytes = json.dumps(request.data).encode("utf-8")
+    if not payload_bytes:
         raise WebhookVerificationException("Cannot read request body")
 
-    # Compute signature
-    # Svix signature format: v1,<base64_signature>
-    to_sign = f"{svix_id}.{svix_timestamp}.{payload.decode()}"
-    expected_sig = hmac.new(
-        secret.encode(),
-        to_sign.encode(),
-        hashlib.sha256
-    ).hexdigest()
+    # Verify using Svix SDK
+    try:
+        wh = Webhook(secret)
+        verified_payload = wh.verify(payload_bytes, headers)
+    except Exception as exc:
+        logger.warning("Webhook signature verification failed: %s", exc)
+        raise WebhookVerificationException("Invalid webhook signature")
 
-    # Parse provided signatures
-    signatures = []
-    for part in svix_signature.split(","):
-        if part.startswith("v1,"):
-            signatures.append(part[3:])
+    # Svix returns the JSON payload (dict)
+    if isinstance(verified_payload, (dict, list)):
+        return verified_payload
 
-    if not signatures:
-        raise WebhookVerificationException("No valid signature found")
+    # Fallback: attempt JSON decode
+    import json
 
-    # Timing-safe comparison
-    for sig in signatures:
-        if hmac.compare_digest(expected_sig, sig):
-            # Valid signature
-            import json
-            try:
-                return json.loads(payload)
-            except json.JSONDecodeError:
-                raise WebhookVerificationException("Invalid JSON payload")
-
-    logger.warning("Webhook signature verification failed")
-    raise WebhookVerificationException("Invalid webhook signature")
+    try:
+        if isinstance(verified_payload, (bytes, bytearray)):
+            return json.loads(verified_payload.decode("utf-8"))
+        return json.loads(str(verified_payload))
+    except Exception as exc:
+        raise WebhookVerificationException("Invalid JSON payload") from exc
 
 
 def verify_clerk_webhook_view(request):

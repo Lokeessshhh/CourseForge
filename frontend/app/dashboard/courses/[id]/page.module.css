@@ -1,0 +1,373 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.breadcrumb a {
+  color: var(--black);
+  opacity: 0.6;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  opacity: 1;
+}
+
+.separator {
+  margin: 0 8px;
+  opacity: 0.4;
+}
+
+.current {
+  opacity: 1;
+}
+
+/* Layout */
+.layout {
+  display: flex;
+  gap: 32px;
+}
+
+/* Week Navigation */
+.weekNav {
+  width: 280px;
+  flex-shrink: 0;
+  padding: 20px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  height: fit-content;
+  position: sticky;
+  top: 0;
+}
+
+.navTitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.weeksList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.weekHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  background-color: var(--white);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.weekHeader:hover {
+  background-color: var(--gray);
+}
+
+.weekHeader.expanded {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.expandIcon {
+  font-size: 10px;
+  width: 12px;
+}
+
+.weekTitle {
+  flex: 1;
+}
+
+.checkMark {
+  font-size: 12px;
+}
+
+.daysList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 20px;
+  overflow: hidden;
+}
+
+.dayItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--black);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.dayItem:hover:not(.locked) {
+  background-color: var(--gray);
+}
+
+.dayItem.current {
+  background-color: var(--black);
+  color: var(--white);
+  border-left: 4px solid var(--black);
+}
+
+.dayItem.completed {
+  opacity: 0.7;
+}
+
+.dayItem.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dayBox {
+  width: 16px;
+  text-align: center;
+}
+
+.dayText {
+  flex: 1;
+}
+
+.dayCheck {
+  font-size: 10px;
+}
+
+.testLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--black);
+  text-decoration: none;
+  margin-top: 8px;
+  border: 2px solid var(--black);
+}
+
+.testLink.completed {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.testLink.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.testIcon {
+  font-size: 10px;
+}
+
+.testScore {
+  margin-left: auto;
+  font-size: 10px;
+}
+
+/* Main Content */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.courseHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.courseName {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.courseMeta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.topic {
+  font-weight: 600;
+}
+
+.divider {
+  margin: 0 8px;
+}
+
+/* Progress Section */
+.progressSection {
+  padding: 20px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.progressLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.progressValue {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.progressBar {
+  height: 12px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+/* Current Day Card */
+.currentDayCard {
+  padding: 32px;
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0px var(--black);
+  background-color: var(--white);
+}
+
+.cardLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.labelIcon {
+  font-size: 10px;
+}
+
+.currentDayTitle {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.statsRow {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.goBtn {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 14px 32px;
+  background-color: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.goBtn:hover {
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .weekNav {
+    width: 100%;
+    position: static;
+  }
+
+  .courseName {
+    font-size: 24px;
+  }
+
+  .statsRow {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .currentDayCard {
+    padding: 20px;
+  }
+
+  .currentDayTitle {
+    font-size: 18px;
+  }
+
+  .statsRow {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}

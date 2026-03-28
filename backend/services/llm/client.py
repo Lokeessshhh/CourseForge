@@ -368,15 +368,11 @@ def generate_sync(
 ) -> str:
     """
     Synchronous wrapper for use in Celery tasks.
-
-    Usage:
-        from services.llm.client import generate_sync
-        result = generate_sync(prompt, "course_generator", "course")
     """
-    import asyncio
-
     try:
         loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError("Loop is closed")
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -395,10 +391,10 @@ def safe_json_generate_sync(
     """
     Synchronous JSON generation for Celery tasks.
     """
-    import asyncio
-
     try:
         loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError("Loop is closed")
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

@@ -1,0 +1,137 @@
+.section {
+  padding: 120px 0;
+  background-color: var(--white);
+  border-top: 3px solid var(--black);
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.6;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.scrollContainer {
+  display: flex;
+  gap: 24px;
+  cursor: grab;
+  padding: 8px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  flex: 0 0 350px;
+  padding: 32px;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+  transition: var(--transition);
+  position: relative;
+}
+
+.card:hover {
+  box-shadow: 8px 8px 0px var(--black);
+}
+
+.darkCard {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.darkCard .quote {
+  color: var(--white);
+}
+
+.darkCard .authorName,
+.darkCard .authorRole {
+  color: var(--white);
+  opacity: 0.8;
+}
+
+.bigQuote {
+  font-family: var(--font-heading);
+  font-size: 80px;
+  line-height: 1;
+  opacity: 0.3;
+  position: absolute;
+  top: 16px;
+  left: 24px;
+}
+
+.quote {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  color: var(--black);
+}
+
+.author {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.authorName {
+  font-weight: 600;
+}
+
+.authorRole {
+  opacity: 0.6;
+}
+
+.dragHint {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.4;
+  margin-top: 32px;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 80px 0;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .title {
+    font-size: 28px;
+    margin-bottom: 40px;
+  }
+
+  .card {
+    flex: 0 0 280px;
+    padding: 24px;
+  }
+
+  .quote {
+    font-size: 14px;
+  }
+}

@@ -68,6 +68,9 @@ class CourseSerializer(serializers.ModelSerializer):
     total_days = serializers.ReadOnlyField()
     generation_status = serializers.CharField(read_only=True)
     generation_progress = serializers.IntegerField(read_only=True)
+    progress = serializers.SerializerMethodField()
+    current_week = serializers.SerializerMethodField()
+    current_day = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -75,22 +78,128 @@ class CourseSerializer(serializers.ModelSerializer):
             "id", "course_name", "topic", "level", "duration_weeks", "hours_per_day",
             "goals", "status", "generation_status", "generation_progress",
             "total_days", "created_at", "weeks",
+            "progress", "current_week", "current_day",
         ]
-        read_only_fields = ["id", "topic", "created_at", "status", "generation_status", "generation_progress"]
+        read_only_fields = ["id", "topic", "created_at", "status", "generation_status", "generation_progress", "progress", "current_week", "current_day"]
+
+    def get_progress(self, obj):
+        """Calculate progress percentage from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(f"CourseSerializer: Course {obj.id}, User {request.user.id}, progress={cp.overall_percentage}, completed_days={cp.completed_days}")
+                    return cp.overall_percentage
+            else:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning("CourseSerializer: No request context or user available")
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"CourseSerializer: Error getting progress for course {obj.id}: {e}")
+        return 0.0
+
+    def get_current_week(self, obj):
+        """Get current week from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    return cp.current_week
+        except Exception:
+            pass
+        return 1
+
+    def get_current_day(self, obj):
+        """Get current day from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    return cp.current_day
+        except Exception:
+            pass
+        return 1
 
 
 class CourseListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for list endpoint (no nested weeks)."""
     total_days = serializers.ReadOnlyField()
     generation_status = serializers.CharField(read_only=True)
+    progress = serializers.SerializerMethodField()
+    current_week = serializers.SerializerMethodField()
+    current_day = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = [
             "id", "course_name", "topic", "level", "duration_weeks", "hours_per_day",
             "goals", "status", "generation_status", "total_days", "created_at",
+            "progress", "current_week", "current_day",
         ]
-        read_only_fields = ["id", "topic", "created_at"]
+        read_only_fields = ["id", "topic", "created_at", "progress", "current_week", "current_day"]
+
+    def get_progress(self, obj):
+        """Calculate progress percentage from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            # Get the current request context to access the user
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(f"Serializer: Course {obj.id}, User {request.user.id}, progress={cp.overall_percentage}, completed_days={cp.completed_days}")
+                    return cp.overall_percentage
+                else:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Serializer: No CourseProgress found for course {obj.id}, user {request.user.id}")
+            else:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning("Serializer: No request context or user available")
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Serializer: Error getting progress for course {obj.id}: {e}")
+        return 0.0
+
+    def get_current_week(self, obj):
+        """Get current week from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    return cp.current_week
+        except Exception:
+            pass
+        return 1
+
+    def get_current_day(self, obj):
+        """Get current day from CourseProgress."""
+        try:
+            from .models import CourseProgress
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    return cp.current_day
+        except Exception:
+            pass
+        return 1
 
 
 class CourseGenerateSerializer(serializers.Serializer):
@@ -99,11 +208,12 @@ class CourseGenerateSerializer(serializers.Serializer):
         max_length=255,
         help_text="Name/title of the course (e.g., 'Python for Data Science')"
     )
-    duration = serializers.CharField(
-        max_length=50,
+    duration_weeks = serializers.IntegerField(
         required=False,
-        default="1 month",
-        help_text="Duration string like '2 weeks', '1 month', '3 months'"
+        default=4,
+        min_value=1,
+        max_value=52,
+        help_text="Duration in weeks (1-52)"
     )
     level = serializers.ChoiceField(
         choices=["beginner", "intermediate", "advanced"],

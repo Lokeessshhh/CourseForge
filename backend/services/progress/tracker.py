@@ -385,6 +385,7 @@ class ProgressTracker:
             Dict with all courses progress
         """
         from apps.courses.models import CourseProgress
+        from apps.quizzes.models import QuizAttempt
 
         try:
             progress_records = CourseProgress.objects.filter(user_id=user_id).select_related("course")
@@ -393,6 +394,7 @@ class ProgressTracker:
             total_study_time = 0
             longest_streak = 0
             completed_courses = 0
+            current_streak = 0
 
             for progress in progress_records:
                 courses_data.append({
@@ -405,10 +407,31 @@ class ProgressTracker:
                 total_study_time += progress.total_study_time
                 if progress.streak_days > longest_streak:
                     longest_streak = progress.streak_days
+                if progress.streak_days > current_streak:
+                    current_streak = progress.streak_days
                 if progress.completed_at:
                     completed_courses += 1
 
+            # Calculate average quiz score from QuizAttempt model
+            # QuizAttempt has is_correct (boolean), so we calculate percentage of correct answers
+            quiz_attempts = QuizAttempt.objects.filter(user_id=user_id)
+            total_attempts = quiz_attempts.count()
+            correct_attempts = quiz_attempts.filter(is_correct=True).count()
+            avg_quiz_score = round((correct_attempts / total_attempts) * 100, 1) if total_attempts > 0 else 0
+            
+            # Debug logging
+            print(f"[DEBUG] User {user_id} - Total quiz attempts: {total_attempts}, Correct: {correct_attempts}, Avg score: {avg_quiz_score}")
+
+            # Convert study time from minutes to hours
+            total_study_hours = round(total_study_time / 60, 1) if total_study_time else 0
+
             return {
+                "overall": {
+                    "courses_active": len(courses_data),
+                    "current_streak": current_streak,
+                    "avg_quiz_score": avg_quiz_score,
+                    "total_study_hours": total_study_hours,
+                },
                 "courses": courses_data,
                 "total_study_time": total_study_time,
                 "longest_streak": longest_streak,

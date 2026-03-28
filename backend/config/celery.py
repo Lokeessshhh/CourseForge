@@ -10,7 +10,10 @@ from celery import Celery
 from celery.schedules import crontab
 
 # Set default Django settings module
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    os.environ.get("DJANGO_SETTINGS_MODULE", "config.settings.production"),
+)
 
 # Create Celery app
 app = Celery("learnai")

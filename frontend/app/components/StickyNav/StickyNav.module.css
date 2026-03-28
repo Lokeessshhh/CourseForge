@@ -1,0 +1,72 @@
+.nav {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.line::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background-color: var(--black);
+  opacity: 0.2;
+}
+
+.dotWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Square dots for brutalist style */
+.dot {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--black);
+  /* Square, no border-radius */
+  background-color: var(--white);
+  position: relative;
+  z-index: 1;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--black);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dotWrapper:hover .label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 1024px) {
+  .nav {
+    display: none;
+  }
+}

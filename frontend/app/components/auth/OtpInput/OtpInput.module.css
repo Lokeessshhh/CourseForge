@@ -1,0 +1,48 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.inputs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.input {
+  width: 48px;
+  height: 60px;
+  border: 3px solid #000;
+  background: #fff;
+  font-size: 24px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.1s;
+}
+
+.input:focus {
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-2px, -2px);
+}
+
+.input.error {
+  border-color: #000;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.errorText {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #000;
+}

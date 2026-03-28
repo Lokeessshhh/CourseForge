@@ -1,0 +1,235 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.verificationContainer {
+  max-width: 600px;
+  width: 100%;
+  background-color: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 12px 12px 0px var(--black);
+  padding: 40px;
+}
+
+/* Verification Badge */
+.verificationBadge {
+  text-align: center;
+  padding: 32px;
+  background: linear-gradient(135deg, var(--success) 0%, #22c55e 100%);
+  border: 3px solid var(--black);
+  margin-bottom: 32px;
+}
+
+.checkmark {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.verifiedTitle {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.verifiedSubtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Certificate Details */
+.certificateDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.detailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background-color: var(--gray);
+  border: 2px solid var(--black);
+}
+
+.detailLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+
+.detailValue {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  word-break: break-word;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+}
+
+.statusBadge.unlocked {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.statusBadge.locked {
+  background-color: var(--warning);
+  color: var(--black);
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 2px solid var(--black);
+}
+
+.footerText {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.homeLink {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--black);
+  text-decoration: none;
+  padding: 12px 24px;
+  border: 2px solid var(--black);
+  display: inline-block;
+  transition: var(--transition);
+}
+
+.homeLink:hover {
+  background-color: var(--black);
+  color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+/* Loading State */
+.loadingBox {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--white);
+  border-top-color: var(--black);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--white);
+}
+
+/* Error State */
+.errorBox {
+  text-align: center;
+  padding: 60px 40px;
+  background-color: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 12px 12px 0px var(--danger);
+}
+
+.errorIcon {
+  font-size: 64px;
+  color: var(--danger);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.errorTitle {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--black);
+  margin-bottom: 8px;
+}
+
+.errorMessage {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 14px 28px;
+  background-color: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.backBtn:hover {
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .verificationContainer {
+    padding: 24px;
+  }
+
+  .verificationBadge {
+    padding: 24px;
+  }
+
+  .checkmark {
+    font-size: 48px;
+  }
+
+  .verifiedTitle {
+    font-size: 18px;
+  }
+
+  .detailValue {
+    font-size: 14px;
+  }
+}

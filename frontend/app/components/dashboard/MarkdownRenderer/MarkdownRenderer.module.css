@@ -1,0 +1,116 @@
+.renderer {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--black);
+}
+
+/* Headers */
+.h1 {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--black);
+}
+
+.h2 {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--black);
+}
+
+.h3 {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* Paragraph */
+.paragraph {
+  margin-bottom: 16px;
+}
+
+/* Bold */
+.bold {
+  font-weight: 700;
+}
+
+/* Links */
+.link {
+  color: var(--black);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+.link:hover {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+/* Inline Code */
+.inlineCode {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background-color: var(--gray);
+  padding: 2px 6px;
+  border: 1px solid var(--black);
+}
+
+/* Code Block */
+.codeBlock {
+  margin: 16px 0;
+  padding: 16px;
+  background-color: var(--black);
+  border: 2px solid var(--black);
+  overflow-x: auto;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--white);
+  white-space: pre;
+}
+
+/* Blockquote */
+.blockquote {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--black);
+  background-color: var(--gray);
+  font-style: italic;
+}
+
+/* Lists */
+.list {
+  margin: 12px 0;
+  padding-left: 0;
+}
+
+.listItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  list-style: none;
+}
+
+.bullet {
+  font-size: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.number {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  flex-shrink: 0;
+}

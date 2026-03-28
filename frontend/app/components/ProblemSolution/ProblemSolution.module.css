@@ -1,0 +1,140 @@
+.section {
+  padding: 120px 0;
+  background-color: var(--white);
+  border-top: 3px solid var(--black);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.6;
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: stretch;
+}
+
+.left {
+  padding: 48px;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 32px;
+  line-height: 1.2;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.x {
+  color: var(--black);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.right {
+  padding: 48px;
+  background-color: var(--black);
+  color: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.titleWhite {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 32px;
+  line-height: 1.2;
+}
+
+.listWhite {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.itemWhite {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.check {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left,
+  .right {
+    padding: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 80px 0;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .label {
+    font-size: 11px;
+    margin-bottom: 32px;
+  }
+
+  .title,
+  .titleWhite {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .item,
+  .itemWhite {
+    font-size: 14px;
+  }
+}

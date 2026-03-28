@@ -315,13 +315,44 @@ Return plain markdown text."""
 
 Week context: {week_theme}
 
+CRITICAL FORMATTING RULES:
+1. ONLY put actual code inside ```python``` code blocks
+2. All headings, explanations, examples, output, common mistakes, and practice exercises must be in NORMAL TEXT (outside code blocks)
+3. Use markdown headings (##) for section titles
+4. Use **bold** text for emphasis on key terms
+5. Format like this example:
+
+## Example 1: Basic Variable Assignment
+
+Assign integer values to variables and print them.
+
+```python
+age = 25
+height = 5.9
+print("Age:", age)
+print("Height:", height)
+```
+
+**Explanation:**
+- `age = 25`: Assigns the integer value `25` to the variable `age`.
+- `height = 5.9`: Assigns the floating-point value `5.9` to the variable `height`.
+
+**Output:**
+```
+Age: 25
+Height: 5.9
+```
+
+**Common Mistakes:**
+- Forgetting to assign a value before using a variable.
+
 Requirements:
 1. Provide 2-3 complete, runnable code examples
-2. Explain each example step by step
-3. Show expected output for each example
-4. Point out common mistakes to avoid
-5. Include a practice exercise at the end
-6. Use proper markdown code blocks with language tags
+2. Explain each example step by step in NORMAL TEXT
+3. Show expected output in NORMAL TEXT
+4. Point out common mistakes in NORMAL TEXT
+5. Include a practice exercise at the end in NORMAL TEXT
+6. ONLY code goes in ```python``` blocks, everything else is normal text
 
 Return markdown with properly formatted code blocks."""
 

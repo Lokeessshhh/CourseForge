@@ -4,9 +4,12 @@ import os
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
-    ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
+if not ALLOWED_HOSTS:
+    raise RuntimeError("ALLOWED_HOSTS must be set in production")
+
+if not SECRET_KEY or SECRET_KEY == "change-me-in-production":  # type: ignore[name-defined]  # noqa: F405
+    raise RuntimeError("DJANGO_SECRET_KEY must be set to a strong value in production")
 
 # ──────────────────────────────────────────────
 # Security hardening
@@ -52,6 +55,22 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+if not CORS_ALLOWED_ORIGINS:
+    raise RuntimeError("CORS_EXTRA_ORIGINS must be set in production")
+
+# Allow API/WebSocket calls from the frontend origin(s) via CSP.
+# SECURITY_HEADERS_CSP is consumed by utils.middleware.SecurityHeadersMiddleware.
+_csp_connect = " ".join(["'self'"] + CORS_ALLOWED_ORIGINS)
+SECURITY_HEADERS_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self'; "
+    "img-src 'self' data:; "
+    "font-src 'self'; "
+    f"connect-src {_csp_connect}; "
+    "frame-ancestors 'none';"
+)
 
 # ──────────────────────────────────────────────
 # Rate Limiting - Enabled in production
@@ -110,30 +129,40 @@ REST_FRAMEWORK = {
 # ──────────────────────────────────────────────
 # Production logging
 # ──────────────────────────────────────────────
-LOG_DIR = "/var/log/learnai"
-os.makedirs(LOG_DIR, exist_ok=True)
+LOG_DIR = os.environ.get("LOG_DIR", "/var/log/learnai")
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except Exception:
+    # Don't crash on import if filesystem is read-only; console logging still works.
+    LOG_DIR = None
 
-LOGGING["handlers"]["file"] = {  # type: ignore[name-defined]  # noqa: F405
-    "class": "logging.handlers.RotatingFileHandler",
-    "filename": f"{LOG_DIR}/django.log",
-    "formatter": "verbose",
-    "maxBytes": 10485760,  # 10MB
-    "backupCount": 5,
-}
-LOGGING["handlers"]["error_file"] = {  # type: ignore[name-defined]  # noqa: F405
-    "class": "logging.handlers.RotatingFileHandler",
-    "filename": f"{LOG_DIR}/error.log",
-    "formatter": "verbose",
-    "level": "ERROR",
-    "maxBytes": 10485760,
-    "backupCount": 5,
-}
-LOGGING["root"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
-LOGGING["loggers"]["django"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
+if LOG_DIR:
+    LOGGING["handlers"]["file"] = {  # type: ignore[name-defined]  # noqa: F405
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": f"{LOG_DIR}/django.log",
+        "formatter": "verbose",
+        "maxBytes": 10485760,  # 10MB
+        "backupCount": 5,
+    }
+    LOGGING["handlers"]["error_file"] = {  # type: ignore[name-defined]  # noqa: F405
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": f"{LOG_DIR}/error.log",
+        "formatter": "verbose",
+        "level": "ERROR",
+        "maxBytes": 10485760,
+        "backupCount": 5,
+    }
+    LOGGING["root"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["django"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["apps"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["services"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
+else:
+    LOGGING["root"]["handlers"] = ["console"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["django"]["handlers"] = ["console"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["apps"]["handlers"] = ["console"]  # type: ignore[name-defined]  # noqa: F405
+    LOGGING["loggers"]["services"]["handlers"] = ["console"]  # type: ignore[name-defined]  # noqa: F405
 LOGGING["loggers"]["django"]["level"] = "WARNING"  # type: ignore[name-defined]  # noqa: F405
-LOGGING["loggers"]["apps"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
 LOGGING["loggers"]["apps"]["level"] = "INFO"  # type: ignore[name-defined]  # noqa: F405
-LOGGING["loggers"]["services"]["handlers"] = ["console", "file"]  # type: ignore[name-defined]  # noqa: F405
 LOGGING["loggers"]["services"]["level"] = "INFO"  # type: ignore[name-defined]  # noqa: F405
 
 # ──────────────────────────────────────────────

@@ -1,0 +1,301 @@
+.section {
+  padding: 120px 0;
+  background-color: var(--white);
+  border-top: 3px solid var(--black);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.6;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto auto auto;
+  gap: 24px;
+}
+
+.card {
+  padding: 28px;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card:hover {
+  box-shadow: 8px 8px 0px var(--black);
+}
+
+/* Size variants */
+.large {
+  grid-column: span 2;
+}
+
+.medium {
+  grid-column: span 1;
+}
+
+.small {
+  grid-column: span 1;
+}
+
+.smallDark,
+.medium-dark {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.small-dark .cardTitle,
+.medium-dark .cardTitle {
+  color: var(--white);
+}
+
+.small-dark .cardDesc,
+.medium-dark .cardDesc {
+  color: var(--white);
+  opacity: 0.8;
+}
+
+.svg {
+  width: 60px;
+  height: 50px;
+  margin-bottom: 8px;
+}
+
+.svg svg {
+  width: 100%;
+  height: 100%;
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.cardDesc {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* Specific card styling */
+.small-dark .cardTitle {
+  font-size: 48px;
+  font-family: var(--font-heading);
+}
+
+/* Dashboard Card */
+.dashboardWrapper {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.dashboardWrapper:hover {
+  box-shadow: none;
+}
+
+.dashboardCard {
+  padding: 24px;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+  font-family: var(--font-mono);
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dashboardName {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dashboardStreak {
+  font-size: 12px;
+}
+
+.dashboardCourse {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 16px;
+}
+
+.dashboardProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.progressLabel {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+.progressPercent {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.weekGrid {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.weekBox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.weekFilled {
+  background-color: var(--black);
+}
+
+.dashboardStat {
+  font-size: 11px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.knowledgeBars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.knowledgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.knowledgeLabel {
+  font-size: 10px;
+  width: 70px;
+  opacity: 0.7;
+}
+
+.knowledgeBar {
+  flex: 1;
+  height: 6px;
+  border: 1px solid var(--black);
+  background-color: var(--white);
+}
+
+.knowledgeFill {
+  height: 100%;
+  background-color: var(--black);
+}
+
+.knowledgeWeak {
+  background-color: var(--black);
+  opacity: 0.4;
+}
+
+.knowledgePercent {
+  font-size: 10px;
+  width: 30px;
+  text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .large {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 80px 0;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .title {
+    font-size: 28px;
+    margin-bottom: 40px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .large {
+    grid-column: span 1;
+  }
+
+  .card {
+    padding: 24px;
+  }
+
+  .cardTitle {
+    font-size: 18px;
+  }
+
+  .cardDesc {
+    font-size: 13px;
+  }
+}

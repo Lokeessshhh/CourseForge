@@ -5,6 +5,7 @@ All environment-specific settings inherit from this.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import importlib.util
 
 load_dotenv()
 
@@ -36,12 +37,15 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "corsheaders",
-    "drf_spectacular",
     "channels",
     "django_celery_beat",
     "django_celery_results",
     "django_extensions",
 ]
+
+_HAS_DRF_SPECTACULAR = importlib.util.find_spec("drf_spectacular") is not None
+if _HAS_DRF_SPECTACULAR:
+    THIRD_PARTY_APPS.insert(2, "drf_spectacular")
 
 LOCAL_APPS = [
     "apps.users",
@@ -58,7 +62,10 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # must be high up
+    "utils.middleware.SecurityHeadersMiddleware",  # Security headers
+    "utils.middleware.RequestLoggingMiddleware",  # Request logging
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -170,9 +177,11 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",
 }
+
+if _HAS_DRF_SPECTACULAR:
+    REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "drf_spectacular.openapi.AutoSchema"
 
 # ──────────────────────────────────────────────
 # drf-spectacular (API docs)
@@ -191,6 +200,8 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXTRA_ORIGINS = os.environ.get("CORS_EXTRA_ORIGINS", "")
@@ -220,8 +231,14 @@ USE_TZ = True
 # ──────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Whitenoise configuration
+WHITENOISE_STATIC_ROOT = STATIC_ROOT
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -237,11 +254,13 @@ CLERK_WEBHOOK_SECRET = os.environ.get("CLERK_WEBHOOK_SECRET", "")
 # ──────────────────────────────────────────────
 # vLLM Server Configuration
 # ──────────────────────────────────────────────
-VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "http://165.245.135.4:8000")
+VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "http://localhost:8000")
 VLLM_MODEL = os.environ.get("VLLM_MODEL", "qwen-coder")
 VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "none")
 VLLM_MAX_TOKENS = int(os.environ.get("VLLM_MAX_TOKENS", "3000"))
 VLLM_STREAM_TIMEOUT = int(os.environ.get("VLLM_STREAM_TIMEOUT", "120"))
+VLLM_TIMEOUT_SECONDS = int(os.environ.get("VLLM_TIMEOUT_SECONDS", "120"))
+VLLM_SDK_MAX_RETRIES = int(os.environ.get("VLLM_SDK_MAX_RETRIES", "0"))
 
 # Generation parameters for different use cases
 GENERATION_PARAMS = {

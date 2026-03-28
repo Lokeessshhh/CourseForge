@@ -1,0 +1,566 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.startBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+}
+
+.startBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.startBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+.playIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.problemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.problemTab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.problemTab:hover {
+  transform: translate(2px, 0);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.problemTab:active {
+  transform: translate(0px, 0px);
+}
+
+.problemTab.active {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.problemIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.problemTabText {
+  flex: 1;
+  font-weight: 600;
+}
+
+.difficultyEasy,
+.difficultyMedium,
+.difficultyHard {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  text-transform: uppercase;
+  border: 2px solid var(--black);
+}
+
+.submitBtn {
+  padding: 16px;
+  border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+}
+
+.submitBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.submitBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.problemPanel {
+  padding: 24px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.problemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--black);
+}
+
+.problemTitle {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.difficulty {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  text-transform: uppercase;
+  border: 2px solid var(--black);
+}
+
+.problemDescription {
+  margin-bottom: 24px;
+}
+
+.problemDescription p {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--black);
+}
+
+.testCases {
+  margin-top: 24px;
+}
+
+.testCasesTitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.testCase {
+  padding: 16px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  margin-bottom: 12px;
+}
+
+.testCaseInput,
+.testCaseOutput {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.testCaseLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 60px;
+}
+
+.testCaseCode {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 8px;
+  border: 1px solid var(--black);
+  background-color: var(--white);
+}
+
+.codePanel {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  max-height: calc(100vh - 200px);
+}
+
+.codeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.languageSelect {
+  padding: 8px 16px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.executeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+}
+
+.executeBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.executeBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+.executeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.codeEditor {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  min-height: 400px;
+}
+
+.executionResult {
+  padding: 16px;
+  border-top: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.executionResultHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.terminalIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.executionSuccess,
+.executionError {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.successIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.errorIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.outputText {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Results Page */
+.resultsContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.resultCard {
+  padding: 32px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.resultHeader {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid var(--black);
+}
+
+.resultTitle {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.passed {
+  color: var(--black);
+}
+
+.failed {
+  color: var(--black);
+}
+
+.scoreSummary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.score {
+  font-family: var(--font-heading);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.percentage {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.problemResults {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.problemResult {
+  padding: 20px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  border-left: 4px solid var(--black);
+}
+
+.problemResultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.problemNumber {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.passedIcon,
+.failedIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.problemResultDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.executionDetails {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+}
+
+.continueBtn {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+  text-align: center;
+}
+
+.continueBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.continueBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+/* Error Box */
+.errorBox {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 32px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  text-align: center;
+}
+
+.errorText {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 24px;
+  display: block;
+}
+
+.retryBtn {
+  padding: 12px 24px;
+  border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+}
+
+.retryBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.retryBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+/* Skeleton */
+.skeletonBox {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border: 2px solid var(--black);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

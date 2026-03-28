@@ -33,10 +33,10 @@ MIDDLEWARE = [
     "utils.middleware.RequestLoggingMiddleware",
 ]
 
-# Show SQL queries in console during development
+# Reduce SQL query noise in console
 LOGGING["loggers"]["django.db.backends"] = {  # type: ignore[name-defined]  # noqa: F405
     "handlers": ["console"],
-    "level": "DEBUG",
+    "level": "WARNING",
     "propagate": False,
 }
 
@@ -61,3 +61,15 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # vLLM development URL
 VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "http://localhost:8000")
+
+# Static files for admin
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = []
+
+# Use in-memory channel layer for development (no Redis required)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}

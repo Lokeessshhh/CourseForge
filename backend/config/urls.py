@@ -8,11 +8,18 @@ from django.urls import path, include
 from django.http import JsonResponse
 from django.db import connection
 from django.core.cache import cache
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
-)
+from django.conf import settings
+from django.conf.urls.static import static
+try:
+    from drf_spectacular.views import (
+        SpectacularAPIView,
+        SpectacularRedocView,
+        SpectacularSwaggerView,
+    )
+except Exception:
+    SpectacularAPIView = None
+    SpectacularRedocView = None
+    SpectacularSwaggerView = None
 import httpx
 import logging
 import time
@@ -99,17 +106,23 @@ urlpatterns = [
     # Health check (no auth)
     path("api/health/", health_check),
 
-    # OpenAPI schema + docs
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui",
-    ),
-    path(
-        "api/redoc/",
-        SpectacularRedocView.as_view(url_name="schema"),
-        name="redoc",
+    # OpenAPI schema + docs (optional)
+    *(
+        [
+            path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+            path(
+                "api/docs/",
+                SpectacularSwaggerView.as_view(url_name="schema"),
+                name="swagger-ui",
+            ),
+            path(
+                "api/redoc/",
+                SpectacularRedocView.as_view(url_name="schema"),
+                name="redoc",
+            ),
+        ]
+        if SpectacularAPIView is not None
+        else []
     ),
 
     # App routers
@@ -122,3 +135,6 @@ urlpatterns = [
     path("api/webhooks/",      include("apps.users.webhook_urls")),
     path("api/admin/",         include("apps.admin_api.urls")),
 ]
+
+# Static files for admin
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

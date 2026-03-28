@@ -30,6 +30,18 @@ class User(models.Model):
         db_table = "users"
         ordering = ["-created_at"]
 
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    @property
+    def is_active(self):
+        return True
+
     def __str__(self):
         return f"{self.email} ({self.clerk_id})"
 

@@ -1,0 +1,147 @@
+.overlay {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  padding: 0 24px;
+  z-index: 250;
+  display: flex;
+  justify-content: center;
+}
+
+.popup {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0px var(--black);
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.headerIcon {
+  font-size: 12px;
+}
+
+.headerTitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  color: var(--black);
+}
+
+.input::placeholder {
+  color: var(--black);
+  opacity: 0.4;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.optionBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 10px 16px;
+  background-color: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.optionBtn:hover {
+  box-shadow: 2px 2px 0px var(--black);
+}
+
+.optionBtn.selected {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.createBtn {
+  width: 100%;
+  padding: 14px 24px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background-color: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 8px;
+}
+
+.createBtn:hover:not(:disabled) {
+  box-shadow: 6px 6px 0px var(--black);
+}
+
+.createBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .overlay {
+    bottom: 70px;
+    padding: 0 16px;
+  }
+
+  .popup {
+    padding: 20px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .optionBtn {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+}
