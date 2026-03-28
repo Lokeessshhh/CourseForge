@@ -1,8 +1,14 @@
-# ─────────────────────────────────────────────────────────
-# LearnAI Django Backend - Git Ignore
-# ─────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────
+# Environment & Secrets
+# ──────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
 
-# ── Python ────────────────────────────────────────────────
+# ──────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,72 +29,91 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# ── Virtual Environments ──────────────────────────────────
+# Virtual Environment
 .venv/
 venv/
 ENV/
 env/
-.env.local
+env.bak/
+venv.bak/
 
-# ── Django ────────────────────────────────────────────────
-*.log
-local_settings.py
-db.sqlite3
-media/
-staticfiles/
+# ──────────────────────────────────────────────
+# Node.js (Frontend)
+# ──────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# ── Environment Variables ─────────────────────────────────
-.env
-.env.production
-.env.*.local
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
 
-# ── IDE ──────────────────────────────────────────────────
+# ──────────────────────────────────────────────
+# IDE & Editors
+# ──────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-.project
-.pydevproject
-.settings/
-
-# ── OS ───────────────────────────────────────────────────
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+*.sublime-project
+*.sublime-workspace
 
-# ── Testing ──────────────────────────────────────────────
-.pytest_cache/
+# ──────────────────────────────────────────────
+# Database
+# ──────────────────────────────────────────────
+*.db
+*.sqlite3
+*.sqlite
+
+# ──────────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────────
+*.log
+logs/
+
+# ──────────────────────────────────────────────
+# Testing
+# ──────────────────────────────────────────────
 .coverage
 htmlcov/
+.pytest_cache/
 .tox/
-.hypothesis/
-coverage.xml
-*.cover
+.nox/
 
-# ── Celery ───────────────────────────────────────────────
-celerybeat-schedule
-celerybeat.pid
+# ──────────────────────────────────────────────
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# ── Jupyter ──────────────────────────────────────────────
-.ipynb_checkpoints/
+# ──────────────────────────────────────────────
+# Git
+# ──────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
 
-# ── mypy ─────────────────────────────────────────────────
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# ──────────────────────────────────────────────
+# Documentation (optional - include if you want)
+# ──────────────────────────────────────────────
+# *.md
+# !README.md
 
-# ── Ruff ─────────────────────────────────────────────────
-.ruff_cache/
+# ──────────────────────────────────────────────
+# OS
+# ──────────────────────────────────────────────
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
 
-# ── Secrets & Credentials ────────────────────────────────
-*.pem
-*.key
-secrets.json
-credentials.json
+# ──────────────────────────────────────────────
+# Qwen Code
+# ──────────────────────────────────────────────
+.qwen/
