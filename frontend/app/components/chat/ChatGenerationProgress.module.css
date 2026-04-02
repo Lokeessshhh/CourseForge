@@ -3,9 +3,10 @@
   border: 3px solid var(--black);
   border-radius: 0;
   padding: 12px 14px;
-  margin: 8px 0;
-  box-shadow: 4px 4px 0px var(--black);
-  max-width: 420px;
+  margin: 0;
+  box-shadow: none;
+  width: 100%;
+  max-width: 100%;
 }
 
 .container.complete {

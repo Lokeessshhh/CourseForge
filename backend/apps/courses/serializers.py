@@ -300,7 +300,7 @@ class CourseUpdateSerializer(serializers.Serializer):
     )
     web_search_enabled = serializers.BooleanField(
         required=False,
-        default=True,
+        default=False,  # Default to False - only search when explicitly enabled by toggle
         help_text="Whether to use web search for updated content"
     )
     percentage = serializers.IntegerField(

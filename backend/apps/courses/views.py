@@ -369,7 +369,7 @@ def course_update(request, course_id):
     data = serializer.validated_data
     update_type = data["update_type"]
     user_query = data["user_query"]
-    web_search_enabled = data.get("web_search_enabled", True)
+    web_search_enabled = data.get("web_search_enabled", False)  # Default to False - only search when explicitly enabled
 
     try:
         course = Course.objects.get(id=course_id, user=request.user)

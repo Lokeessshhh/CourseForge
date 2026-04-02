@@ -989,7 +989,7 @@ export default function ChatPage() {
               const apiData: any = {
                 update_type: newUpdateType,
                 user_query: user_query || '',
-                web_search_enabled: true,
+                web_search_enabled: webSearchEnabled,  // Use actual toggle state
               };
 
               if (newUpdateType === 'percentage') {
@@ -2017,35 +2017,58 @@ export default function ChatPage() {
                 {/* Web Search Status */}
                 <WebSearchStatus webSearchState={webSearchState} />
 
-                {/* Course Generation Progress - In Chat */}
+                {/* Course Generation Progress - Rendered as part of message flow */}
                 {generatingCourseId && generatingCourse && (
-                  <ChatGenerationProgress
-                    courseId={generatingCourseId}
-                    courseName={generatingCourse.courseName || generatingCourse.topic || 'Course'}
-                    onComplete={() => {
-                      console.log('[Chat] Generation complete, removing from chat view');
-                    }}
-                    onCancel={async () => {
-                      console.log('[Chat] Generation cancelled by user');
-                      // Add cancellation message to chat
-                      const cancelMessage: ChatMessage = {
-                        id: `ai-${Date.now()}`,
-                        role: 'assistant',
-                        content: `⚠️ **Course Generation Cancelled**\n\nThe generation for '${generatingCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
-                        timestamp: new Date(),
-                      };
-                      setMessages([...messages, cancelMessage]);
-                      
-                      // Persist cancellation message to database
-                      let sessionIdToUse = currentSessionId;
-                      if (!sessionIdToUse) {
-                        sessionIdToUse = await createSession({ course_id: courseId });
-                      }
-                      if (sessionIdToUse) {
-                        persistConversation(sessionIdToUse, `Cancel generation of ${generatingCourse.courseName}`, cancelMessage.content);
-                      }
-                    }}
-                  />
+                  <motion.div
+                    key={`progress-${generatingCourseId}`}
+                    className={styles.message}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className={styles.messageInner}>
+                      <div className={styles.aiAvatar}>
+                        <span className={styles.aiMonogram}>CF</span>
+                      </div>
+                      <div className={styles.messageBody}>
+                        <div className={styles.messageHeader}>
+                          <span className={styles.messageRole}>COURSEFORGE AI</span>
+                          <span className={styles.messageDate}>
+                            {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                        <div className={styles.messageContent}>
+                          <ChatGenerationProgress
+                            courseId={generatingCourseId}
+                            courseName={generatingCourse.courseName || generatingCourse.topic || 'Course'}
+                            onComplete={() => {
+                              console.log('[Chat] Generation complete, removing from chat view');
+                            }}
+                            onCancel={async () => {
+                              console.log('[Chat] Generation cancelled by user');
+                              // Add cancellation message to chat
+                              const cancelMessage: ChatMessage = {
+                                id: `ai-${Date.now()}`,
+                                role: 'assistant',
+                                content: `⚠️ **Course Generation Cancelled**\n\nThe generation for '${generatingCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
+                                timestamp: new Date(),
+                              };
+                              setMessages([...messages, cancelMessage]);
+
+                              // Persist cancellation message to database
+                              let sessionIdToUse = currentSessionId;
+                              if (!sessionIdToUse) {
+                                sessionIdToUse = await createSession({ course_id: courseId });
+                              }
+                              if (sessionIdToUse) {
+                                persistConversation(sessionIdToUse, `Cancel generation of ${generatingCourse.courseName}`, cancelMessage.content);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
 
                 <div ref={messagesEndRef} />
@@ -2087,7 +2110,7 @@ export default function ChatPage() {
             const apiData: any = {
               update_type: updateType,
               user_query: pendingUpdateData.user_query,
-              web_search_enabled: true,
+              web_search_enabled: webSearchEnabled,  // Use actual toggle state
             };
 
             if (updateType === 'percentage' && options.percentage) {
