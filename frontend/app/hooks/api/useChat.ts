@@ -18,6 +18,7 @@ export interface ChatMessage {
   content: string;
   sources?: { title: string; page?: number | null }[];
   timestamp: Date;
+  date?: string;
 }
 
 export interface ChatSession {
@@ -27,6 +28,22 @@ export interface ChatSession {
   message_count: number;
   last_message_at: string;
   created_at: string;
+  date?: string;
+}
+
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+  source?: string;
+}
+
+export interface WebSearchState {
+  isActive: boolean;
+  query: string;
+  results: WebSearchResult[];
+  success: boolean;
+  messageId: string | null;
 }
 
 // WebSocket Chat Hook
@@ -37,7 +54,15 @@ export function useChat(courseId?: string, sessionId?: string) {
   const [isThinking, setIsThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wsSessionId, setWsSessionId] = useState<string | null>(null);
+  const [isSessionSwitching, setIsSessionSwitching] = useState(false);
   const [onTitleUpdated, setOnTitleUpdated] = useState<((sessionId: string, title: string) => void) | null>(null);
+  const [webSearchState, setWebSearchState] = useState<WebSearchState>({
+    isActive: false,
+    query: '',
+    results: [],
+    success: false,
+    messageId: null,
+  });
 
   const wsRef = useRef<WebSocket | null>(null);
   const currentMessageId = useRef<string | null>(null);
@@ -82,14 +107,21 @@ export function useChat(courseId?: string, sessionId?: string) {
       // PREVENT CHURN: If URL is exactly the same and we're already connecting/connected, bail.
       if (activeUrlRef.current === wsUrl && (isConnectingRef.current || (wsRef.current && wsRef.current.readyState <= 1))) {
         wsLog('connect:skipping_duplicate', { wsUrl: wsUrl.replace(token, '[token]') });
+        console.log('[WS] WARNING: Skipping duplicate connection - already connected');
         return;
       }
 
       // Don't reconnect if session hasn't changed and we're still connected
       if (lastSessionIdRef.current === currentSessionId && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsLog('connect:skipping_already_connected', { sessionId: currentSessionId });
+        console.log('[WS] SUCCESS: Already connected, skipping');
         return;
       }
+
+      console.log('[WS] CONNECTING: Attempting WebSocket connection...');
+      console.log('[WS] URL:', wsUrl.replace(token, '[TOKEN]'));
+      console.log('[WS] Session ID:', currentSessionId || 'none');
+      console.log('[WS] Course ID:', currentCourseId || 'none (global chat)');
 
       isConnectingRef.current = true;
       activeUrlRef.current = wsUrl;
@@ -245,6 +277,30 @@ export function useChat(courseId?: string, sessionId?: string) {
             }
             break;
 
+          case 'web_search_start':
+            // Web search started
+            setWebSearchState({
+              isActive: true,
+              query: data.query || '',
+              results: [],
+              success: false,
+              messageId: data.message_id || null,
+            });
+            wsLog('ws:web_search_start', { seq, message_id: data.message_id, query: data.query });
+            break;
+
+          case 'web_search_end':
+            // Web search completed
+            setWebSearchState({
+              isActive: false,
+              query: data.query || '',
+              results: data.results || [],
+              success: data.success || false,
+              messageId: data.message_id || null,
+            });
+            wsLog('ws:web_search_end', { seq, message_id: data.message_id, success: data.success, results: (data.results || []).length });
+            break;
+
           case 'ping':
             // Ignore ping messages (heartbeat from server)
             wsLog('ws:ping', { seq });
@@ -323,7 +379,15 @@ export function useChat(courseId?: string, sessionId?: string) {
 
     if (sessionIdChanged) {
       wsLog('session:changed', { oldSession: oldSessionId, newSession: sessionId });
+
+      // Set session switching state
+      setIsSessionSwitching(true);
       
+      // Ensure switching state is visible for at least 300ms
+      setTimeout(() => {
+        setIsSessionSwitching(false);
+      }, 300);
+
       // Increment sequence to invalidate old WebSocket's message handlers
       wsInstanceSeqRef.current += 1;
       console.log('[useChat] Session changed, incremented wsInstanceSeq to:', wsInstanceSeqRef.current);
@@ -367,7 +431,7 @@ export function useChat(courseId?: string, sessionId?: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - connection managed internally
 
-  const send = useCallback((content: string, outgoingSessionId?: string) => {
+  const send = useCallback((content: string, outgoingSessionId?: string, webSearch?: boolean) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       // Queue the send to be flushed on next open. This prevents losing the first
@@ -395,9 +459,10 @@ export function useChat(courseId?: string, sessionId?: string) {
       message_id: crypto.randomUUID(),
       include_sources: true,
       session_id: outgoingSessionId,  // Include session_id in payload
+      web_search: webSearch || false,  // Include web search flag
     }));
 
-    wsLog('send:sent', { sessionId: outgoingSessionId, preview: content.slice(0, 80) });
+    wsLog('send:sent', { sessionId: outgoingSessionId, webSearch, preview: content.slice(0, 80) });
 
     return true;
   }, [connect]);
@@ -431,12 +496,23 @@ export function useChat(courseId?: string, sessionId?: string) {
     messages,
     isConnected,
     isThinking,
+    isSessionSwitching,
     error,
     send,
     clearMessages,
     setMessages: setMessagesExternal,
     reconnect,
     onTitleUpdate,
+    webSearchState,
+    clearWebSearch: () => {
+      setWebSearchState({
+        isActive: false,
+        query: '',
+        results: [],
+        success: false,
+        messageId: null,
+      });
+    },
   };
 }
 
@@ -557,6 +633,7 @@ export function useChatHistory(sessionId: string) {
         role: m.role,
         content: m.content,
         timestamp: new Date(m.created_at),
+        date: m.date,
         sources: [],
       })));
     } catch (err) {

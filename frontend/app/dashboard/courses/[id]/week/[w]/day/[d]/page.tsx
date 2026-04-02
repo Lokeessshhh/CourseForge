@@ -438,7 +438,7 @@ export default function DayLessonPage() {
                   animate={{ opacity: 1, scale: 1 }}
                 >
                   <h2 className={styles.scoreTitle}>
-                    {quizResult?.score || calculateScore()}/{normalizedQuestions.length} · {Math.round((quizResult?.score || calculateScore()) / normalizedQuestions.length * 100)}%
+                    {calculateScore()}/{normalizedQuestions.length} · {Math.round((calculateScore() / normalizedQuestions.length) * 100)}%
                   </h2>
                   
                   <span className={`${styles.passTag} ${styles.passed}`}>

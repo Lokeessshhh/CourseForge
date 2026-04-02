@@ -59,9 +59,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         4. Load full user context
         5. Send welcome message
         """
+        # Get connection details for logging
+        # Note: headers in ASGI are a list of (name, value) tuples
+        headers_dict = {k: v for k, v in self.scope.get("headers", [])}
+        scope_info = {
+            "type": self.scope.get("type"),
+            "path": self.scope.get("path"),
+            "user_agent": headers_dict.get(b"user-agent", b"").decode(),
+        }
+
+        logger.info("=" * 80)
+        logger.info("🔌 WEBSOCKET CONNECTION ATTEMPT")
+        logger.info(f"   Scope: {scope_info}")
+        logger.info(f"   Query: {self.scope.get('query_string', b'').decode()[:200]}")
+        logger.info("=" * 80)
+
         logger.info("[WS] Connect attempt - scope keys: %s", list(self.scope.keys()))
         logger.info("[WS] Connect - query_string: %s", self.scope.get("query_string", b"").decode()[:100])
-        
+
         # Get authenticated user from middleware
         user = self.scope.get("user")
         auth_error = self.scope.get("auth_error")
@@ -69,12 +84,109 @@ class ChatConsumer(AsyncWebsocketConsumer):
         logger.info("[WS] Connect - user: %s, auth_error: %s", user.id if user else None, auth_error)
 
         if not user or auth_error:
-            logger.warning("[WS] WebSocket connection refused: %s", auth_error or "no user")
+            logger.warning("[WS] ❌ WebSocket connection refused: %s", auth_error or "no user")
             await self.close(code=4001)
             return
 
         self.user = user
         self.user_id = str(user.id)
+
+        logger.info("[WS] ✅ User authenticated: %s (%s)", user.email, user.id)
+
+        # Extract scope from URL kwargs
+        url_kwargs = self.scope["url_route"]["kwargs"]
+        self.course_id = url_kwargs.get("course_id")
+        self.week = int(url_kwargs["week"]) if url_kwargs.get("week") else None
+        self.day = int(url_kwargs["day"]) if url_kwargs.get("day") else None
+
+    def _should_trigger_web_search(self, query: str) -> bool:
+        """
+        Check if query should trigger web search based on keywords.
+        
+        Matches the same keywords as the frontend for consistency.
+        
+        Args:
+            query: User's query string
+            
+        Returns:
+            True if web search should be triggered
+        """
+        WEB_SEARCH_KEYWORDS = [
+            # Search intent
+            'search', 'web search', 'google', 'bing', 'look up',
+            'find online', 'search the web', 'search online',
+            
+            # Time-sensitive
+            'latest', 'current', 'recent', 'new', 'today',
+            'yesterday', 'this week', 'this month', '2026', '2025',
+            
+            # News/Events
+            'news', 'announcement', 'release', 'update', 'breaking',
+            
+            # Facts/Data
+            'statistics', 'price', 'cost', 'population', 'market share',
+            'ranking', 'report', 'study', 'survey',
+            
+            # People/Companies
+            'who is', 'what company', 'founder', 'ceo', 'owner',
+            
+            # Technology
+            'version', 'release date', 'documentation', 'changelog',
+            
+            # Weather/Current events
+            'weather', 'temperature', 'forecast', 'score', 'result',
+            
+            # Conflict/Events
+            'conflict', 'war', 'attack', 'election', 'protest',
+        ]
+
+        query_lower = query.lower()
+        return any(keyword in query_lower for keyword in WEB_SEARCH_KEYWORDS)
+
+    async def connect(self):
+        """
+        Authenticate and initialize chat session.
+
+        On connect:
+        1. Extract JWT from query param and verify
+        2. Extract scope from URL (global/course/day)
+        3. Create or resume session
+        4. Load full user context
+        5. Send welcome message
+        """
+        # Get connection details for logging
+        # Note: headers in ASGI are a list of (name, value) tuples
+        headers_dict = {k: v for k, v in self.scope.get("headers", [])}
+        scope_info = {
+            "type": self.scope.get("type"),
+            "path": self.scope.get("path"),
+            "user_agent": headers_dict.get(b"user-agent", b"").decode(),
+        }
+
+        logger.info("=" * 80)
+        logger.info("🔌 WEBSOCKET CONNECTION ATTEMPT")
+        logger.info(f"   Scope: {scope_info}")
+        logger.info(f"   Query: {self.scope.get('query_string', b'').decode()[:200]}")
+        logger.info("=" * 80)
+
+        logger.info("[WS] Connect attempt - scope keys: %s", list(self.scope.keys()))
+        logger.info("[WS] Connect - query_string: %s", self.scope.get("query_string", b"").decode()[:100])
+
+        # Get authenticated user from middleware
+        user = self.scope.get("user")
+        auth_error = self.scope.get("auth_error")
+
+        logger.info("[WS] Connect - user: %s, auth_error: %s", user.id if user else None, auth_error)
+
+        if not user or auth_error:
+            logger.warning("[WS] ❌ WebSocket connection refused: %s", auth_error or "no user")
+            await self.close(code=4001)
+            return
+
+        self.user = user
+        self.user_id = str(user.id)
+
+        logger.info("[WS] ✅ User authenticated: %s (%s)", user.email, user.id)
 
         # Extract scope from URL kwargs
         url_kwargs = self.scope["url_route"]["kwargs"]
@@ -132,11 +244,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         """
         Save session state and cleanup on disconnect.
-        
+
         NOTE: Message processing continues in background even after disconnect.
         The _process_message method saves all data to database before attempting
         to send responses to client, so conversations are never lost.
         """
+        logger.info("=" * 80)
+        logger.info("🔌 WEBSOCKET DISCONNECTED")
+        logger.info(f"   User: {self.user.email if hasattr(self, 'user') else 'Unknown'}")
+        logger.info(f"   Session: {getattr(self, 'session_id', 'N/A')}")
+        logger.info(f"   Close Code: {close_code}")
+        logger.info("=" * 80)
+        
         # Cancel heartbeat task if running
         if hasattr(self, "heartbeat_task") and self.heartbeat_task:
             self.heartbeat_task.cancel()
@@ -152,6 +271,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.init_task
             except asyncio.CancelledError:
                 pass
+            
+        logger.info("[WS] 🧹 Cleanup completed for session %s", getattr(self, 'session_id', 'N/A'))
 
         if hasattr(self, "room_group_name"):
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -175,7 +296,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "session_id": "uuid" (optional)
         }
         """
-        logger.info("WS received message: %s", text_data[:200])
+        logger.info("=" * 60)
+        logger.info("💬 MESSAGE RECEIVED")
+        logger.info(f"   User: {self.user.email if hasattr(self, 'user') else 'Unknown'}")
+        logger.info(f"   Session: {getattr(self, 'session_id', 'N/A')}")
+        logger.info(f"   Message: {text_data[:200]}")
+        logger.info("=" * 60)
 
         # Parse message
         try:
@@ -188,6 +314,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = data.get("message", "").strip()
         message_id = data.get("message_id", str(uuid.uuid4()))
         include_sources = data.get("include_sources", self.include_sources)
+        web_search = data.get("web_search", False)
+
+        logger.info("[WS] 📩 Processing message: '%s...' (ID: %s, web_search: %s)", message[:50], message_id, web_search)
         
         # Use session_id from message payload if provided (for new sessions)
         message_session_id = data.get("session_id")
@@ -274,36 +403,87 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             # Run chat pipeline
             logger.info(
-                "WS calling _process_message: session=%s message_id=%s include_sources=%s",
-                self.session_id, message_id, include_sources
+                "WS calling _process_message: session=%s message_id=%s include_sources=%s web_search=%s",
+                self.session_id, message_id, include_sources, web_search
             )
-            await self._process_message(message, message_id, include_sources)
+            await self._process_message(message, message_id, include_sources, web_search)
         except Exception as exc:
             logger.exception("Chat pipeline error: %s", exc)
             await self._send_error("Processing error. Please try again.", message_id)
 
-    async def _process_message(self, query: str, message_id: str, include_sources: bool):
+    async def _process_message(self, query: str, message_id: str, include_sources: bool, web_search: bool = False):
         """
         Process message with LLM + user context (no RAG).
+        Optionally performs web search using Tavily API.
 
         Steps:
         1. Load user context (lightweight - parallel)
-        2. Stream LLM response
-        3. Save conversation (awaited before response completes)
-        4. Update session metadata (title generation)
-        5. Send stream_end signal
-        
+        2. Perform web search if enabled (Tavily API)
+        3. Stream LLM response with web search results
+        4. Save conversation (awaited before response completes)
+        5. Update session metadata (title generation)
+        6. Send stream_end signal
+
         IMPORTANT: This continues processing even if client disconnects.
         All data is saved to database before attempting to send to client.
         """
         from services.chat.context import UserContextLoader
         from services.chat.session import ChatSession
         from services.llm.qwen_client import get_client
+        
+        # Web search results
+        web_search_results = None
+        search_query = None
 
-        # Track if client is still connected
-        client_connected = True
+        # Step 1: Perform web search if enabled (silent - no UI events)
+        if web_search:
+            try:
+                from services.chat.web_search import perform_web_search, format_web_search_for_prompt
 
-        # Step 1: Load user context (run in parallel for speed)
+                logger.info("WS performing SILENT web search for: %s", query[:100])
+                
+                # Send web search start event
+                try:
+                    await self.send(json.dumps({
+                        "type": "web_search_start",
+                        "message_id": message_id,
+                        "query": query,
+                    }))
+                except Exception:
+                    pass  # Continue even if client disconnected
+
+                # Perform search (no UI events sent)
+                web_search_results = await perform_web_search(query)
+                
+                # Send web search end event with results
+                try:
+                    await self.send(json.dumps({
+                        "type": "web_search_end",
+                        "message_id": message_id,
+                        "success": web_search_results.get('success', False) if web_search_results else False,
+                        "results": web_search_results.get('frontend_results', []) if web_search_results else [],
+                        "query": web_search_results.get('query', query) if web_search_results else query,
+                    }))
+                except Exception:
+                    pass  # Continue even if client disconnected
+
+                if web_search_results and web_search_results.get('success'):
+                    # Format search results for LLM prompt
+                    search_formatted = format_web_search_for_prompt(web_search_results)
+                    enhanced_query = search_formatted + "\n\nUser Question: " + query
+                    logger.info("WS silent web search successful: %d results", len(web_search_results.get('frontend_results', [])))
+                else:
+                    error_msg = web_search_results.get('error', 'Unknown error') if web_search_results else 'Search failed'
+                    logger.warning("WS silent web search failed: %s", error_msg)
+                    enhanced_query = query  # Use original query if search fails
+
+            except Exception as exc:
+                logger.exception("WS silent web search error: %s", exc)
+                enhanced_query = query
+        else:
+            enhanced_query = query
+
+        # Step 2: Load user context (run in parallel for speed)
         context_loader = UserContextLoader()
         try:
             user_context = await asyncio.wait_for(
@@ -326,7 +506,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Step 2: Build context string
         context_string = context_loader.build_context_string(user_context)
 
-        # Step 3: Stream LLM response
+        # Step 4: Stream LLM response (enhanced_query already includes web search if enabled)
         full_response = ""
         client = get_client()
 
@@ -334,7 +514,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "WS stream_start: session=%s message_id=%s",
             self.session_id, message_id
         )
-        
+
+        # Track if client is still connected
+        client_connected = True
+
         # Try to send stream_start, but continue even if client disconnected
         try:
             await self.send(json.dumps({
@@ -347,7 +530,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         try:
             async for token in client.stream_generate(
-                prompt=query,
+                prompt=enhanced_query,
                 context=context_string,
                 max_tokens=2000,
             ):
@@ -405,7 +588,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "WS stream_end: session=%s message_id=%s response_len=%s",
             self.session_id, message_id, len(full_response)
         )
-        
+
         # Try to send stream_end, but continue even if client disconnected
         if client_connected:
             try:
@@ -919,21 +1102,23 @@ Rules:
 class ChatAPIView(APIView):
     """
     REST endpoint fallback for non-WebSocket clients.
-    
+
     POST /api/chat/
     POST /api/chat/{course_id}/
-    
-    Request: {"message": "...", "session_id": "uuid"}
-    Response: {"response": "...", "sources": [...], "session_id": "uuid"}
+
+    Request: {"message": "...", "session_id": "uuid", "web_search": true}
+    Response: {"response": "...", "sources": [...], "session_id": "uuid", "web_search_results": [...]}
     """
     permission_classes = [IsAuthenticated]
 
     async def post(self, request, course_id=None):
         from services.chat.pipeline import run_chat_pipeline, generate_response, save_conversation
+        from services.chat.web_search import perform_web_search, format_web_search_for_prompt
 
         message = request.data.get("message", "").strip()
         session_id = request.data.get("session_id") or str(uuid.uuid4())
         include_sources = request.data.get("include_sources", True)
+        web_search = request.data.get("web_search", False)
 
         if not message:
             return Response({"error": "Empty message"}, status=status.HTTP_400_BAD_REQUEST)
@@ -946,6 +1131,11 @@ class ChatAPIView(APIView):
 
         user_id = str(request.user.id)
 
+        # Perform web search if enabled
+        web_search_result = None
+        if web_search:
+            web_search_result = await perform_web_search(message)
+
         # Run pipeline (non-streaming)
         prompt, sources, metadata = await run_chat_pipeline(
             query=message,
@@ -955,6 +1145,10 @@ class ChatAPIView(APIView):
             course_id=course_id,
             include_sources=include_sources,
         )
+
+        # Inject web search results into prompt
+        if web_search_result and web_search_result.get('success'):
+            prompt = format_web_search_for_prompt(web_search_result) + "\n\n" + prompt
 
         # Generate response
         response = await generate_response(prompt)
@@ -974,4 +1168,7 @@ class ChatAPIView(APIView):
             "sources": sources if include_sources else [],
             "session_id": session_id,
             "metadata": metadata,
+            "web_search_used": web_search,
+            "web_search_results": web_search_result.get('frontend_results', []) if web_search_result and web_search_result.get('success') else [],
+            "search_query": web_search_result.get('query', message) if web_search_result else None,
         })

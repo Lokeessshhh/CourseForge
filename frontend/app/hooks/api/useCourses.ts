@@ -35,6 +35,9 @@ export interface CourseStatus {
       status: 'pending' | 'generating' | 'completed';
     }[];
   }[];
+  // New generation progress fields
+  current_stage?: string;
+  generation_status?: string;
 }
 
 export interface GenerateCourseData {
@@ -43,6 +46,7 @@ export interface GenerateCourseData {
   level: 'beginner' | 'intermediate' | 'advanced';
   goals?: string[];
   hours_per_day?: number;
+  description?: string;  // Optional user-provided description
 }
 
 export interface CourseProgress {
@@ -126,13 +130,28 @@ export function useCourseStatus(id: string, pollInterval = 0) {
 
     const fetchStatus = async () => {
       try {
-        const data = await api.get<CourseStatus>(`/api/courses/${id}/status/`);
-        setStatus(data);
+        // Use the new generation-progress endpoint for real-time updates
+        const data: any = await api.get(`/api/courses/${id}/generation-progress/`);
+        
+        // Map the response to match CourseStatus interface
+        const mappedData: CourseStatus = {
+          id,
+          topic: data.data?.topic || '',
+          status: data.data?.status === 'ready' ? 'completed' : data.data?.status === 'failed' ? 'failed' : 'generating',
+          progress: data.data?.progress || 0,
+          total_days: data.data?.total_days || 0,
+          completed_days: data.data?.completed_days || 0,
+          current_stage: data.data?.current_stage,
+          generation_status: data.data?.generation_status,
+          weeks: data.data?.weeks || [], // Use weeks from backend
+        };
+        
+        setStatus(mappedData);
         setError(null);
         setIsLoading(false);
-        
+
         // Stop polling if completed or failed
-        if (data.status === 'completed' || data.status === 'failed') {
+        if (data.data?.status === 'ready' || data.data?.status === 'failed') {
           if (intervalId) clearInterval(intervalId);
         }
       } catch (err) {
@@ -155,8 +174,19 @@ export function useCourseStatus(id: string, pollInterval = 0) {
   const refetch = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<CourseStatus>(`/api/courses/${id}/status/`);
-      setStatus(data);
+      const data: any = await api.get(`/api/courses/${id}/generation-progress/`);
+      const mappedData: CourseStatus = {
+        id,
+        topic: data.data?.topic || '',
+        status: data.data?.status === 'ready' ? 'completed' : data.data?.status === 'failed' ? 'failed' : 'generating',
+        progress: data.data?.progress || 0,
+        total_days: data.data?.total_days || 0,
+        completed_days: data.data?.completed_days || 0,
+        current_stage: data.data?.current_stage,
+        generation_status: data.data?.generation_status,
+        weeks: data.data?.weeks || [],
+      };
+      setStatus(mappedData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -217,7 +247,7 @@ export function useDeleteCourse() {
     setIsDeleting(true);
     setError(null);
     try {
-      await api.delete(`/api/courses/${id}/`);
+      await api.delete(`/api/courses/${id}/delete/`);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -228,4 +258,83 @@ export function useDeleteCourse() {
   }, [api]);
 
   return { deleteCourse, isDeleting, error };
+}
+
+export interface UpdateCoursePreview {
+  course_id: string;
+  course_name: string;
+  current_duration_weeks: number;
+  new_duration_weeks: number;
+  update_type: string;
+  weeks_to_update: number[];
+  weeks_to_preserve: number[];
+  total_days_affected: number;
+  estimated_new_days: number;
+  requires_confirmation: boolean;
+  user_query?: string;
+}
+
+export interface UpdateCourseData {
+  update_type: 'percentage' | 'extend' | 'compact';
+  user_query: string;
+  web_search_enabled?: boolean;
+  percentage?: 50 | 75;
+  extend_weeks?: number;
+  target_weeks?: number;
+}
+
+export function useUpdateCourse() {
+  const api = useApiClient();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isFetchingPreview, setIsFetchingPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<UpdateCoursePreview | null>(null);
+
+  const getUpdatePreview = useCallback(async (courseId: string, data: UpdateCourseData) => {
+    setIsFetchingPreview(true);
+    setError(null);
+    try {
+      const result = await api.post<UpdateCoursePreview>(`/api/courses/${courseId}/update-preview/`, data);
+      setPreview(result);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      return null;
+    } finally {
+      setIsFetchingPreview(false);
+    }
+  }, [api]);
+
+  const updateCourse = useCallback(async (courseId: string, data: UpdateCourseData) => {
+    setIsUpdating(true);
+    setError(null);
+    try {
+      const result = await api.post<{ 
+        course_id: string; 
+        status: string; 
+        weeks_to_update: number[];
+        new_duration_weeks: number;
+      }>(`/api/courses/${courseId}/update/`, data);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      return null;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [api]);
+
+  const clearPreview = useCallback(() => {
+    setPreview(null);
+  }, []);
+
+  return { 
+    updateCourse, 
+    getUpdatePreview, 
+    clearPreview,
+    isUpdating, 
+    isFetchingPreview, 
+    error,
+    preview 
+  };
 }

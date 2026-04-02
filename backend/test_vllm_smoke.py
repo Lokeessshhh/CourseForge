@@ -2,10 +2,13 @@
 Smoke test for vLLM configuration and connectivity.
 Tests the new vLLM server at http://129.212.187.15:8000
 """
+
 import httpx
+
+
 import json
 
-BASE_URL = "http://134.199.201.125:8000"
+BASE_URL = "http://165.245.139.32:8000"
 
 print('=== vLLM Smoke Test ===')
 print(f'Target: {BASE_URL}')

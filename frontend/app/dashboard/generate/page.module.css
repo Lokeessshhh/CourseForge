@@ -178,6 +178,73 @@
   opacity: 0.6;
 }
 
+/* Progress Bar */
+.progressBarContainer {
+  margin-bottom: 32px;
+  padding: 24px;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--white);
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progressLabel span:first-child {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.progressLabel span:last-child {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.progressBar {
+  width: 100%;
+  height: 20px;
+  background: #e0e0e0;
+  border: 2px solid var(--black);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--black);
+  transition: width 0.3s ease;
+}
+
+.progressDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressDetails span:first-child {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.currentStage {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--black);
+  background: var(--gray);
+  padding: 4px 8px;
+  border: 1px solid var(--black);
+}
+
 .skeletonGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

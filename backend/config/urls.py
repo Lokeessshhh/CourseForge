@@ -134,6 +134,7 @@ urlpatterns = [
     path("api/certificates/",  include("apps.certificates.urls")),
     path("api/webhooks/",      include("apps.users.webhook_urls")),
     path("api/admin/",         include("apps.admin_api.urls")),
+    path("api/chat/",          include("apps.chat.urls")),  # Chat course management
 ]
 
 # Static files for admin

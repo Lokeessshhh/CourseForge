@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useGenerateCourse, useCourseStatus } from '@/app/hooks/api/useCourses';
+import { useGenerationProgress } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import { Skeleton } from '@/app/components/Skeleton';
 import styles from './page.module.css';
 
@@ -38,9 +39,10 @@ function ErrorBox({ message }: { message: string }) {
 function GenerateContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+  const { startGeneration, completeGeneration, dismissGeneration, generatingCourseId } = useGenerationProgress();
+
   const { generate, isGenerating, error: generateError } = useGenerateCourse();
-  
+
   const [courseId, setCourseId] = useState<string | null>(null);
   const [topic, setTopic] = useState(searchParams.get('topic') || '');
   const [duration, setDuration] = useState(searchParams.get('duration') || '2wk');
@@ -51,14 +53,47 @@ function GenerateContent() {
   const [goalInput, setGoalInput] = useState('');
   const [hoursPerDay, setHoursPerDay] = useState(2);
 
+  // Check if navigating from dashboard with existing generating course
+  useEffect(() => {
+    const urlCourseId = searchParams.get('id');
+    if (urlCourseId) {
+      console.log('[Generate] Found course ID in URL:', urlCourseId);
+      setCourseId(urlCourseId);
+    } else if (generatingCourseId) {
+      console.log('[Generate] Using generating course ID from context:', generatingCourseId);
+      setCourseId(generatingCourseId);
+    }
+  }, [searchParams, generatingCourseId]);
+
   // Poll for status updates when courseId is set
   const { status, isLoading: statusLoading, error: statusError } = useCourseStatus(
     courseId || '',
-    courseId ? 3000 : 0 // Poll every 3 seconds
+    courseId ? 2000 : 0 // Poll every 2 seconds for faster updates
   );
 
-  const isComplete = status?.status === 'completed';
+  const isComplete = status?.status === 'completed' || status?.generation_status === 'ready';
   const isFailed = status?.status === 'failed' || generateError || statusError;
+
+  // Notify provider when generation starts
+  useEffect(() => {
+    if (courseId && !isComplete && !isFailed) {
+      console.log('[Generate] Starting generation tracking for:', courseId);
+      startGeneration(courseId);
+    }
+  }, [courseId, isComplete, isFailed, startGeneration]);
+
+  // When generation completes, redirect to DASHBOARD (not course page)
+  // Dashboard will detect the generating course via polling and show SSE toast
+  useEffect(() => {
+    if (isComplete && courseId) {
+      console.log('[Generate] Generation complete, redirecting to dashboard');
+      // Redirect to dashboard where polling will detect the generating course
+      const timer = setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isComplete, courseId, router]);
 
   const handleAddGoal = () => {
     if (goalInput.trim() && goals.length < 5) {
@@ -75,7 +110,7 @@ function GenerateContent() {
     if (!topic.trim()) return;
 
     const durationWeeks = durations.find(d => d.value === duration)?.weeks || 2;
-    
+
     const result = await generate({
       course_name: topic,
       duration_weeks: durationWeeks,
@@ -86,6 +121,8 @@ function GenerateContent() {
 
     if (result?.id) {
       setCourseId(result.id);
+      // Start progress tracking immediately
+      startGeneration(result.id);
     }
   };
 
@@ -111,9 +148,42 @@ function GenerateContent() {
           </div>
           
           <h1 className={styles.courseTopic}>{status.topic}</h1>
-          
+
           <div className={styles.progressInfo}>
-            WEEK {Math.ceil((status.completed_days || 0) / 5)} OF {status.weeks?.length || 0} · {status.completed_days || 0}/{status.total_days || 0} DAYS READY
+            {status.current_stage || (() => {
+              const totalWeeks = Math.ceil((status.total_days || 0) / 7);
+              const currentWeek = Math.ceil((status.completed_days || 0) / 7);
+              return `WEEK ${currentWeek} OF ${totalWeeks} · ${status.completed_days || 0}/${status.total_days || 0} TASKS COMPLETE`;
+            })()}
+          </div>
+
+          {/* Progress Bar */}
+          <div className={styles.progressBarContainer}>
+            <div className={styles.progressLabel}>
+              <span>GENERATION PROGRESS</span>
+              <span>{status.progress || 0}%</span>
+            </div>
+            <div className={styles.progressBar}>
+              <motion.div
+                className={styles.progressFill}
+                initial={{ width: 0 }}
+                animate={{ width: `${status.progress || 0}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <div className={styles.progressDetails}>
+              {(() => {
+                const totalWeeks = Math.round((status.total_days || 0) / 7);
+                const totalDayTasks = totalWeeks * 5;
+                const totalTestTasks = totalWeeks * 2;
+                return (
+                  <span>{status.completed_days || 0} of {totalDayTasks} days + {totalTestTasks} tests completed</span>
+                );
+              })()}
+              {status.current_stage && (
+                <span className={styles.currentStage}>{status.current_stage}</span>
+              )}
+            </div>
           </div>
           
           <div className={styles.skeletonGrid}>
@@ -136,7 +206,7 @@ function GenerateContent() {
                         <span className={styles.pulseAnimation}>...</span>
                       )}
                       {day.status === 'pending' && (
-                        <span className={styles.lockedIcon}>🔒</span>
+                        <span className={styles.lockedIcon}>LOCK</span>
                       )}
                     </motion.div>
                   ))}

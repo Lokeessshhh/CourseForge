@@ -135,6 +135,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for list endpoint (no nested weeks)."""
     total_days = serializers.ReadOnlyField()
     generation_status = serializers.CharField(read_only=True)
+    generation_progress = serializers.IntegerField(read_only=True)
     progress = serializers.SerializerMethodField()
     current_week = serializers.SerializerMethodField()
     current_day = serializers.SerializerMethodField()
@@ -143,7 +144,7 @@ class CourseListSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "course_name", "topic", "level", "duration_weeks", "hours_per_day",
-            "goals", "status", "generation_status", "total_days", "created_at",
+            "goals", "status", "generation_status", "generation_progress", "total_days", "created_at",
             "progress", "current_week", "current_day",
         ]
         read_only_fields = ["id", "topic", "created_at", "progress", "current_week", "current_day"]
@@ -231,6 +232,12 @@ class CourseGenerateSerializer(serializers.Serializer):
         default=list,
         help_text="Learning goals (optional)"
     )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Optional user-provided course description/requirements"
+    )
 
 
 class CodingProblemSerializer(serializers.Serializer):
@@ -279,3 +286,87 @@ class CourseStatusSerializer(serializers.Serializer):
     progress = serializers.CharField()
     total_days = serializers.IntegerField()
     days_filled = serializers.IntegerField()
+
+
+class CourseUpdateSerializer(serializers.Serializer):
+    """Serializer for course update requests."""
+    update_type = serializers.ChoiceField(
+        choices=["percentage", "extend", "compact"],
+        help_text="Type of update: percentage (replace 50%/75%), extend (add weeks), compact (compress course)"
+    )
+    user_query = serializers.CharField(
+        max_length=2000,
+        help_text="User's update request (what to add/modify in the course)"
+    )
+    web_search_enabled = serializers.BooleanField(
+        required=False,
+        default=True,
+        help_text="Whether to use web search for updated content"
+    )
+    percentage = serializers.IntegerField(
+        required=False,
+        help_text="Percentage for 'percentage' update type (50 or 75)"
+    )
+    extend_weeks = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=52,
+        help_text="Number of weeks to add for 'extend' update type"
+    )
+    target_weeks = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=52,
+        help_text="Target number of weeks for 'compact' update type"
+    )
+
+    def validate(self, data):
+        update_type = data.get("update_type")
+
+        # Validate based on update type
+        if update_type == "percentage":
+            percentage = data.get("percentage")
+            if not percentage:
+                raise serializers.ValidationError({
+                    "percentage": "percentage must be 50 or 75 for percentage update type"
+                })
+            if percentage not in [50, 75]:
+                raise serializers.ValidationError({
+                    "percentage": "percentage must be 50 or 75"
+                })
+
+        elif update_type == "extend":
+            extend_weeks = data.get("extend_weeks")
+            if not extend_weeks or extend_weeks < 1:
+                raise serializers.ValidationError({
+                    "extend_weeks": "extend_weeks must be at least 1 for extend update type"
+                })
+
+        elif update_type == "compact":
+            target_weeks = data.get("target_weeks")
+            if not target_weeks or target_weeks < 1:
+                raise serializers.ValidationError({
+                    "target_weeks": "target_weeks is required for compact update type"
+                })
+
+        return data
+
+
+class CourseUpdatePreviewSerializer(serializers.Serializer):
+    """Serializer for course update preview response."""
+    course_id = serializers.UUIDField()
+    course_name = serializers.CharField()
+    current_duration_weeks = serializers.IntegerField()
+    new_duration_weeks = serializers.IntegerField()
+    update_type = serializers.CharField()
+    weeks_to_update = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="List of week numbers that will be updated/added"
+    )
+    weeks_to_preserve = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="List of week numbers that will remain unchanged"
+    )
+    total_days_affected = serializers.IntegerField()
+    estimated_new_days = serializers.IntegerField()
+    requires_confirmation = serializers.BooleanField()

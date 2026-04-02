@@ -206,10 +206,53 @@
   gap: 8px;
 }
 
+.courseHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
 .courseName {
   font-family: var(--font-heading);
   font-size: 32px;
   font-weight: 700;
+  flex: 1;
+}
+
+.deleteCourseBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.deleteCourseBtn:hover:not(:disabled) {
+  background: var(--black);
+  color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
+}
+
+.deleteCourseBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleting {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .courseMeta {
@@ -370,4 +413,120 @@
     flex-wrap: wrap;
     gap: 16px;
   }
+}
+
+/* Delete Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0px var(--black);
+  max-width: 450px;
+  width: 100%;
+}
+
+.modalContent {
+  padding: 24px;
+  border-bottom: 2px solid var(--black);
+}
+
+.modalTitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0 0 12px 0;
+  color: var(--black);
+}
+
+.modalText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--black);
+  margin: 0 0 8px 0;
+}
+
+.modalWarning {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--black);
+  opacity: 0.7;
+  margin: 0;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  justify-content: flex-end;
+}
+
+.modalCancelBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modalCancelBtn:hover:not(:disabled) {
+  background: var(--gray);
+}
+
+.modalCancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalDeleteBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modalDeleteBtn:hover:not(:disabled) {
+  background: var(--white);
+  color: var(--black);
+}
+
+.modalDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalDeleteBtn.deleting {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }

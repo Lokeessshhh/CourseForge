@@ -748,20 +748,22 @@ async def run_quiz_flow(inputs: dict) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def run_course_flow_sync(inputs: dict) -> dict:
-    """Synchronous wrapper for course flow."""
+    """Synchronous wrapper for course flow. ALWAYS creates fresh event loop."""
+    # Always create a fresh event loop for Celery tasks
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(run_course_flow(inputs))
+        return loop.run_until_complete(run_course_flow(inputs))
+    finally:
+        loop.close()
 
 
 def run_quiz_flow_sync(inputs: dict) -> dict:
-    """Synchronous wrapper for quiz flow."""
+    """Synchronous wrapper for quiz flow. ALWAYS creates fresh event loop."""
+    # Always create a fresh event loop for Celery tasks
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(run_quiz_flow(inputs))
+        return loop.run_until_complete(run_quiz_flow(inputs))
+    finally:
+        loop.close()

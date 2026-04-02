@@ -47,7 +47,7 @@ function LockedCertificate({ courseId }: { courseId: string }) {
         >
           <div className={`${styles.certificate} ${styles.locked}`}>
             <div className={styles.lockOverlay}>
-              <span className={styles.lockIcon}>🔒</span>
+              <span className={styles.lockIcon}>LOCK</span>
               <h3 className={styles.lockTitle}>CERTIFICATE LOCKED</h3>
               <p className={styles.lockSubtitle}>Complete the course to unlock your certificate</p>
             </div>
@@ -71,7 +71,7 @@ function LockedCertificate({ courseId }: { courseId: string }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <h3 className={styles.panelTitle}>🔒 LOCKED</h3>
+          <h3 className={styles.panelTitle}>LOCKED</h3>
           
           <div className={styles.lockedInfo}>
             <p className={styles.lockedText}>
@@ -293,7 +293,7 @@ export default function CertificatePage() {
 
           <div className={styles.verificationInfo}>
             <p className={styles.verificationText}>
-              🔒 This certificate can be verified at:
+              LOCK This certificate can be verified at:
             </p>
             <code className={styles.verificationUrl}>
               /verify/{certificate.certificate_id}

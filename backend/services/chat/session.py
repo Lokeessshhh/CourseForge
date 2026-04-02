@@ -266,7 +266,74 @@ class ChatSession:
             if msg["role"] == "assistant":
                 return msg
         return None
-    
+
+    def add_generating_course(self, course_id: str, course_name: str) -> None:
+        """
+        Add a course ID to the list of generating courses for this session.
+
+        Args:
+            course_id: Course UUID
+            course_name: Course name
+        """
+        if "generating_courses" not in self.metadata:
+            self.metadata["generating_courses"] = {}
+
+        self.metadata["generating_courses"][course_id] = {
+            "course_name": course_name,
+            "started_at": timezone.now().isoformat(),
+            "status": "generating",
+        }
+        self.last_activity = timezone.now()
+
+    def update_generating_course_status(self, course_id: str, status: str, progress: int = 0) -> None:
+        """
+        Update the status of a generating course.
+
+        Args:
+            course_id: Course UUID
+            status: Status (generating/ready/failed)
+            progress: Progress percentage (0-100)
+        """
+        if "generating_courses" not in self.metadata:
+            return
+
+        if course_id in self.metadata["generating_courses"]:
+            self.metadata["generating_courses"][course_id]["status"] = status
+            self.metadata["generating_courses"][course_id]["progress"] = progress
+            if status in ("ready", "failed"):
+                self.metadata["generating_courses"][course_id]["completed_at"] = timezone.now().isoformat()
+        self.last_activity = timezone.now()
+
+    def remove_generating_course(self, course_id: str) -> None:
+        """
+        Remove a course from the generating list.
+
+        Args:
+            course_id: Course UUID
+        """
+        if "generating_courses" in self.metadata and course_id in self.metadata["generating_courses"]:
+            del self.metadata["generating_courses"][course_id]
+        self.last_activity = timezone.now()
+
+    def get_generating_courses(self) -> Dict[str, Any]:
+        """
+        Get all generating courses for this session.
+
+        Returns:
+            Dictionary of course_id -> course info
+        """
+        return self.metadata.get("generating_courses", {})
+
+    @staticmethod
+    def get_redis() -> redis.Redis:
+        """
+        Get the Redis client.
+        
+        Returns:
+            Redis client instance
+        """
+        return get_redis()
+
     async def clear(self) -> bool:
         """
         Clear session messages (keep session alive).

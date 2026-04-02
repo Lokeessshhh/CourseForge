@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useApiClient } from '@/app/hooks/useApiClient';
 import { useCourse, useCourseProgress, useWeekPlans } from '@/app/hooks/api';
 import styles from './page.module.css';
 
@@ -38,11 +39,16 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
 
 export default function CoursePage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.id as string;
+  const api = useApiClient();
 
   const { data: course, isLoading: courseLoading, error: courseError, refetch: refetchCourse } = useCourse(courseId);
   const { data: progress, isLoading: progressLoading, error: progressError, refetch: refetchProgress } = useCourseProgress(courseId);
   const { data: weekPlans, isLoading: weeksLoading, error: weeksError } = useWeekPlans(courseId);
+
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isLoading = courseLoading || progressLoading || weeksLoading;
   const hasError = courseError || progressError || weeksError;
@@ -58,15 +64,28 @@ export default function CoursePage() {
     }
   }, [course?.current_week, progress?.current_week]);
 
+  const handleDeleteCourse = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/api/courses/${courseId}/delete/`);
+      router.push('/dashboard/courses');
+    } catch (err) {
+      alert('Failed to delete course');
+      console.error('Delete course error:', err);
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (isLoading) return <LoadingSkeleton />;
   if (hasError) {
     return (
-      <ErrorBox 
-        message={courseError || progressError || 'Unknown error'} 
+      <ErrorBox
+        message={courseError || progressError || 'Unknown error'}
         onRetry={() => {
           refetchCourse();
           refetchProgress();
-        }} 
+        }}
       />
     );
   }
@@ -114,6 +133,42 @@ export default function CoursePage() {
 
   return (
     <div className={styles.page}>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay}>
+          <motion.div
+            className={styles.modal}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>DELETE COURSE</h3>
+              <p className={styles.modalText}>
+                This will permanently delete "{course.course_name}" and all progress, quizzes, tests, and certificates.
+              </p>
+              <p className={styles.modalWarning}>This action cannot be undone.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelBtn}
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                CANCEL
+              </button>
+              <button
+                className={`${styles.modalDeleteBtn} ${deleting ? styles.deleting : ''}`}
+                onClick={handleDeleteCourse}
+                disabled={deleting}
+              >
+                {deleting ? 'DELETING...' : 'DELETE'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
         <Link href="/dashboard">DASHBOARD</Link>
@@ -156,7 +211,7 @@ export default function CoursePage() {
                         className={`${styles.dayItem} ${day.completed ? styles.completed : ''} ${currentWeek === weekData.week && currentDay === day.day ? styles.current : ''} ${day.locked ? styles.locked : ''}`}
                       >
                         <span className={styles.dayBox}>
-                          {day.completed ? '■' : day.locked ? '🔒' : '□'}
+                          {day.completed ? '■' : day.locked ? 'LOCK' : '□'}
                         </span>
                         <span className={styles.dayText}>
                           Day {day.day}: {day.title}
@@ -190,7 +245,19 @@ export default function CoursePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h1 className={styles.courseName}>{course.course_name}</h1>
+            <div className={styles.courseHeaderTop}>
+              <h1 className={styles.courseName}>{course.course_name}</h1>
+              <motion.button
+                className={`${styles.deleteCourseBtn} ${deleting ? styles.deleting : ''}`}
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Delete course"
+              >
+                {deleting ? 'DELETING...' : 'DELETE COURSE'}
+              </motion.button>
+            </div>
             <div className={styles.courseMeta}>
               <span className={styles.topic}>{course.topic}</span>
               <span className={styles.divider}>·</span>

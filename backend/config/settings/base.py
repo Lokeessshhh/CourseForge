@@ -48,6 +48,7 @@ if _HAS_DRF_SPECTACULAR:
     THIRD_PARTY_APPS.insert(2, "drf_spectacular")
 
 LOCAL_APPS = [
+    "apps.core",  # Core utilities and management commands (must be first)
     "apps.users",
     "apps.courses",
     "apps.rag",
@@ -56,6 +57,7 @@ LOCAL_APPS = [
     "apps.certificates",
     "apps.cache",
     "apps.websockets",
+    "apps.chat",  # Chat course management
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -288,6 +290,9 @@ EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "384"))
 # External APIs
 # ──────────────────────────────────────────────
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
+TAVILY_SEARCH_DEPTH = os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")  # basic, advanced, fast, ultra-fast
+TAVILY_MAX_RESULTS = int(os.environ.get("TAVILY_MAX_RESULTS", "5"))
+
 JUDGE0_API_URL = os.environ.get("JUDGE0_API_URL", "https://judge0.example.com")
 JUDGE0_API_KEY = os.environ.get("JUDGE0_API_KEY", "")
 
@@ -299,7 +304,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "format": "{levelname} {asctime} {module} {message}",
             "style": "{",
         },
         "simple": {
@@ -325,12 +330,12 @@ LOGGING = {
         },
         "apps": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "INFO",  # Changed from DEBUG to INFO for cleaner logs
             "propagate": False,
         },
         "services": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "INFO",  # Changed from DEBUG to INFO for cleaner logs
             "propagate": False,
         },
     },

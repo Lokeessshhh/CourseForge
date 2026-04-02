@@ -4,6 +4,7 @@ All course CRUD + AI generation + progress.
 """
 import logging
 from django.utils import timezone
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -66,6 +67,7 @@ def course_generate(request):
         user=user,
         course_name=data["course_name"],
         topic=data["course_name"],  # Will be updated by Celery task
+        description=data.get("description"),  # Optional user-provided description
         level=data.get("level", "beginner"),
         duration_weeks=duration_weeks,
         hours_per_day=data.get("hours_per_day", 2),
@@ -120,6 +122,7 @@ def course_generate(request):
         duration_weeks=duration_weeks,
         level=data.get("level", "beginner"),
         goals=data.get("goals", []),
+        description=data.get("description"),  # Pass optional description to task
     )
 
     # Return course_id instantly - user can create another course immediately
@@ -130,7 +133,7 @@ def course_generate(request):
         "duration_weeks": duration_weeks,
         "total_days": duration_weeks * 5,
         "status": "generating",
-        "message": "Course creation started. Poll /api/courses/{id}/status/ for progress.",
+        "message": "Course creation started. Poll /api/courses/{id}/generation-progress/ for progress.",
     }, status.HTTP_202_ACCEPTED)
 
 
@@ -175,6 +178,37 @@ def course_status(request, course_id):
 
 
 # ──────────────────────────────────────────────
+# POST /api/courses/{id}/cancel-generation/
+# ──────────────────────────────────────────────
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def course_cancel_generation(request, course_id):
+    """
+    Cancel course generation or update and delete the course.
+    Stops the generation/update process and removes the course.
+    """
+    try:
+        course = Course.objects.get(id=course_id, user=request.user)
+    except Course.DoesNotExist:
+        return _err("Course not found.", status.HTTP_404_NOT_FOUND)
+
+    # Check if course is still generating or updating
+    if course.generation_status not in ["generating", "updating"]:
+        return _err("Course is not currently being generated or updated.", status.HTTP_400_BAD_REQUEST)
+
+    # Delete the course (this stops generation/update)
+    course_name = course.course_name
+    course.delete()
+
+    logger.info("Cancelled course generation/update: %s (ID: %s)", course_name, course_id)
+
+    return _ok({
+        "message": f"Course {'update' if course.generation_status == 'updating' else 'generation'} for '{course_name}' has been cancelled.",
+        "course_id": str(course_id),
+    })
+
+
+# ──────────────────────────────────────────────
 # GET /api/courses/{id}/
 # ──────────────────────────────────────────────
 @api_view(["GET"])
@@ -200,6 +234,234 @@ def course_delete(request, course_id):
         return _err("Course not found.", status.HTTP_404_NOT_FOUND)
     course.delete()
     return _ok({"deleted": str(course_id)})
+
+
+# ──────────────────────────────────────────────
+# POST /api/courses/{id}/update-preview/
+# ──────────────────────────────────────────────
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def course_update_preview(request, course_id):
+    """
+    Get preview of course update without making changes.
+    Shows which weeks will be updated/added and what will be preserved.
+
+    Request:
+    {
+        "update_type": "50%" | "75%" | "extend_50%",
+        "user_query": "Add Django REST framework and deployment"
+    }
+
+    Response:
+    {
+        "course_id": "uuid",
+        "course_name": "Python",
+        "current_duration_weeks": 4,
+        "new_duration_weeks": 4,
+        "update_type": "percentage",
+        "weeks_to_update": [3, 4],
+        "weeks_to_preserve": [1, 2],
+        "total_days_affected": 10,
+        "estimated_new_days": 10,
+        "requires_confirmation": true
+    }
+    """
+    from .serializers import CourseUpdateSerializer
+
+    serializer = CourseUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return _err(serializer.errors)
+
+    data = serializer.validated_data
+    update_type = data["update_type"]
+    user_query = data["user_query"]
+
+    try:
+        course = Course.objects.get(id=course_id, user=request.user)
+    except Course.DoesNotExist:
+        return _err("Course not found.", status.HTTP_404_NOT_FOUND)
+
+    current_weeks = course.duration_weeks
+    weeks_to_update = []
+    weeks_to_preserve = []
+    new_duration_weeks = current_weeks
+
+    # Calculate which weeks will be affected based on update type
+    if update_type == "percentage":
+        percentage = data.get("percentage", 50)
+        # Replace last X% of weeks
+        split_point = max(1, int(current_weeks * (1 - percentage / 100)))
+        weeks_to_preserve = list(range(1, split_point + 1))
+        weeks_to_update = list(range(split_point + 1, current_weeks + 1))
+    elif update_type == "extend":
+        # Keep all weeks, add more weeks
+        extend_weeks = data.get("extend_weeks", 1)
+        weeks_to_preserve = list(range(1, current_weeks + 1))
+        new_duration_weeks = current_weeks + extend_weeks
+        weeks_to_update = list(range(current_weeks + 1, new_duration_weeks + 1))
+    elif update_type == "compact":
+        # Compress entire course into fewer weeks
+        target_weeks = data.get("target_weeks", current_weeks)
+        # Validate target_weeks is less than current duration
+        if target_weeks >= current_weeks:
+            return _err("Target weeks must be less than current course duration for compact update", status.HTTP_400_BAD_REQUEST)
+        new_duration_weeks = target_weeks
+        # For compact, we only regenerate the target number of weeks
+        # The content from all existing weeks will be analyzed and compressed
+        weeks_to_preserve = []
+        weeks_to_update = list(range(1, target_weeks + 1))  # Only regenerate target weeks
+
+    total_days_affected = len(weeks_to_update) * 5
+    estimated_new_days = total_days_affected
+
+    return _ok({
+        "course_id": str(course_id),
+        "course_name": course.course_name,
+        "current_duration_weeks": current_weeks,
+        "new_duration_weeks": new_duration_weeks,
+        "update_type": update_type,
+        "weeks_to_update": weeks_to_update,
+        "weeks_to_preserve": weeks_to_preserve,
+        "total_days_affected": total_days_affected,
+        "estimated_new_days": estimated_new_days,
+        "requires_confirmation": True,
+        "user_query": user_query,
+    })
+
+
+# ──────────────────────────────────────────────
+# POST /api/courses/{id}/update/
+# ──────────────────────────────────────────────
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def course_update(request, course_id):
+    """
+    Update an existing course with new content.
+    Fires Celery task to regenerate specified weeks.
+
+    Request:
+    {
+        "update_type": "percentage" | "extend" | "compact",
+        "percentage": 50 | 75,  // for percentage type
+        "extend_weeks": 6,      // for extend type
+        "target_weeks": 4,      // for compact type
+        "user_query": "Add Django REST framework and deployment",
+        "web_search_enabled": true
+    }
+
+    Response:
+    {
+        "course_id": "uuid",
+        "status": "updating",
+        "message": "Course update started",
+        "update_type": "percentage",
+        "weeks_to_update": [3, 4],
+        "new_duration_weeks": 4
+    }
+    """
+    from .serializers import CourseUpdateSerializer
+    from .models import CourseProgress
+
+    serializer = CourseUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return _err(serializer.errors)
+
+    data = serializer.validated_data
+    update_type = data["update_type"]
+    user_query = data["user_query"]
+    web_search_enabled = data.get("web_search_enabled", True)
+
+    try:
+        course = Course.objects.get(id=course_id, user=request.user)
+    except Course.DoesNotExist:
+        return _err("Course not found.", status.HTTP_404_NOT_FOUND)
+
+    # Check if course is ready for update
+    if course.generation_status == "generating":
+        return _err("Course is still being generated. Please wait for completion.", status.HTTP_400_BAD_REQUEST)
+
+    current_weeks = course.duration_weeks
+    new_duration_weeks = current_weeks
+    weeks_to_update = []
+
+    # Calculate which weeks will be affected
+    if update_type == "percentage":
+        percentage = data.get("percentage", 50)
+        split_point = max(1, int(current_weeks * (1 - percentage / 100)))
+        weeks_to_update = list(range(split_point + 1, current_weeks + 1))
+    elif update_type == "extend":
+        extend_weeks = data.get("extend_weeks", 1)
+        new_duration_weeks = current_weeks + extend_weeks
+        weeks_to_update = list(range(current_weeks + 1, new_duration_weeks + 1))
+
+        # Update course duration
+        course.duration_weeks = new_duration_weeks
+        course.save(update_fields=["duration_weeks"])
+
+        # Update CourseProgress
+        CourseProgress.objects.filter(course=course).update(
+            total_days=new_duration_weeks * 5,
+            total_weeks=new_duration_weeks,
+        )
+    elif update_type == "compact":
+        target_weeks = data.get("target_weeks", current_weeks)
+        # Validate target_weeks is less than current duration
+        if target_weeks >= current_weeks:
+            return _err("Target weeks must be less than current course duration for compact update", status.HTTP_400_BAD_REQUEST)
+        new_duration_weeks = target_weeks
+        # For compact, only regenerate the target number of weeks
+        # All existing content will be analyzed and compressed into these weeks
+        weeks_to_update = list(range(1, target_weeks + 1))
+
+        # Update course duration
+        course.duration_weeks = new_duration_weeks
+        course.save(update_fields=["duration_weeks"])
+
+        # Update CourseProgress
+        CourseProgress.objects.filter(course=course).update(
+            total_days=new_duration_weeks * 5,
+            total_weeks=new_duration_weeks,
+        )
+
+    # Update course status
+    course.generation_status = "updating"
+    course.generation_progress = 0
+    course.save(update_fields=["generation_status", "generation_progress"])
+
+    # Calculate total days being updated (for frontend progress display)
+    total_days_being_updated = len(weeks_to_update) * 5
+
+    # Fire Celery task for update
+    from apps.courses.tasks import update_course_content_task
+    update_course_content_task.delay(
+        course_id=str(course.id),
+        course_name=course.course_name,
+        topic=course.topic or course.course_name,
+        level=course.level,
+        goals=course.goals or [],
+        description=course.description,
+        update_type=update_type,
+        user_query=user_query,
+        weeks_to_update=weeks_to_update,
+        new_duration_weeks=new_duration_weeks,
+        web_search_enabled=web_search_enabled,
+        target_weeks=data.get("target_weeks"),  # Pass for compact update
+        percentage=data.get("percentage", 50),  # Pass for percentage update
+    )
+
+    logger.info("Course update started: %s (ID: %s) - Type: %s, Weeks to update: %s",
+                course.course_name, course.id, update_type, weeks_to_update)
+
+    return _ok({
+        "course_id": str(course_id),
+        "course_name": course.course_name,
+        "status": "updating",
+        "message": "Course update started. Poll /api/courses/{id}/generation-progress/ for progress.",
+        "update_type": update_type,
+        "weeks_to_update": weeks_to_update,
+        "new_duration_weeks": new_duration_weeks,
+        "total_days_being_updated": total_days_being_updated,  # For frontend progress display
+    }, status.HTTP_202_ACCEPTED)
 
 
 # ──────────────────────────────────────────────
@@ -460,9 +722,18 @@ def day_quiz(request, course_id, week_number, day_number):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def day_quiz_submit(request, course_id, week_number, day_number):
-    """Submit quiz answers and get results."""
+    """
+    Submit quiz answers and get results.
+    
+    Business Logic:
+    - Day requires 3 quiz attempts to be marked complete
+    - Day completes regardless of score after 3 attempts
+    - Weekly test unlocks after all 5 days complete
+    - Next day unlocks after current day completes
+    """
     from apps.quizzes.models import QuizQuestion, QuizAttempt
     from .serializers import QuizSubmitSerializer
+    from services.course.completion import get_completion_service
 
     serializer = QuizSubmitSerializer(data=request.data)
     if not serializer.is_valid():
@@ -493,26 +764,17 @@ def day_quiz_submit(request, course_id, week_number, day_number):
     correct_count = 0
     total = questions.count()
 
-    # Map numeric keys if needed (frontend sends [0, 1, 2] usually)
-    # The keys in the request body 'answers' might be "1", "2", "3" or indices
     for i, question in enumerate(questions):
-        # Check both index-based and 1-based string keys
         user_answer_idx = answers.get(str(i)) if str(i) in answers else answers.get(str(i + 1))
-        
-        # If the frontend sends an array, it might be indices
+
         if user_answer_idx is None and isinstance(answers, list) and i < len(answers):
             user_answer_idx = answers[i]
 
-        # Convert index (0, 1, 2, 3) to letter (a, b, c, d) if needed
-        # Or compare directly if the model stores letters
-        # Let's check what correct_answer stores. Usually it's a letter.
-        # Options are usually a list.
-        
         user_answer_letter = ""
         if user_answer_idx is not None:
             try:
                 idx = int(user_answer_idx)
-                user_answer_letter = chr(97 + idx) # 0 -> 'a'
+                user_answer_letter = chr(97 + idx)
             except (ValueError, TypeError):
                 user_answer_letter = str(user_answer_idx).lower()
 
@@ -539,84 +801,53 @@ def day_quiz_submit(request, course_id, week_number, day_number):
 
     # Calculate score
     percentage = round((correct_count / total * 100), 1) if total > 0 else 0
-    # ALWAYS pass the quiz regardless of score, as requested by user
-    passed = True 
-
-    # Update day score and status
-    day.quiz_score = percentage
-    day.quiz_attempts += 1
-    day.is_completed = True
-    day.completed_at = timezone.now()
-    day.save(update_fields=["quiz_score", "quiz_attempts", "is_completed", "completed_at"])
-
-    # Use tracker to handle progress updates and weekly test unlock
-    from services.progress.tracker import get_tracker
-    tracker = get_tracker()
-    tracker_result = tracker.complete_day(
+    
+    # Get current quiz attempts count for this day
+    current_attempts = QuizAttempt.objects.filter(
+        user=request.user,
+        question__course=course,
+        question__week_number=week_number,
+        question__day_number=day_number,
+    ).count()
+    
+    # Use completion service for production-grade logic
+    completion_service = get_completion_service()
+    completion_result = completion_service.complete_day(
         user_id=str(request.user.id),
-        course_id=course_id,
+        course_id=str(course.id),
         week_number=week_number,
         day_number=day_number,
         quiz_score=percentage,
-        time_spent=0,  # We don't track time spent on quiz
+        quiz_attempts=current_attempts,
+        time_spent_minutes=0,
     )
 
-    logger.info(f"Quiz submit: Tracker result - week_test_unlocked={tracker_result.get('week_test_unlocked', False)}")
+    logger.info(f"Quiz submit: Completion result - {completion_result}")
 
-    # Update CourseProgress (tracker already handles this, but keep for compatibility)
-    from .models import CourseProgress
-    cp, _ = CourseProgress.objects.get_or_create(user=request.user, course=course)
-    
-    # Recalculate completed days
-    all_completed = DayPlan.objects.filter(week_plan__course=course, is_completed=True).count()
-    logger.info(f"Quiz submit: Found {all_completed} completed days for course {course.id}")
-    cp.completed_days = all_completed
-    
-    # Calculate percentage
-    total_days = course.total_days
-    logger.info(f"Quiz submit: Total days for course {course.id}: {total_days}")
-    if total_days > 0:
-        cp.overall_percentage = round((all_completed / total_days) * 100, 1)
-        logger.info(f"Quiz submit: Calculated percentage: {cp.overall_percentage}%")
-    else:
-        logger.warning(f"Quiz submit: total_days is 0 for course {course.id}")
-    
-    # Update current position to next day
-    if day_number < 5:
-        cp.current_day = day_number + 1
-        cp.current_week = week_number
-    else:
-        cp.current_day = 1
-        cp.current_week = week_number + 1
-        
-    cp.last_activity = timezone.now()
-    cp.save()
-    
-    # DEBUG: Log progress update
-    logger.info(
-        f"Progress updated for user {request.user.id}, course {course.id}: "
-        f"completed_days={cp.completed_days}, overall_percentage={cp.overall_percentage}, "
-        f"current_week={cp.current_week}, current_day={cp.current_day}"
-    )
-
-    # Check if entire week is done
-    if not week.days.filter(is_completed=False).exists():
-        week.is_completed = True
-        week.save(update_fields=["is_completed"])
-
-    # ALWAYS unlock next day
-    from .tasks import unlock_next_day
-    unlock_next_day.delay(str(course.id), week_number, day_number)
-
-    return _ok({
-        "score": correct_count,
-        "total": total,
-        "percentage": percentage,
-        "passed": passed,
+    # Prepare response
+    response_data = {
         "results": results,
-        "day_unlocked": True,
-        "next_day_unlocked": True,
-    })
+        "score": percentage,
+        "total": total,
+        "correct": correct_count,
+        "passed": True,  # Always pass as per requirement
+        "day_completed": completion_result.get("day_completed", False),
+        "quiz_attempts": current_attempts,
+        "attempts_remaining": completion_result.get("attempts_remaining", 0),
+    }
+
+    # Add completion bonuses if day is complete
+    if completion_result.get("day_completed"):
+        response_data.update({
+            "week_test_unlocked": completion_result.get("week_test_unlocked", False),
+            "next_day_unlocked": completion_result.get("next_day_unlocked", False),
+            "streak_days": completion_result.get("streak_days", 0),
+            "overall_percentage": completion_result.get("overall_percentage", 0),
+            "current_week": completion_result.get("current_week", 0),
+            "current_day": completion_result.get("current_day", 0),
+        })
+
+    return _ok(response_data)
 
 
 # ──────────────────────────────────────────────
@@ -817,9 +1048,12 @@ def week_test_submit(request, course_id, week_number):
             course_id=course_id,
             week_number=week_number,
             test_score=percentage,
+            passed=passed,  # NEW: Pass the passed parameter
         )
         next_week_unlocked = result.get("next_week_unlocked", False)
         logger.info(f"Weekly test submit: Week completed, next_week_unlocked={next_week_unlocked}")
+    else:
+        logger.warning(f"Weekly test failed: score={percentage}%, required=60%")
 
     return _ok({
         "score": correct_count,

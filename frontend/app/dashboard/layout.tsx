@@ -2,22 +2,24 @@
 
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/dashboard/Sidebar/Sidebar';
 import BottomBar from '../components/dashboard/BottomBar/BottomBar';
 import { ToastProvider } from '../components/Toast';
+import { GenerationProgressProvider } from '../context/GenerationProgressContext';
+import GlobalGenerationToastWrapper from '../components/GenerationProgressToast/GlobalGenerationToastWrapper';
 import { SidebarSkeleton } from '../components/Skeleton';
 import styles from './layout.module.css';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Check if current page is chat (full-page layout)
+  const isChatPage = pathname === '/dashboard/chat';
 
   // Redirect to login if not authenticated
   if (isLoaded && !isSignedIn) {
@@ -39,36 +41,66 @@ export default function DashboardLayout({
     );
   }
 
+  // Full-page layout for chat - no sidebar or bottom bar
+  if (isChatPage) {
+    return (
+      <ToastProvider>
+        <GenerationProgressProvider>
+          {children}
+          <AnimatePresence>
+            <GlobalGenerationToastWrapper />
+          </AnimatePresence>
+        </GenerationProgressProvider>
+      </ToastProvider>
+    );
+  }
+
+  // Standard dashboard layout with sidebar and bottom bar
   return (
     <ToastProvider>
-      <div className={styles.layout}>
-        {/* Left Sidebar */}
-        <motion.aside
-          className={styles.sidebar}
-          initial={{ x: -240 }}
-          animate={{ x: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        >
-          <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        </motion.aside>
-
-        {/* Main Content Area */}
-        <main className={styles.main}>
-          <motion.div
-            className={styles.content}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+      <GenerationProgressProvider>
+        <div className={styles.layout}>
+          {/* Left Sidebar */}
+          <motion.aside
+            className={styles.sidebar}
+            initial={{ x: -240 }}
+            animate={{ x: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            {children}
-          </motion.div>
-        </main>
+            <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+          </motion.aside>
 
-        {/* Bottom Bar - Fixed at bottom */}
-        <div className={styles.bottomBar}>
-          <BottomBar />
+          {/* Main Content Area */}
+          <main className={styles.main}>
+            <motion.div
+              className={styles.content}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {children}
+            </motion.div>
+          </main>
+
+          {/* Bottom Bar - Fixed at bottom */}
+          <div className={styles.bottomBar}>
+            <BottomBar />
+          </div>
+
+          {/* Generation Progress Toast - Top Right (shows on all non-chat pages) */}
+          <AnimatePresence>
+            <GlobalGenerationToastWrapper />
+          </AnimatePresence>
         </div>
-      </div>
+      </GenerationProgressProvider>
     </ToastProvider>
   );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <DashboardContent>{children}</DashboardContent>;
 }

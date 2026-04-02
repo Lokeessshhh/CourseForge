@@ -37,6 +37,7 @@ class Course(models.Model):
     )
     course_name = models.CharField(max_length=255)  # User-defined course name
     topic = models.TextField()  # AI-detected topic from course_name
+    description = models.TextField(blank=True, null=True, help_text="Optional user-provided course description/requirements")  # User-provided description
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default="beginner")
     duration_weeks = models.IntegerField(null=True, blank=True)
     hours_per_day = models.IntegerField(null=True, blank=True)

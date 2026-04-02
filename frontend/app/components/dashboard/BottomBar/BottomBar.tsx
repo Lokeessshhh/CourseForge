@@ -102,7 +102,7 @@ export default function BottomBar() {
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           >
             <span className={styles.icon}>
-              {mode === 'course' ? '🎯' : '🤖'}
+              {mode === 'course' ? 'MODE: COURSE' : 'MODE: AI'}
             </span>
             
             {mode === 'chat' ? (

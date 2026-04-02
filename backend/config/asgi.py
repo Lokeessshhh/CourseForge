@@ -12,8 +12,7 @@ from channels.security.websocket import AllowedHostsOriginValidator
 # Set development settings for ASGI
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging - use Django's LOGGING configuration, not basicConfig
 logger = logging.getLogger(__name__)
 
 logger.info("[ASGI] Starting with settings: %s", os.environ.get("DJANGO_SETTINGS_MODULE"))
@@ -32,14 +31,18 @@ from services.auth.clerk import ClerkWebSocketMiddleware   # noqa: E402
 
 logger.info("[ASGI] WebSocket patterns loaded")
 
+# For development, allow all origins
+if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.development":
+    WebSocketApp = ClerkWebSocketMiddleware(URLRouter(websocket_urlpatterns))
+else:
+    WebSocketApp = AllowedHostsOriginValidator(
+        ClerkWebSocketMiddleware(URLRouter(websocket_urlpatterns))
+    )
+
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
-        "websocket": AllowedHostsOriginValidator(
-            ClerkWebSocketMiddleware(
-                URLRouter(websocket_urlpatterns)
-            )
-        ),
+        "websocket": WebSocketApp,
     }
 )
 

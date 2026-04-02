@@ -212,6 +212,7 @@ class ProgressTracker:
         course_id: str,
         week_number: int,
         test_score: float,
+        passed: bool = True,  # NEW: Track if test was passed
     ) -> Dict[str, Any]:
         """
         Mark a week as completed after passing weekly test.
@@ -222,6 +223,7 @@ class ProgressTracker:
             course_id: Course ID
             week_number: Week number
             test_score: Weekly test score (0-100)
+            passed: Whether the test was passed (must be >= 70%)
 
         Returns:
             Dict with completion status
@@ -232,9 +234,19 @@ class ProgressTracker:
             course = Course.objects.get(id=course_id)
             week = WeekPlan.objects.get(course=course, week_number=week_number)
 
-            # Mark week complete
-            week.is_completed = True
-            week.save(update_fields=["is_completed"])
+            # ONLY mark week complete if test was passed
+            if passed:
+                week.is_completed = True
+                week.save(update_fields=["is_completed"])
+                logger.info(f"Week {week_number} marked as completed (test passed)")
+            else:
+                logger.warning(f"Week {week_number} test failed ({test_score}%) - not marking complete")
+                return {
+                    "success": False,
+                    "week_completed": False,
+                    "next_week_unlocked": False,
+                    "message": f"Test score {test_score}% is below passing (70%). Please retake the test.",
+                }
 
             # Update progress
             progress = CourseProgress.objects.get(user_id=user_id, course=course)
@@ -255,14 +267,15 @@ class ProgressTracker:
             progress.last_activity = timezone.now()
             progress.save()
 
-            # Unlock next week day 1
+            # Unlock next week day 1 - ONLY if test was passed
             next_week_unlocked = False
-            if week_number < course.duration_weeks:
+            if week_number < course.duration_weeks and passed:
                 next_week = WeekPlan.objects.get(course=course, week_number=week_number + 1)
                 first_day = next_week.days.get(day_number=1)
                 first_day.is_locked = False
                 first_day.save(update_fields=["is_locked"])
                 next_week_unlocked = True
+                logger.info(f"Unlocked week {week_number + 1}, day 1")
 
             # Check if all weeks done - trigger certificate
             certificate_generated = False

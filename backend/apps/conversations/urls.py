@@ -31,6 +31,7 @@ urlpatterns = [
     path("sessions/<uuid:session_id>/title/get/", views.get_session_title, name="session-title-get"),
     path("sessions/<uuid:session_id>/rename/", views.session_rename, name="session-rename"),
     path("sessions/<uuid:session_id>/archive/", views.session_archive, name="session-archive"),
+    path("sessions/<uuid:session_id>/generating-courses/", views.session_save_generating_courses, name="session-save-generating-courses"),
 
     # Course-specific history
     path("course/<uuid:course_id>/", views.course_history, name="course-history"),
@@ -38,4 +39,7 @@ urlpatterns = [
     # Search and stats
     path("search/", views.search_conversations, name="conversation-search"),
     path("stats/", views.conversation_stats, name="conversation-stats"),
+
+    # Persist conversation (for course management)
+    path("persist/", views.persist_conversation, name="conversation-persist"),
 ]

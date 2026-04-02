@@ -1,0 +1,379 @@
+.container {
+  background: var(--white);
+  border: 2px solid var(--black);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin: 4px auto;
+  box-shadow: 2px 2px 0px var(--black);
+  max-width: 340px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--black);
+}
+
+.icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--black);
+  margin: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.courseName {
+  font-size: 9px;
+  color: #666;
+  margin: 1px 0 0 0;
+  font-family: var(--font-mono);
+}
+
+.requestBox {
+  background: #f9f9f9;
+  border: 1px solid var(--black);
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 3px;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.requestLabel {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.requestValue {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionCard {
+  border: 2px solid var(--black);
+  background: var(--white);
+  border-radius: 3px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionCardDisabled {
+  opacity: 0.6;
+  background: #f5f5f5;
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.optionNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.optionLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--black);
+  margin: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.comingSoonBadge {
+  background: #f39c12;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.optionDescription {
+  font-size: 8px;
+  color: #555;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.toggleContainer {
+  display: flex;
+  gap: 6px;
+  border: 2px solid var(--black);
+  border-radius: 3px;
+  padding: 3px;
+  background: #f9f9f9;
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: 5px 10px;
+  font-size: 8px;
+  font-weight: 600;
+  background: var(--white);
+  color: var(--black);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-mono);
+}
+
+.toggleBtn:hover {
+  background: #eee;
+}
+
+.toggleBtnActive {
+  background: var(--black);
+  color: var(--white);
+}
+
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inputLabel {
+  font-size: 7px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--black);
+  font-family: var(--font-mono);
+}
+
+.numberInput {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 9px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  border-radius: 3px;
+}
+
+.numberInput:focus {
+  border-color: #666;
+  outline: none;
+}
+
+.optionInfo {
+  display: flex;
+  justify-content: center;
+}
+
+.infoBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #e8f4fd;
+  border: 1px solid #3498db;
+  border-radius: 3px;
+  font-size: 7px;
+  color: #2980b9;
+  font-weight: 600;
+}
+
+.selectBtn {
+  padding: 6px 12px;
+  font-size: 8px;
+  font-weight: 700;
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.selectBtn:hover {
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
+}
+
+.selectBtnDisabled {
+  padding: 6px 12px;
+  font-size: 8px;
+  font-weight: 700;
+  background: #ccc;
+  color: #999;
+  border: 2px solid #999;
+  cursor: not-allowed;
+  border-radius: 3px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.cancelBtn {
+  padding: 5px 10px;
+  font-size: 8px;
+  font-weight: 600;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+.cancelBtn:hover {
+  background: #f5f5f5;
+}
+
+.confirmBox {
+  background: #fef9e7;
+  border: 2px solid var(--black);
+  padding: 8px 10px;
+  border-radius: 3px;
+}
+
+.confirmHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.confirmIcon {
+  font-size: 12px;
+}
+
+.confirmTitle {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--black);
+  margin: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.confirmText {
+  font-size: 8px;
+  color: #333;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+}
+
+.confirmNote {
+  background: #fff3cd;
+  border: 1px solid var(--black);
+  padding: 5px 6px;
+  border-radius: 3px;
+  font-size: 7px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmBtn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 8px;
+  font-weight: 700;
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.backBtn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 8px;
+  font-weight: 600;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.backBtn:hover {
+  background: #f5f5f5;
+}
+
+.infoBox {
+  background: #e8f4fd;
+  border: 1px solid #3498db;
+  padding: 6px 8px;
+  border-radius: 3px;
+  margin-top: 8px;
+}
+
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.infoIcon {
+  font-size: 10px;
+}
+
+.infoTitle {
+  font-size: 8px;
+  font-weight: 700;
+  color: #2980b9;
+  margin: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.infoList {
+  margin: 0;
+  padding: 0 0 0 12px;
+  font-size: 7px;
+  color: #2980b9;
+  line-height: 1.5;
+}
+
+.infoList li {
+  margin-bottom: 3px;
+}

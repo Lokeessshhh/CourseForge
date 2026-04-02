@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { useApiClient } from '@/app/hooks/useApiClient';
+import { useGenerationProgress } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import { WebcamASCII } from '@/app/components/WebcamASCII';
 import { MemoryGame, ReactionGame, MathGame, NumberGuessGame, ClickSpeedGame } from '@/app/components/MiniGames';
 import {
@@ -33,6 +34,8 @@ interface Course {
   current_week: number;
   current_day: number;
   status: string;
+  generation_status?: string;
+  generation_progress?: number;
   created_at: string;
 }
 
@@ -338,6 +341,15 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Use global generation progress provider
+  const {
+    generatingCourseId,
+    isGenerating,
+    startGeneration,
+    completeGeneration,
+    dismissGeneration,
+  } = useGenerationProgress();
+
   // Derived state
   const [xp, setXp] = useState(0);
   const [dailyActivity, setDailyActivity] = useState<DailyActivity[]>([]);
@@ -345,6 +357,20 @@ export default function DashboardPage() {
   const [aiQuotes, setAiQuotes] = useState<AIQuote[]>([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [currentGame, setCurrentGame] = useState(0);
+  const [progressOverTime, setProgressOverTime] = useState<ProgressOverTime[]>([]);
+
+  // Update charts when courses data changes
+  useEffect(() => {
+    if (courses.length > 0 && progress) {
+      // Generate daily activity
+      const activity = generateDailyActivity(courses, progress);
+      setDailyActivity(activity);
+
+      // Generate progress over time
+      const progressData = generateProgressOverTime(courses);
+      setProgressOverTime(progressData);
+    }
+  }, [courses, progress]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch all data in parallel
   useEffect(() => {
@@ -372,6 +398,22 @@ export default function DashboardPage() {
         const calculatedXP = calculateXP(progressData, coursesData || []);
         setXp(calculatedXP);
 
+        // Find ALL courses that are ACTIVELY generating
+        const generatingCourses = (coursesData || []).filter(
+          c => c.generation_status === 'generating'
+        );
+
+        if (generatingCourses.length > 0) {
+          // Start generation tracking for the first generating course
+          console.log('[Dashboard] Found generating courses:', generatingCourses.map(c => c.id));
+          startGeneration(generatingCourses[0].id);
+        } else if (isGenerating) {
+          // No courses generating - clear the state
+          // The SSE toast will have received 'ready' event and dismissed itself
+          console.log('[Dashboard] No generating courses, clearing state');
+          completeGeneration();
+        }
+
         // Generate daily activity from course progress
         const activity = generateDailyActivity(coursesData || [], progressData);
         setDailyActivity(activity);
@@ -396,19 +438,100 @@ export default function DashboardPage() {
     fetchAllData();
   }, [isLoaded, api]);
 
-  // Generate daily activity (mock based on course data - would need real tracking in backend)
+  // Refresh dashboard data (called when course generation completes)
+  const refreshDashboard = useCallback(async () => {
+    console.log('[Dashboard] Refreshing data...');
+    try {
+      const [coursesData, progressData] = await Promise.all([
+        api.get<Course[]>('/api/courses/').catch(() => []),
+        api.get<UserProgress>('/api/users/me/progress/').catch(() => null),
+      ]);
+
+      setCourses(coursesData || []);
+      setProgress(progressData);
+
+      // Recalculate XP
+      const calculatedXP = calculateXP(progressData, coursesData || []);
+      setXp(calculatedXP);
+
+      // Find ALL courses that are ACTIVELY generating
+      const generatingCourses = (coursesData || []).filter(
+        c => c.generation_status === 'generating'
+      );
+
+      if (generatingCourses.length > 0) {
+        // Still generating - ensure we're tracking the right course
+        if (!isGenerating || generatingCourseId !== generatingCourses[0].id) {
+          startGeneration(generatingCourses[0].id);
+        }
+      } else if (isGenerating) {
+        // No courses generating - clear the state
+        console.log('[Dashboard] No generating courses, clearing state');
+        completeGeneration();
+      }
+
+      // Refresh quiz history
+      const quizHistoryData = await api.get<QuizAttemptBackend[]>('/api/users/me/quiz-history/').catch(() => []);
+      const quizzes = transformQuizAttemptsToChartFormat(quizHistoryData || []);
+      setQuizHistory(quizzes);
+    } catch (err) {
+      console.error('[Dashboard] Refresh failed:', err);
+    }
+  }, [api, isGenerating, generatingCourseId, completeGeneration, startGeneration]);
+
+  // Poll for dashboard updates every 3 seconds - always poll to catch newly generating courses
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    // Start polling immediately
+    console.log('[Dashboard] Starting initial polling...');
+    interval = setInterval(() => {
+      refreshDashboard();
+    }, 3000);
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [refreshDashboard]);
+
+  // Generate daily activity based on real study time from progress
   const generateDailyActivity = useCallback(
     (coursesData: Course[], progressData: UserProgress | null): DailyActivity[] => {
       const days: DailyActivity[] = [];
       const today = new Date();
-
+      
+      // Get total study time from progress (in minutes)
+      const totalStudyMinutes = progressData?.overall.total_study_hours 
+        ? Math.round(progressData.overall.total_study_hours * 60) 
+        : 0;
+      
+      // Get completed days count
+      const completedDays = coursesData.reduce((acc, c) => {
+        // Estimate completed days from progress percentage
+        const estimatedDays = Math.ceil((c.progress / 100) * (c.duration_weeks * 5));
+        return acc + estimatedDays;
+      }, 0);
+      
+      // Distribute study time across recent days based on completed days
+      const activeDays = Math.max(completedDays, 1);
+      const minutesPerActiveDay = Math.ceil(totalStudyMinutes / activeDays);
+      
       for (let i = 29; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const hasActivity = progressData && progressData.overall.courses_active > 0;
-        const minutes = hasActivity ? Math.floor(Math.random() * 90) + 15 : 0;
-        days.push({ date: dateStr, minutes });
+        
+        // Simulate activity on some days (in real implementation, this would come from backend)
+        // For now, distribute based on completion percentage
+        const dayIndex = 29 - i;
+        const isActiveDay = dayIndex < activeDays && dayIndex % 2 === 0; // Every other day until all active days used
+        
+        days.push({ 
+          date: dateStr, 
+          minutes: isActiveDay ? minutesPerActiveDay : 0 
+        });
       }
 
       return days;
@@ -416,22 +539,34 @@ export default function DashboardPage() {
     []
   );
 
-  // Generate progress over time data for line chart
+  // Generate progress over time data for line chart - based on actual course progress
   const generateProgressOverTime = useCallback((coursesData: Course[]): ProgressOverTime[] => {
-    const dataPoints: ProgressOverTime[] = [];
-    const stages = ['Start', 'Week 1', 'Week 2', 'Week 3', 'Week 4', 'Current'];
+    if (!coursesData || coursesData.length === 0) return [];
     
-    coursesData.forEach((course) => {
-      const progressPerStage = course.progress / stages.length;
-      stages.forEach((stage, index) => {
-        dataPoints.push({
-          label: stage,
-          progress: Math.min(100, Math.round(progressPerStage * (index + 1))),
-          courseId: course.id,
-          courseName: course.course_name,
-        });
+    // Create data points based on actual course progress
+    const dataPoints: ProgressOverTime[] = [];
+    
+    // Get the most progressed course
+    const mainCourse = coursesData.reduce((max, course) => 
+      course.progress > max.progress ? course : max, coursesData[0]);
+    
+    // Calculate weeks completed based on progress
+    const totalWeeks = mainCourse.duration_weeks || 4;
+    const currentProgress = mainCourse.progress;
+    
+    // Generate data points for each week
+    for (let week = 0; week <= totalWeeks; week++) {
+      const weekProgress = week === totalWeeks 
+        ? currentProgress 
+        : Math.min(currentProgress, Math.round((week / totalWeeks) * 100));
+      
+      dataPoints.push({
+        label: week === 0 ? 'Start' : week === totalWeeks ? 'Current' : `Week ${week}`,
+        progress: weekProgress,
+        courseId: mainCourse.id,
+        courseName: mainCourse.course_name,
       });
-    });
+    }
 
     return dataPoints;
   }, []);
@@ -703,6 +838,8 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Generation progress toast is now shown globally in dashboard layout */}
+
       {/* AI Personal Insights - Carousel */}
       <motion.div
         className={styles.aiQuotesWidget}
@@ -801,10 +938,10 @@ export default function DashboardPage() {
           <div className={styles.widgetHeader}>
             <span className={styles.widgetTitle}>COURSE PROGRESS OVER TIME</span>
           </div>
-          {courses.length > 0 && courses.some(c => c.progress > 0) ? (
+          {progressOverTime.length > 0 ? (
             <div className={styles.chartContainer}>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={generateProgressOverTime(courses)}>
+                <LineChart data={progressOverTime}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                   <XAxis
                     dataKey="label"

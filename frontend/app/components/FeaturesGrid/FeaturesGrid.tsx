@@ -163,7 +163,7 @@ function DashboardCard({ userData }: { userData: UserData }) {
     <div className={styles.dashboardCard} ref={ref}>
       <div className={styles.dashboardHeader}>
         <span className={styles.dashboardName}>{userData.name}</span>
-        <span className={styles.dashboardStreak}>🔥 {userData.streak} days</span>
+        <span className={styles.dashboardStreak}>FIRE {userData.streak} days</span>
       </div>
       <div className={styles.dashboardCourse}>Course: {userData.course}</div>
       

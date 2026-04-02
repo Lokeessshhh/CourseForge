@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useUserProgress } from '@/app/hooks/api';
+import { useApiClient } from '@/app/hooks/useApiClient';
+import { useGenerationProgress } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import styles from './page.module.css';
 
 function StatBox({ label, value, delay }: { label: string; value: number; delay: number }) {
@@ -68,19 +70,18 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
 // Generate streak calendar data from activity
 const generateStreakCalendar = (activity: { date: string; minutes: number }[] = []) => {
   const calendar: { studied: boolean; minutes: number }[][] = [];
-  const today = new Date();
   const activityMap = new Map(activity.map(a => [a.date, a.minutes]));
-  
+
   for (let week = 0; week < 52; week++) {
     const weekDays: { studied: boolean; minutes: number }[] = [];
     for (let day = 0; day < 7; day++) {
-      const date = new Date(today);
+      const date = new Date();
       date.setDate(date.getDate() - (51 - week) * 7 - (6 - day));
       const dateStr = date.toISOString().split('T')[0];
       const minutes = activityMap.get(dateStr) || 0;
-      weekDays.push({ 
-        studied: minutes > 0 && date <= today, 
-        minutes 
+      weekDays.push({
+        studied: minutes > 0,
+        minutes
       });
     }
     calendar.push(weekDays);
@@ -90,9 +91,12 @@ const generateStreakCalendar = (activity: { date: string; minutes: number }[] = 
 
 export default function ProgressPage() {
   const { data: progress, isLoading, error, refetch } = useUserProgress();
-  
+  const { startGeneration, completeGeneration, generatingCourseId, isGenerating } = useGenerationProgress();
+  const api = useApiClient();
+
   const [conceptFilter, setConceptFilter] = useState<'all' | 'weak' | 'strong'>('all');
   const [sortByWeakest, setSortByWeakest] = useState(true);
+  const [courses, setCourses] = useState<any[]>([]);
 
   const streakCalendar = useMemo(() => {
     return progress?.streak_calendar?.weeks || [];
@@ -100,19 +104,61 @@ export default function ProgressPage() {
 
   const filteredConcepts = useMemo(() => {
     let filtered = [...(progress?.concepts || [])];
-    
+
     if (conceptFilter === 'weak') {
       filtered = filtered.filter(c => c.mastery < 50);
     } else if (conceptFilter === 'strong') {
       filtered = filtered.filter(c => c.mastery >= 80);
     }
-    
+
     if (sortByWeakest) {
       filtered.sort((a, b) => a.mastery - b.mastery);
     }
-    
+
     return filtered;
   }, [progress?.concepts, conceptFilter, sortByWeakest]);
+
+  // Fetch courses to check for generating courses
+  const fetchCoursesForGeneration = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/api/courses/');
+      setCourses(data || []);
+
+      // Check for generating courses
+      const generatingCourses = (data || []).filter(
+        c => c.generation_status === 'generating'
+      );
+
+      if (generatingCourses.length > 0) {
+        // Start generation tracking for the first generating course
+        if (!isGenerating || generatingCourseId !== generatingCourses[0].id) {
+          console.log('[Progress] Found generating course:', generatingCourses[0].id);
+          startGeneration(generatingCourses[0].id);
+        }
+      } else if (generatingCourses.length === 0 && isGenerating) {
+        // No courses generating - clear the state
+        console.log('[Progress] No generating courses, clearing state');
+        completeGeneration();
+      }
+    } catch (err) {
+      console.error('[Progress] Error fetching courses:', err);
+    }
+  }, [api, isGenerating, generatingCourseId, startGeneration, completeGeneration]);
+
+  // Initial fetch for generating courses
+  useEffect(() => {
+    fetchCoursesForGeneration();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Continuous polling every 3 seconds to catch newly generating courses
+  useEffect(() => {
+    console.log('[Progress] Starting continuous polling for generating courses...');
+    const pollInterval = setInterval(() => {
+      fetchCoursesForGeneration();
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [fetchCoursesForGeneration]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (error) {

@@ -6,6 +6,7 @@ Celery configuration for LearnAI.
 - Task routes for course, quiz, cert generation
 """
 import os
+import logging
 from celery import Celery
 from celery.schedules import crontab
 
@@ -14,6 +15,15 @@ os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
     os.environ.get("DJANGO_SETTINGS_MODULE", "config.settings.production"),
 )
+
+# Configure logging for Celery workers
+logging.basicConfig(
+    level=logging.INFO,
+    format='[Celery] %(levelname)s %(asctime)s %(module)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+logger = logging.getLogger(__name__)
+logger.info("[Celery] Starting with settings: %s", os.environ.get("DJANGO_SETTINGS_MODULE"))
 
 # Create Celery app
 app = Celery("learnai")

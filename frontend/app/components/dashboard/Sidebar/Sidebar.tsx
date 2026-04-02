@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       {/* Streak Badge */}
       <div className={styles.streakBadge}>
-        🔥 {streak} DAYS
+        FIRE {streak} DAYS
       </div>
 
       {/* Navigation */}

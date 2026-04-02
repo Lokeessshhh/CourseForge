@@ -12,6 +12,7 @@ Endpoints:
   GET    /api/conversations/course/{course_id}/ → Get course-specific history
   GET    /api/conversations/search/             → Search conversations
 """
+import json
 import logging
 import uuid
 
@@ -159,7 +160,7 @@ def conversation_list(request):
             session_id=s["session_id"],
             role="system"
         ).first()
-        
+
         # If system message exists with generated title (not placeholder), use it
         if system_msg and system_msg.content and system_msg.content != "[Session created]":
             title = system_msg.content
@@ -175,6 +176,19 @@ def conversation_list(request):
             else:
                 title = "New Chat"
 
+        # Get generating courses from Redis session metadata
+        generating_course_ids = []
+        try:
+            from services.chat.session import ChatSession
+            session = ChatSession(
+                user_id=str(request.user.id),
+                session_id=sid,
+            )
+            generating_courses = session.get_generating_courses()
+            generating_course_ids = list(generating_courses.keys())
+        except Exception as exc:
+            logger.warning("Failed to get generating courses for session %s: %s", sid, exc)
+
         data.append({
             "id": sid,
             "title": title,
@@ -184,6 +198,8 @@ def conversation_list(request):
             "message_count": s["message_count"],
             "first_message": s["first_message"],
             "last_message": s["last_message"],
+            "date": s["last_message"].strftime("%Y-%m-%d") if s["last_message"] else None,
+            "generating_course_ids": generating_course_ids,  # NEW: Include generating courses
         })
 
     return _ok(data)
@@ -233,10 +249,11 @@ def session_list(request):
             "message_count": s["message_count"],
             "first_message": s["first_message"],
             "last_message": s["last_message"],
+            "date": s["last_message"].strftime("%Y-%m-%d") if s["last_message"] else None,
         }
         for s in page
     ]
-    
+
     return Response({
         "success": True,
         "data": data,
@@ -288,10 +305,11 @@ def session_detail(request, session_id):
             "message_count": messages.count(),
             "created_at": messages.first().created_at,
             "updated_at": messages.last().created_at,
+            "date": messages.first().created_at.strftime("%Y-%m-%d") if messages.first().created_at else None,
         },
         "messages": ConversationSerializer(messages, many=True).data,
     }
-    
+
     return _ok(data)
 
 
@@ -299,8 +317,8 @@ def session_detail(request, session_id):
 @permission_classes([IsAuthenticated])
 def session_rename(request, session_id):
     """
-    Rename a session by updating the title in Redis and placeholder Conversation.
-    
+    Rename a session by updating the title in Redis and database.
+
     Body:
     {
         "title": "New Title"
@@ -325,20 +343,33 @@ def session_rename(request, session_id):
     session.metadata["title"] = title
     async_to_sync(session.save_async)()
 
-    # Update placeholder Conversation in database
+    # Update or create system message in database
     @sync_to_async
-    def update_placeholder():
-        placeholder = Conversation.objects.filter(
+    def update_or_create_system_message():
+        # Try to update existing system message
+        system_msg = Conversation.objects.filter(
             user=request.user,
             session_id=sid,
-            role="system",
-            content="[Session created]"
+            role="system"
         ).first()
-        if placeholder:
-            placeholder.content = title
-            placeholder.save()
+        
+        if system_msg:
+            # Update existing system message
+            system_msg.content = title
+            system_msg.save()
+            logger.info("Updated existing system message for session %s", session_id)
+        else:
+            # Create new system message
+            Conversation.objects.create(
+                user=request.user,
+                session_id=sid,
+                role="system",
+                content=title,
+                is_summarized=True,
+            )
+            logger.info("Created new system message for session %s", session_id)
 
-    async_to_sync(update_placeholder)()
+    async_to_sync(update_or_create_system_message)()
 
     logger.info("Renamed session %s to: %s", session_id, title)
 
@@ -508,6 +539,72 @@ def set_session_title(request, session_id):
     return _ok({"session_id": str(sid), "title": title})
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def session_save_generating_courses(request, session_id):
+    """
+    Save generating course IDs to session metadata in Redis.
+
+    This is called when user navigates away from chat to persist
+    which courses are being generated in this session.
+
+    Body:
+    {
+        "course_ids": ["uuid1", "uuid2", ...]
+    }
+    """
+    try:
+        sid = uuid.UUID(str(session_id))
+    except ValueError:
+        return _err("Invalid session_id")
+
+    course_ids = request.data.get("course_ids", [])
+    if not course_ids:
+        return _err("course_ids required")
+
+    # Get session from Redis
+    from services.chat.session import ChatSession
+    session = ChatSession(
+        user_id=str(request.user.id),
+        session_id=str(sid),
+        scope="global",
+    )
+
+    # Load existing session to get metadata
+    redis_client = session.get_redis()
+    key = f"chat:session:{request.user.id}:{sid}"
+    data = redis_client.get(key)
+
+    if data:
+        try:
+            parsed = json.loads(data)
+            session.metadata = parsed.get("metadata", {})
+        except (json.JSONDecodeError, KeyError) as exc:
+            logger.warning("Failed to parse session data: %s", exc)
+
+    # Update generating courses in metadata
+    if "generating_courses" not in session.metadata:
+        session.metadata["generating_courses"] = {}
+
+    # Add course IDs (backend will fetch details from progress tracking)
+    for course_id in course_ids:
+        if course_id not in session.metadata["generating_courses"]:
+            session.metadata["generating_courses"][course_id] = {
+                "status": "generating",
+                "saved_at": timezone.now().isoformat(),
+            }
+
+    # Save back to Redis
+    session.save()
+
+    logger.info("Saved generating courses to session %s: %s", session_id, course_ids)
+
+    return _ok({
+        "session_id": str(sid),
+        "generating_courses": list(session.metadata["generating_courses"].keys()),
+    })
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_session_title(request, session_id):
@@ -606,4 +703,108 @@ def conversation_stats(request):
             {"date": str(a["date"]), "count": a["count"]}
             for a in activity
         ],
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def persist_conversation(request):
+    """
+    Persist a conversation (user message + AI response) to the database.
+    
+    This is used by the course management feature to save CRUD-generated
+    messages to the database so they appear in chat history sidebar.
+    
+    Body:
+    {
+        "session_id": "uuid",
+        "user_message": "List all courses",
+        "ai_response": "Here are your courses...",
+        "course_id": "uuid" (optional)
+    }
+    
+    Returns:
+    {
+        "success": true,
+        "session_id": "uuid"
+    }
+    """
+    session_id = request.data.get("session_id")
+    user_message = request.data.get("user_message", "").strip()
+    ai_response = request.data.get("ai_response", "").strip()
+    course_id = request.data.get("course_id")
+    
+    # Validate required fields
+    if not session_id:
+        return _err("session_id is required")
+    
+    if not user_message:
+        return _err("user_message is required")
+    
+    if not ai_response:
+        return _err("ai_response is required")
+    
+    try:
+        sid = uuid.UUID(str(session_id))
+    except ValueError:
+        return _err("Invalid session_id")
+    
+    # Validate course_id if provided
+    if course_id:
+        try:
+            course_id = uuid.UUID(str(course_id))
+        except ValueError:
+            return _err("Invalid course_id")
+    else:
+        course_id = None
+    
+    # Check if this is the first message in the session
+    existing_messages = Conversation.objects.filter(
+        user=request.user,
+        session_id=sid
+    )
+    is_first_message = not existing_messages.exists()
+    
+    # Create placeholder system message if this is the first message
+    if is_first_message:
+        Conversation.objects.create(
+            user=request.user,
+            session_id=sid,
+            role="system",
+            content="[Session created]",
+            course_id=course_id,
+            is_summarized=True,
+        )
+        logger.info(
+            "Created placeholder system message for session: user=%s session_id=%s",
+            request.user.id, session_id
+        )
+    
+    # Save user message
+    Conversation.objects.create(
+        user=request.user,
+        session_id=sid,
+        role="user",
+        content=user_message,
+        course_id=course_id,
+    )
+    
+    # Save AI response
+    Conversation.objects.create(
+        user=request.user,
+        session_id=sid,
+        role="assistant",
+        content=ai_response,
+        course_id=course_id,
+    )
+    
+    logger.info(
+        "Persisted conversation: user=%s session_id=%s user_msg_len=%d ai_response_len=%d",
+        request.user.id, session_id, len(user_message), len(ai_response)
+    )
+    
+    return _ok({
+        "success": True,
+        "session_id": str(sid),
+        "message_count": 2 if is_first_message else 2,  # Always 2 new messages
     })

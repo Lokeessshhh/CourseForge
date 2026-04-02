@@ -1,20 +1,20 @@
 .bottomBar {
   width: 100%;
   height: 100%;
-  background-color: var(--white);
+  background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.05) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 24px;
+  padding: 10px 24px;
 }
 
 .container {
   position: relative;
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .inputWrapper {
@@ -22,28 +22,42 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .inputBar {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 16px;
+  padding: 10px 16px;
   border: 2px solid var(--black);
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
   background-color: var(--white);
+  border-radius: 6px;
+  transition: var(--transition);
+}
+
+.inputBar:focus-within {
+  box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .icon {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .input {
   flex: 1;
   font-family: var(--font-mono);
   font-size: 14px;
+  font-weight: 500;
   border: none;
   outline: none;
   background: transparent;
@@ -53,44 +67,60 @@
 .input::placeholder {
   color: var(--black);
   opacity: 0.4;
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .actionBtn {
   font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 1px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   background-color: var(--black);
   color: var(--white);
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
+  border-radius: 6px;
+  text-transform: uppercase;
 }
 
-.actionBtn:hover {
-  box-shadow: 2px 2px 0px var(--black);
+.actionBtn:hover:not(:disabled) {
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .toggleBtn {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   background-color: var(--white);
   color: var(--black);
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .toggleBtn:hover {
   background-color: var(--black);
   color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 /* Chat Preview */

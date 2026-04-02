@@ -24,13 +24,14 @@ TIMEOUT_SECONDS = getattr(settings, "VLLM_TIMEOUT_SECONDS", 120)
 SDK_MAX_RETRIES = getattr(settings, "VLLM_SDK_MAX_RETRIES", 0)
 
 # Configure httpx client with proper connection limits
-# This prevents connection pool exhaustion when multiple tasks run concurrently
+# Increased limits to handle concurrent weekly test generation tasks
+# Each Celery task runs in its own thread with asyncio.run(), so we need enough connections
 http_client = httpx.AsyncClient(
     timeout=TIMEOUT_SECONDS,
     limits=httpx.Limits(
-        max_connections=50,      # Total connections across all hosts
-        max_keepalive_connections=20,  # Keep connections alive for reuse
-        keepalive_expiry=30,     # Close idle connections after 30s
+        max_connections=100,      # Total connections across all hosts (increased from 50)
+        max_keepalive_connections=50,  # Keep connections alive for reuse (increased from 20)
+        keepalive_expiry=60,     # Close idle connections after 60s (increased from 30s)
     ),
 )
 
@@ -167,7 +168,8 @@ async def generate(
 
     messages.append({"role": "user", "content": prompt})
 
-    for attempt in range(3):
+    # Increased retries from 3 to 5 for better reliability with longer backoff
+    for attempt in range(5):
         try:
             response = await client.chat.completions.create(
                 model=MODEL_NAME,
@@ -177,11 +179,12 @@ async def generate(
             return response.choices[0].message.content
 
         except Exception as e:
-            logger.warning("LLM generation attempt %d failed: %s", attempt + 1, e)
-            if attempt == 2:
-                logger.exception("LLM generation failed after 3 attempts")
+            logger.warning("LLM generation attempt %d/5 failed: %s", attempt + 1, e)
+            if attempt == 4:
+                logger.exception("LLM generation failed after 5 attempts")
                 raise
-            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+            # Exponential backoff with longer delays (2, 4, 8, 16 seconds)
+            await asyncio.sleep(2 ** (attempt + 1))
 
 
 async def stream_generate(
@@ -234,10 +237,11 @@ async def safe_json_generate(
     system_type: str = "course_generator",
     param_type: str = "course",
     expected_keys: List[str] = None,
-    max_retries: int = 3,
+    max_retries: int = 5,  # Increased from 3 to 5 for better reliability
 ) -> Dict:
     """
     Generate JSON response with validation and retry logic.
+    Uses json-repair to handle malformed JSON from LLM.
 
     Args:
         prompt: User prompt
@@ -276,8 +280,41 @@ async def safe_json_generate(
 
             cleaned = cleaned.strip()
 
-            # Parse JSON
-            parsed = json.loads(cleaned)
+            # Remove any trailing text after the JSON object
+            # Find the last closing brace and truncate there
+            if cleaned.endswith("}"):
+                # Find matching braces
+                brace_count = 0
+                last_valid_pos = -1
+                for i, char in enumerate(cleaned):
+                    if char == "{":
+                        brace_count += 1
+                    elif char == "}":
+                        brace_count -= 1
+                        if brace_count == 0:
+                            last_valid_pos = i
+                            break
+                
+                if last_valid_pos > 0 and last_valid_pos < len(cleaned) - 1:
+                    cleaned = cleaned[:last_valid_pos + 1]
+            
+            # Try standard json.loads first (faster)
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError:
+                # Fall back to json-repair for malformed JSON
+                try:
+                    from json_repair import repair_json
+                    logger.info("Standard JSON parse failed, attempting repair...")
+                    repaired = repair_json(cleaned)
+                    parsed = json.loads(repaired)
+                    logger.info("JSON repair successful!")
+                except ImportError:
+                    logger.warning("json-repair not installed, using standard parser only")
+                    raise
+                except Exception as repair_error:
+                    logger.warning("JSON repair also failed: %s", repair_error)
+                    raise
 
             # Validate expected keys
             for key in expected_keys:
@@ -287,22 +324,22 @@ async def safe_json_generate(
             return parsed
 
         except json.JSONDecodeError as e:
-            logger.warning("JSON parse error (attempt %d): %s", attempt + 1, e)
+            logger.warning("JSON parse error (attempt %d/%d): %s", attempt + 1, max_retries, e)
             if attempt == max_retries - 1:
                 return {"error": f"JSON parse error: {str(e)}", "raw": raw}
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.5)  # Slightly longer delay for retry
 
         except ValueError as e:
-            logger.warning("Validation error (attempt %d): %s", attempt + 1, e)
+            logger.warning("Validation error (attempt %d/%d): %s", attempt + 1, max_retries, e)
             if attempt == max_retries - 1:
                 return {"error": str(e), "raw": raw}
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.5)
 
         except Exception as e:
             logger.exception("Unexpected error in safe_json_generate: %s", e)
             if attempt == max_retries - 1:
                 return {"error": str(e), "raw": raw}
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.5)
 
     return {"error": "Max retries exceeded", "raw": raw}
 
@@ -368,18 +405,17 @@ def generate_sync(
 ) -> str:
     """
     Synchronous wrapper for use in Celery tasks.
+    ALWAYS creates a fresh event loop to avoid "loop is closed" errors.
     """
+    # Always create a fresh event loop for Celery tasks
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_closed():
-            raise RuntimeError("Loop is closed")
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    return loop.run_until_complete(
-        generate(prompt, system_type, param_type, extra_context)
-    )
+        return loop.run_until_complete(
+            generate(prompt, system_type, param_type, extra_context)
+        )
+    finally:
+        loop.close()
 
 
 def safe_json_generate_sync(
@@ -390,15 +426,14 @@ def safe_json_generate_sync(
 ) -> Dict:
     """
     Synchronous JSON generation for Celery tasks.
+    ALWAYS creates a fresh event loop to avoid "loop is closed" errors.
     """
+    # Always create a fresh event loop for Celery tasks
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_closed():
-            raise RuntimeError("Loop is closed")
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    return loop.run_until_complete(
-        safe_json_generate(prompt, system_type, param_type, expected_keys)
-    )
+        return loop.run_until_complete(
+            safe_json_generate(prompt, system_type, param_type, expected_keys)
+        )
+    finally:
+        loop.close()

@@ -40,6 +40,120 @@ LOGGING["loggers"]["django.db.backends"] = {  # type: ignore[name-defined]  # no
     "propagate": False,
 }
 
+# Enhanced logging for development - show INFO level for Celery
+LOGGING["root"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",  # Show INFO logs (needed for Celery task logs)
+}
+
+# Show Django server logs
+LOGGING["loggers"]["django"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show WebSocket logs
+LOGGING["loggers"]["websockets"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show Channels logs
+LOGGING["loggers"]["channels"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show course generation logs (IMPORTANT - shows weekly test progress)
+LOGGING["loggers"]["apps.courses"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show WebSocket consumer logs
+LOGGING["loggers"]["apps.websockets"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show Celery task logs (IMPORTANT - shows task start/complete)
+LOGGING["loggers"]["celery"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show Tavily web search logs
+LOGGING["loggers"]["services.web_search"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+LOGGING["loggers"]["services.web_search.tavily_client"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show course web search logs
+LOGGING["loggers"]["services.course"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+LOGGING["loggers"]["services.course.web_search"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show LLM client logs (shows API calls)
+LOGGING["loggers"]["services.llm"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show course tasks logs (shows weekly test generation)
+LOGGING["loggers"]["apps.courses.tasks"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# Show course generator logs (shows test/question generation)
+LOGGING["loggers"]["services.course.generator"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "INFO",
+    "propagate": False,
+}
+
+# HIDE noisy debug logs
+LOGGING["loggers"]["httpx"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "WARNING",  # Hide HTTP debug logs
+    "propagate": False,
+}
+
+LOGGING["loggers"]["httpcore"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "WARNING",  # Hide HTTP connection logs
+    "propagate": False,
+}
+
+LOGGING["loggers"]["django.db.backends"] = {  # type: ignore[name-defined]
+    "handlers": ["console"],
+    "level": "WARNING",  # Hide SQL query logs
+    "propagate": False,
+}
+
 # Development REST framework - allow any for testing
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -73,3 +187,6 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+# Note: Logging is configured via Django's LOGGING dict above.
+# Do NOT call logging.basicConfig() here as it will override the proper configuration.

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useGenerateCourse } from '@/app/hooks/api/useCourses';
+import { useGenerationProgress } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import { useToast } from '@/app/components/Toast';
 import styles from './CoursePopup.module.css';
 
@@ -11,38 +12,96 @@ interface CoursePopupProps {
   onClose: () => void;
 }
 
-const durations = [
-  { value: '1wk', label: '1WK', weeks: 1 },
-  { value: '2wk', label: '2WK', weeks: 2 },
-  { value: '1mo', label: '1MO', weeks: 4 },
-  { value: '2mo', label: '2MO', weeks: 8 },
-  { value: '3mo', label: '3MO', weeks: 12 },
-];
-
 const skillLevels = ['beginner', 'intermediate', 'advanced'] as const;
 
 export default function CoursePopup({ onClose }: CoursePopupProps) {
   const router = useRouter();
   const { generate, isGenerating } = useGenerateCourse();
+  const { startGeneration } = useGenerationProgress();
   const toast = useToast();
-  
+
   const [topic, setTopic] = useState('');
-  const [duration, setDuration] = useState('2wk');
+  const [durationValue, setDurationValue] = useState('4');
+  const [durationUnit, setDurationUnit] = useState<'weeks' | 'months'>('weeks');
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+  const [description, setDescription] = useState('');
+  const [durationError, setDurationError] = useState('');
+
+  const handleDurationValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Only allow digits
+    if (value && !/^\d*$/.test(value)) {
+      return;
+    }
+
+    // Limit to 2 characters
+    if (value.length > 2) {
+      return;
+    }
+
+    setDurationValue(value);
+    setDurationError('');
+
+    // Auto-validate: if value > 12 and unit is months, show error
+    const numValue = parseInt(value, 10);
+    if (durationUnit === 'months' && numValue > 12) {
+      setDurationError('Maximum 12 months allowed');
+    }
+  };
+
+  const handleDurationUnitChange = (unit: 'weeks' | 'months') => {
+    setDurationUnit(unit);
+    setDurationError('');
+
+    // Validate: if value > 12 and unit is months, show error
+    const numValue = parseInt(durationValue, 10);
+    if (unit === 'months' && numValue > 12) {
+      setDurationError('Maximum 12 months allowed');
+    }
+  };
+
+  const getDurationInWeeks = () => {
+    const numValue = parseInt(durationValue, 10);
+    if (isNaN(numValue) || numValue < 1) {
+      return 4; // default
+    }
+
+    if (durationUnit === 'weeks') {
+      return numValue;
+    } else {
+      return numValue * 4; // months to weeks
+    }
+  };
 
   const handleCreate = async () => {
     if (!topic.trim()) return;
 
-    const durationWeeks = durations.find(d => d.value === duration)?.weeks || 2;
-    
+    const numValue = parseInt(durationValue, 10);
+    if (isNaN(numValue) || numValue < 1) {
+      setDurationError('Please enter a valid duration');
+      return;
+    }
+
+    if (durationUnit === 'months' && numValue > 12) {
+      setDurationError('Maximum 12 months allowed');
+      return;
+    }
+
+    const durationWeeks = getDurationInWeeks();
+
     try {
       const result = await generate({
         course_name: topic.trim(),
         duration_weeks: durationWeeks,
         level: skillLevel,
+        description: description.trim() || undefined,  // Optional description
       });
 
       if (result?.id) {
+        // Start generation tracking to show toast automatically
+        startGeneration(result.id);
+
         toast.success('Course generation started!');
         router.push(`/dashboard/generate?id=${result.id}`);
         onClose();
@@ -90,18 +149,33 @@ export default function CoursePopup({ onClose }: CoursePopupProps) {
         {/* Duration */}
         <div className={styles.field}>
           <label className={styles.label}>DURATION</label>
-          <div className={styles.options}>
-            {durations.map((d) => (
-              <button
-                key={d.value}
-                className={`${styles.optionBtn} ${duration === d.value ? styles.selected : ''}`}
-                onClick={() => setDuration(d.value)}
-                disabled={isGenerating}
-              >
-                {d.label}
-              </button>
-            ))}
+          <div className={styles.durationContainer}>
+            <input
+              type="text"
+              inputMode="numeric"
+              className={`${styles.durationInput} ${durationError ? styles.inputError : ''}`}
+              placeholder="4"
+              value={durationValue}
+              onChange={handleDurationValueChange}
+              disabled={isGenerating}
+              maxLength={2}
+            />
+            <select
+              className={styles.durationSelect}
+              value={durationUnit}
+              onChange={(e) => handleDurationUnitChange(e.target.value as 'weeks' | 'months')}
+              disabled={isGenerating}
+            >
+              <option value="weeks">Weeks</option>
+              <option value="months">Months</option>
+            </select>
           </div>
+          {durationError && <p className={styles.errorText}>{durationError}</p>}
+          {!durationError && durationValue && (
+            <p className={styles.durationHint}>
+              = {getDurationInWeeks()} week{getDurationInWeeks() !== 1 ? 's' : ''} total
+            </p>
+          )}
         </div>
 
         {/* Skill Level */}
@@ -119,6 +193,19 @@ export default function CoursePopup({ onClose }: CoursePopupProps) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Description */}
+        <div className={styles.field}>
+          <label className={styles.label}>DESCRIPTION (OPTIONAL)</label>
+          <textarea
+            className={styles.textarea}
+            placeholder="Describe what you want to learn..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={isGenerating}
+            rows={3}
+          />
         </div>
 
         {/* Create Button */}

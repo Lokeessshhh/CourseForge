@@ -121,7 +121,15 @@ class QwenClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            # Use a more robust async client configuration
+            # Set environment to bypass proxy for remote vLLM server
+            import os
+            os.environ['NO_PROXY'] = '*'  # Bypass proxy for all hosts
+            
+            async with httpx.AsyncClient(
+                timeout=self.timeout,
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+            ) as client:
                 async with client.stream("POST", url, json=payload) as response:
                     if response.status_code != 200:
                         error_text = await response.aread()
@@ -194,7 +202,15 @@ class QwenClient:
         }
 
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            # Use a more robust client configuration
+            # Set environment to bypass proxy for remote vLLM server
+            import os
+            os.environ['NO_PROXY'] = '*'  # Bypass proxy for all hosts
+            
+            with httpx.Client(
+                timeout=self.timeout,
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+            ) as client:
                 response = client.post(url, json=payload)
 
                 if response.status_code != 200:

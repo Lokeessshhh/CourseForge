@@ -76,6 +76,7 @@ numpy>=1.26
 django-extensions>=3.2
 gunicorn>=21.0
 uvicorn>=0.29
+json-repair>=0.25
 
 # ──────────────────────────────────────────────
 # Type stubs / dev tools (optional)

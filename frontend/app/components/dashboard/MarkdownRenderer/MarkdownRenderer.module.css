@@ -3,6 +3,9 @@
   font-size: 15px;
   line-height: 1.7;
   color: var(--black);
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* Headers */
@@ -36,6 +39,9 @@
 /* Paragraph */
 .paragraph {
   margin-bottom: 16px;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* Bold */
@@ -71,6 +77,7 @@
   background-color: var(--black);
   border: 2px solid var(--black);
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .code {
@@ -78,6 +85,8 @@
   font-size: 13px;
   color: var(--white);
   white-space: pre;
+  word-break: break-all;
+  max-width: 100%;
 }
 
 /* Blockquote */

@@ -151,7 +151,10 @@ class CourseGenerator:
         topic: str,
         skill_level: str,
         goals: List[str],
-        previous_themes: List[str],
+        description: str = None,  # Optional user-provided description
+        previous_themes: List[str] = None,
+        is_compact: bool = False,  # Flag for compact course generation
+        original_duration: int = None,  # Original course duration for compact
     ) -> Tuple[str, List[str]]:
         """
         Generate theme and objectives for a week.
@@ -171,13 +174,51 @@ class CourseGenerator:
 
         goals_str = "\n".join(f"- {g}" for g in goals) if goals else "General mastery"
         previous_str = ", ".join(previous_themes) if previous_themes else "None"
+        
+        # Add user description if provided (ensure it's a string)
+        description_str = ""
+        if description and isinstance(description, str) and description.strip():
+            description_str = f"\n\nUSER REQUIREMENTS:\n{description.strip()}\n\nIMPORTANT: Tailor the course content to meet these specific user requirements."
 
-        prompt = f"""You are a curriculum designer. Generate a week theme and objectives for a {skill_level} {topic} course.
+        # Special prompt for compact course generation
+        if is_compact and original_duration:
+            prompt = f"""You are a curriculum designer. Generate a COMPACTED week theme for a {skill_level} {topic} course.
+
+COMPACT COURSE MODE:
+- Original course: {original_duration} weeks
+- New compact course: {total_weeks} weeks
+- Week {week_number} of {total_weeks} total weeks
+
+IMPORTANT: This is a COMPRESSED course. You must:
+1. Combine multiple concepts into fewer weeks while maintaining learning quality
+2. Focus on ESSENTIAL and HIGH-IMPACT topics only
+3. Remove redundant or nice-to-have content
+4. Ensure each week covers more ground efficiently
+5. Maintain logical progression and build complexity appropriately
+6. Prioritize practical, hands-on learning over theory
+
+Course goals:
+{goals_str}
+Previous weeks covered: {previous_str}
+{description_str}
+
+Return ONLY valid JSON:
+{{
+  "theme": "Week {week_number}: <theme name>",
+  "objectives": ["objective 1", "objective 2", "objective 3", "objective 4"]
+}}
+
+Example for compact Java course (4 weeks → 2 weeks):
+- Week 1: "Java Fundamentals & OOP Mastery" (combines basics, variables, control flow, classes, objects, inheritance)
+- Week 2: "Advanced Java & Real-World Applications" (combines collections, streams, exceptions, file I/O, projects)"""
+        else:
+            prompt = f"""You are a curriculum designer. Generate a week theme and objectives for a {skill_level} {topic} course.
 
 Week {week_number} of {total_weeks} total weeks.
 Course goals:
 {goals_str}
 Previous weeks covered: {previous_str}
+{description_str}
 
 Return ONLY valid JSON:
 {{
@@ -207,7 +248,8 @@ Return ONLY valid JSON:
         week_theme: str,
         topic: str,
         skill_level: str,
-        previous_titles: List[str],
+        description: str = None,  # Optional user-provided description
+        previous_titles: List[str] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Generate title and tasks for a day.
@@ -225,12 +267,18 @@ Return ONLY valid JSON:
         from services.llm.client import safe_json_generate
 
         previous_str = ", ".join(previous_titles) if previous_titles else "None"
+        
+        # Add user description if provided (ensure it's a string)
+        description_str = ""
+        if description and isinstance(description, str) and description.strip():
+            description_str = f"\n\nUSER REQUIREMENTS:\n{description.strip()}\n\nIMPORTANT: Tailor the daily content to meet these specific user requirements."
 
         prompt = f"""You are a curriculum designer for a {skill_level} {topic} course.
 
 Week theme: {week_theme}
 Day {day_number} of 5 in this week.
 Previously covered days: {previous_str}
+{description_str}
 
 Generate the day title and tasks.
 Return ONLY valid JSON:
@@ -265,33 +313,102 @@ Return ONLY valid JSON:
         week_theme: str,
         topic: str,
         skill_level: str,
+        description: str = None,  # Optional user-provided description
+        web_search_results: str = "",
     ) -> str:
         """
         Generate theory content for a day (no code).
 
+        Args:
+            day_title: Title of the day's lesson
+            week_theme: Theme for the current week
+            topic: Course topic
+            skill_level: Skill level (beginner/intermediate/advanced)
+            web_search_results: Optional formatted web search results for enhancement
+
         Returns:
-            Markdown theory content
+            Markdown theory content (comprehensive, 4000+ tokens)
         """
         from services.llm.client import generate
 
-        prompt = f"""Generate a theory lesson for "{day_title}" in a {skill_level} {topic} course.
+        # Build web search context if available
+        web_context = ""
+        if web_search_results:
+            web_context = f"""
+
+{web_search_results}
+
+INTEGRATE WEB RESEARCH:
+- Use the above research resources to enhance your explanation
+- Include up-to-date information, best practices, and real-world examples
+- Reference current industry standards where relevant
+- If web resources mention specific tools/versions, incorporate them appropriately
+"""
+
+        # Add user description if provided (ensure it's a string)
+        description_str = ""
+        if description and isinstance(description, str) and description.strip():
+            description_str = f"""
+
+USER REQUIREMENTS:
+{description.strip()}
+
+IMPORTANT: Tailor your explanation to address these specific user requirements. Focus on the aspects mentioned by the user and provide relevant examples and use cases that match their needs.
+"""
+
+        prompt = f"""Generate a COMPREHENSIVE theory lesson for "{day_title}" in a {skill_level} {topic} course.
 
 Week context: {week_theme}
-
+{web_context}
+{description_str}
 Requirements:
-1. Explain concepts clearly with analogies
-2. Use simple language appropriate for {skill_level} learners
-3. Include a summary at the end
-4. DO NOT include any code examples or code blocks
-5. Focus on conceptual understanding only
-6. Use markdown formatting (headers, lists, bold for key terms)
+1. Provide DETAILED explanations (aim for 2000+ words)
+2. Explain concepts thoroughly with multiple analogies and real-world examples
+3. Use simple language appropriate for {skill_level} learners
+4. Break down complex topics into digestible sections
+5. Include:
+   - Introduction to the topic (what it is, why it matters)
+   - Core concepts explained in detail
+   - How it works (step-by-step breakdown)
+   - Real-world applications and use cases
+   - Common misconceptions and how to avoid them
+   - Best practices and tips
+   - Summary of key points
+6. Use markdown formatting (headers, subheaders, lists, bold for key terms)
+7. DO NOT include any code examples or code blocks
+8. Focus on deep conceptual understanding
 
-Return plain markdown text."""
+Structure your response like this:
+## Introduction
+[Comprehensive introduction - 300+ words]
+
+## What is [Topic]?
+[Detailed explanation - 400+ words]
+
+## How It Works
+[Step-by-step breakdown - 500+ words]
+
+## Key Concepts
+[Multiple sub-sections with detailed explanations - 600+ words]
+
+## Real-World Applications
+[Practical examples and use cases - 300+ words]
+
+## Common Misconceptions
+[Address common misunderstandings - 200+ words]
+
+## Best Practices
+[Tips and recommendations - 200+ words]
+
+## Summary
+[Recap of key points - 200+ words]
+
+Return comprehensive markdown text."""
 
         content = await generate(
             prompt,
             system_type="tutor",
-            param_type="content",
+            param_type="course",  # Use 'course' param type for longer content (3000 tokens)
         )
 
         return content
@@ -380,10 +497,9 @@ Return markdown with properly formatted code blocks."""
 
         prompt = f"""Generate 3 MCQ quizzes for "{day_title}" in a {skill_level} {topic} course.
 
-Each question must:
-1. Test understanding, not just memory
-2. Have 4 plausible options (a, b, c, d)
-3. Include an explanation that teaches
+IMPORTANT: Return ONLY valid JSON. No text before or after the JSON.
+Escape all quotes inside strings with backslash (\\").
+Do not include newlines inside string values.
 
 Return ONLY this exact JSON structure:
 {{
@@ -399,6 +515,30 @@ Return ONLY this exact JSON structure:
       }},
       "correct_answer": "a",
       "explanation": "Explanation here..."
+    }},
+    {{
+      "question_number": 2,
+      "question_text": "Question here?",
+      "options": {{
+        "a": "Option A",
+        "b": "Option B",
+        "c": "Option C",
+        "d": "Option D"
+      }},
+      "correct_answer": "b",
+      "explanation": "Explanation here..."
+    }},
+    {{
+      "question_number": 3,
+      "question_text": "Question here?",
+      "options": {{
+        "a": "Option A",
+        "b": "Option B",
+        "c": "Option C",
+        "d": "Option D"
+      }},
+      "correct_answer": "c",
+      "explanation": "Explanation here..."
     }}
   ]
 }}"""
@@ -408,6 +548,7 @@ Return ONLY this exact JSON structure:
             system_type="quiz_generator",
             param_type="quiz",
             expected_keys=["quizzes"],
+            max_retries=5,  # More retries for quiz generation
         )
 
         if "error" in result or "quizzes" not in result:
@@ -424,6 +565,7 @@ Return ONLY this exact JSON structure:
         topic: str,
         skill_level: str,
         goals: List[str],
+        description: str = None,  # Optional user-provided description
         course_id: str = None,
     ) -> Dict[str, Any]:
         """
@@ -453,7 +595,7 @@ Return ONLY this exact JSON structure:
         """
         # Step 1: Generate week theme and objectives
         theme, objectives = await self._generate_week_theme(
-            week_number, total_weeks, topic, skill_level, goals, []
+            week_number, total_weeks, topic, skill_level, goals, description, []
         )
         week_data["theme"] = theme
         week_data["objectives"] = objectives
@@ -466,14 +608,14 @@ Return ONLY this exact JSON structure:
 
             # 2a: Generate day title and tasks
             title, tasks = await self._generate_day_title_tasks(
-                day_num, theme, topic, skill_level, previous_titles
+                day_num, theme, topic, skill_level, description, previous_titles
             )
             day["title"] = title
             day["tasks"] = tasks
             previous_titles.append(title)
 
             # 2b: Generate theory content (no code)
-            theory = await self._generate_theory_content(title, theme, topic, skill_level)
+            theory = await self._generate_theory_content(title, theme, topic, skill_level, description)
             day["theory_content"] = theory
             day["theory_generated"] = True
 
@@ -677,20 +819,23 @@ Return ONLY this exact JSON structure:
         from asgiref.sync import sync_to_async
         from apps.courses.models import Course, WeekPlan, WeeklyTest
 
-        try:
-            course = await sync_to_async(Course.objects.get)(id=course_id)
-            week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+        max_retries = 3
+        
+        for retry in range(max_retries):
+            try:
+                course = await sync_to_async(Course.objects.get)(id=course_id)
+                week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
 
-            # Get all 5 days content
-            days = await sync_to_async(list)(week.days.all().order_by("day_number"))
-            if len(days) != 5:
-                logger.warning("Week %d does not have 5 days", week_number)
-                return {"error": "Week incomplete"}
+                # Get all 5 days content
+                days = await sync_to_async(list)(week.days.all().order_by("day_number"))
+                if len(days) != 5:
+                    logger.warning("Week %d does not have 5 days", week_number)
+                    return {"error": "Week incomplete"}
 
-            # Build context from all days
-            day_titles = [d.title or f"Day {d.day_number}" for d in days]
+                # Build context from all days
+                day_titles = [d.title or f"Day {d.day_number}" for d in days]
 
-            prompt = f"""You are an expert {course.topic} instructor.
+                prompt = f"""You are an expert {course.topic} instructor.
 
 Week {week_number} theme: {week.theme or 'Course Content'}
 This week covered these topics:
@@ -707,43 +852,62 @@ IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep explanations
 JSON format:
 {{"week_test": [{{"question_number": 1, "question_text": "Question?", "difficulty": "easy", "day_reference": 1, "options": {{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}, "correct_answer": "a", "explanation": "Brief explanation"}}]}}"""
 
-            result = await self.llm._generate_json(prompt, max_tokens=4000)
+                result = await self.llm._generate_json(prompt, max_tokens=4000)
 
-            if "error" in result or "week_test" not in result:
-                logger.warning("Weekly test generation failed: %s", result.get("error"))
-                return {"error": "Generation failed", "questions": []}
+                if "error" in result or "week_test" not in result:
+                    logger.warning("Weekly test generation failed (attempt %d/%d): %s", 
+                                  retry + 1, max_retries, result.get("error"))
+                    if retry < max_retries - 1:
+                        await asyncio.sleep(3)  # Wait before retry
+                        continue
+                    return {"error": "Generation failed", "questions": []}
 
-            questions = result.get("week_test", [])
+                questions = result.get("week_test", [])
+                
+                # Validate we got 10 questions
+                if len(questions) < 10:
+                    logger.warning("Weekly test only generated %d questions (expected 10) - retrying", 
+                                  len(questions))
+                    if retry < max_retries - 1:
+                        await asyncio.sleep(3)
+                        continue
 
-            # Save to database
-            @sync_to_async
-            def save_test():
-                test, created = WeeklyTest.objects.update_or_create(
-                    course=course,
-                    week_number=week_number,
-                    defaults={
-                        "questions": questions,
-                        "total_questions": len(questions),
-                    }
-                )
-                week.test_generated = True
-                week.save(update_fields=["test_generated"])
-                return test
+                # Save to database
+                @sync_to_async
+                def save_test():
+                    test, created = WeeklyTest.objects.update_or_create(
+                        course=course,
+                        week_number=week_number,
+                        defaults={
+                            "questions": questions,
+                            "total_questions": len(questions),
+                        }
+                    )
+                    week.test_generated = True
+                    week.save(update_fields=["test_generated"])
+                    return test
 
-            test = await save_test()
+                test = await save_test()
 
-            logger.info("Generated weekly test for Week %d in course %s", week_number, course_id)
+                logger.info("Generated weekly test for Week %d in course %s (%d questions)", 
+                           week_number, course_id, len(questions))
 
-            return {
-                "success": True,
-                "test_id": str(test.id),
-                "week_number": week_number,
-                "total_questions": len(questions),
-            }
+                return {
+                    "success": True,
+                    "test_id": str(test.id),
+                    "week_number": week_number,
+                    "total_questions": len(questions),
+                }
 
-        except Exception as exc:
-            logger.exception("Error generating weekly test: %s", exc)
-            return {"error": str(exc)}
+            except Exception as exc:
+                logger.exception("Error generating weekly test (attempt %d/%d): %s", 
+                               retry + 1, max_retries, exc)
+                if retry < max_retries - 1:
+                    await asyncio.sleep(3)
+                else:
+                    return {"error": str(exc)}
+        
+        return {"error": "Max retries exceeded"}
 
     async def generate_coding_test(
         self,
@@ -764,23 +928,26 @@ JSON format:
         from asgiref.sync import sync_to_async
         from apps.courses.models import Course, WeekPlan, CodingTest
 
-        try:
-            course = await sync_to_async(Course.objects.get)(id=course_id)
-            week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+        max_retries = 3
+        
+        for retry in range(max_retries):
+            try:
+                course = await sync_to_async(Course.objects.get)(id=course_id)
+                week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
 
-            # Get all 5 days content
-            days = await sync_to_async(list)(week.days.all().order_by("day_number"))
-            day_titles = [d.title or f"Day {d.day_number}" for d in days]
+                # Get all 5 days content
+                days = await sync_to_async(list)(week.days.all().order_by("day_number"))
+                day_titles = [d.title or f"Day {d.day_number}" for d in days]
 
-            # Determine difficulty based on course level
-            difficulty_map = {
-                "beginner": ["easy", "easy"],
-                "intermediate": ["easy", "medium"],
-                "advanced": ["medium", "hard"],
-            }
-            difficulties = difficulty_map.get(course.level, ["easy", "medium"])
+                # Determine difficulty based on course level
+                difficulty_map = {
+                    "beginner": ["easy", "easy"],
+                    "intermediate": ["easy", "medium"],
+                    "advanced": ["medium", "hard"],
+                }
+                difficulties = difficulty_map.get(course.level, ["easy", "medium"])
 
-            prompt = f"""You are an expert {course.topic} instructor creating coding challenges.
+                prompt = f"""You are an expert {course.topic} instructor creating coding challenges.
 
 Week {week_number} theme: {week.theme or 'Course Content'}
 Topics: {', '.join(day_titles)}
@@ -793,41 +960,60 @@ IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep descriptions
 JSON format:
 {{"coding_problems": [{{"problem_number": 1, "title": "Title", "description": "Brief description", "difficulty": "{difficulties[0]}", "starter_code": "def solve():", "test_cases": [{{"input": "input", "expected_output": "output", "is_hidden": false}}], "hints": ["Hint 1"], "solution": "def solve(): pass", "time_limit_seconds": 30, "memory_limit_mb": 256}}]}}"""
 
-            result = await self.llm._generate_json(prompt, max_tokens=5000)
+                result = await self.llm._generate_json(prompt, max_tokens=5000)
 
-            if "error" in result or "coding_problems" not in result:
-                logger.warning("Coding test generation failed: %s", result.get("error"))
-                return {"error": "Generation failed", "problems": []}
+                if "error" in result or "coding_problems" not in result:
+                    logger.warning("Coding test generation failed (attempt %d/%d): %s", 
+                                  retry + 1, max_retries, result.get("error"))
+                    if retry < max_retries - 1:
+                        await asyncio.sleep(3)
+                        continue
+                    return {"error": "Generation failed", "problems": []}
 
-            problems = result.get("coding_problems", [])
+                problems = result.get("coding_problems", [])
+                
+                # Validate we got 2 problems
+                if len(problems) < 2:
+                    logger.warning("Coding test only generated %d problems (expected 2) - retrying", 
+                                  len(problems))
+                    if retry < max_retries - 1:
+                        await asyncio.sleep(3)
+                        continue
 
-            # Save to database
-            @sync_to_async
-            def save_test():
-                test, created = CodingTest.objects.update_or_create(
-                    course=course,
-                    week_number=week_number,
-                    defaults={
-                        "problems": problems,
-                        "total_problems": len(problems),
-                    }
-                )
-                return test
+                # Save to database
+                @sync_to_async
+                def save_test():
+                    test, created = CodingTest.objects.update_or_create(
+                        course=course,
+                        week_number=week_number,
+                        defaults={
+                            "problems": problems,
+                            "total_problems": len(problems),
+                        }
+                    )
+                    return test
 
-            test = await save_test()
+                test = await save_test()
 
-            logger.info("Generated coding test for Week %d in course %s", week_number, course_id)
+                logger.info("Generated coding test for Week %d in course %s (%d problems)", 
+                           week_number, course_id, len(problems))
 
-            return {
-                "success": True,
-                "test_id": str(test.id),
-                "week_number": week_number,
-                "total_problems": len(problems),
-            }
+                return {
+                    "success": True,
+                    "test_id": str(test.id),
+                    "week_number": week_number,
+                    "total_problems": len(problems),
+                }
 
-        except Exception as exc:
-            logger.exception("Error generating coding test: %s", exc)
-            return {"error": str(exc)}
+            except Exception as exc:
+                logger.exception("Error generating coding test (attempt %d/%d): %s", 
+                               retry + 1, max_retries, exc)
+                if retry < max_retries - 1:
+                    await asyncio.sleep(3)
+                else:
+                    return {"error": str(exc)}
+        
+        return {"error": "Max retries exceeded"}
 
 
 def generate_full_course(

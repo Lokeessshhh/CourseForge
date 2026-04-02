@@ -1,0 +1,78 @@
+/* ========================================
+   SESSION STATUS - BRUTALIST STYLE
+   Black & White only - Matches CourseForge theme
+   ======================================== */
+
+.container {
+  display: flex;
+  align-items: center;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.statusBadge:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--black);
+  flex-shrink: 0;
+}
+
+.statusBadge.connected {
+  background: var(--white);
+  color: var(--black);
+}
+
+.statusBadge.connected .statusDot {
+  background: var(--black);
+}
+
+.statusBadge.disconnected {
+  background: var(--black);
+  color: var(--white);
+}
+
+.statusBadge.disconnected .statusDot {
+  background: var(--white);
+}
+
+.statusBadge.switching {
+  background: var(--black);
+  color: var(--white);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.statusBadge.switching .statusDot {
+  background: var(--white);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.statusText {
+  white-space: nowrap;
+}

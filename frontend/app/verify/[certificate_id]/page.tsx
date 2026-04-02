@@ -155,7 +155,7 @@ export default function VerifyCertificatePage() {
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>STATUS</span>
             <span className={`${styles.detailValue} ${styles.statusBadge} ${result.is_unlocked ? styles.unlocked : styles.locked}`}>
-              {result.is_unlocked ? '✓ UNLOCKED' : '🔒 LOCKED'}
+              {result.is_unlocked ? '✓ UNLOCKED' : 'LOCKED'}
             </span>
           </div>
         </div>

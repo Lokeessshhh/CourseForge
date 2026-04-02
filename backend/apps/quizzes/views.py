@@ -52,6 +52,14 @@ def quiz_list(request, course_id, week_number, day_number):
     if not day:
         return _err("Not found.", status.HTTP_404_NOT_FOUND)
 
+    # Check if day is locked
+    if day.is_locked:
+        return _err("Day is locked.", status.HTTP_403_FORBIDDEN)
+
+    # Check if quiz is generated
+    if not day.quiz_generated:
+        return _err("Quiz not generated yet.", status.HTTP_400_BAD_REQUEST)
+
     questions = QuizQuestion.objects.filter(
         course=course, week_number=week_number, day_number=day_number
     )
@@ -67,6 +75,14 @@ def quiz_submit(request, course_id, week_number, day_number):
     course, week, day = _get_day(request.user, course_id, week_number, day_number)
     if not day:
         return _err("Not found.", status.HTTP_404_NOT_FOUND)
+
+    # Check if day is locked
+    if day.is_locked:
+        return _err("Day is locked.", status.HTTP_403_FORBIDDEN)
+
+    # Check if quiz is generated
+    if not day.quiz_generated:
+        return _err("Quiz not generated yet.", status.HTTP_400_BAD_REQUEST)
 
     serializer = QuizSubmitSerializer(data=request.data)
     if not serializer.is_valid():
@@ -128,6 +144,14 @@ def quiz_results(request, course_id, week_number, day_number):
     course, week, day = _get_day(request.user, course_id, week_number, day_number)
     if not day:
         return _err("Not found.", status.HTTP_404_NOT_FOUND)
+
+    # Check if day is locked
+    if day.is_locked:
+        return _err("Day is locked.", status.HTTP_403_FORBIDDEN)
+
+    # Check if quiz is generated
+    if not day.quiz_generated:
+        return _err("Quiz not generated yet.", status.HTTP_400_BAD_REQUEST)
 
     attempts = QuizAttempt.objects.filter(
         user=request.user,

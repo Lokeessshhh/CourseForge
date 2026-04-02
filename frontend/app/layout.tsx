@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import { AuthTokenBridge } from '@/app/components/AuthTokenBridge';
 import { LoadingProvider } from '@/app/components/LoadingProvider';
+import { GenerationProgressProvider } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({
           <ErrorBoundary>
             <AuthTokenBridge />
             <LoadingProvider>
-              {children}
+              <GenerationProgressProvider>
+                {children}
+              </GenerationProgressProvider>
             </LoadingProvider>
           </ErrorBoundary>
         </body>

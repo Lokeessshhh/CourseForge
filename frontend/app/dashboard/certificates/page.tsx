@@ -40,7 +40,7 @@ function CertificateCard({ cert, index }: { cert: Certificate; index: number }) 
             </span>
             {!cert.is_unlocked && (
               <div className={styles.lockOverlay}>
-                <span className={styles.lockIcon}>🔒</span>
+                <span className={styles.lockIcon}>LOCK</span>
               </div>
             )}
           </div>
@@ -48,7 +48,7 @@ function CertificateCard({ cert, index }: { cert: Certificate; index: number }) 
             {cert.is_unlocked ? (
               <span className={styles.certStatus}>✓ EARNED</span>
             ) : (
-              <span className={styles.certStatusLocked}>🔒 LOCKED</span>
+              <span className={styles.certStatusLocked}>LOCKED</span>
             )}
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function CertificatesPage() {
           {/* Locked Certificates */}
           {lockedCerts.length > 0 && (
             <div className={styles.certSection}>
-              <h3 className={styles.sectionTitle}>🔒 LOCKED CERTIFICATES</h3>
+              <h3 className={styles.sectionTitle}>LOCKED CERTIFICATES</h3>
               <div className={styles.certGrid}>
                 {lockedCerts.map((cert, index) => (
                   <CertificateCard key={cert.course_id} cert={cert} index={unlockedCerts.length + index} />

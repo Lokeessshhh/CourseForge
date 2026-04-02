@@ -1,6 +1,6 @@
 .overlay {
   position: fixed;
-  bottom: 60px;
+  bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -56,7 +56,8 @@
   width: 100%;
   padding: 12px 16px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   border: 2px solid var(--black);
   background-color: var(--white);
   color: var(--black);
@@ -64,12 +65,132 @@
 
 .input::placeholder {
   color: var(--black);
-  opacity: 0.4;
+  opacity: 0.5;
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .input:focus {
   outline: none;
+  border-color: var(--black);
   box-shadow: 4px 4px 0px var(--black);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  color: var(--black);
+  resize: vertical;
+  min-height: 80px;
+}
+
+.textarea::placeholder {
+  color: var(--black);
+  opacity: 0.5;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.textarea:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Duration input */
+.durationContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.durationInput {
+  width: 50px;
+  padding: 10px 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 4px;
+}
+
+.durationInput:focus {
+  border-color: #666;
+}
+
+.durationInput:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.durationInput.inputError {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.durationSelect {
+  flex: 1;
+  max-width: 140px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+  cursor: pointer;
+  border-radius: 4px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  transition: var(--transition);
+}
+
+.durationSelect:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.durationSelect:focus {
+  border-color: #666;
+}
+
+.durationSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.durationHint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #666;
+  margin: 4px 0 0 0;
+}
+
+.errorText {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #e74c3c;
+  margin: 4px 0 0 0;
+  font-weight: 600;
 }
 
 .options {

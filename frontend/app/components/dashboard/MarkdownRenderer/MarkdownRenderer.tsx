@@ -13,7 +13,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   }, [content]);
 
   return (
-    <div 
+    <div
       className={styles.renderer}
       dangerouslySetInnerHTML={{ __html: html }}
     />

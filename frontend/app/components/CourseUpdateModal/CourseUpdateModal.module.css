@@ -1,0 +1,457 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0px var(--black);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid var(--black);
+  background: var(--black);
+  color: var(--white);
+}
+
+.modalTitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0;
+  color: var(--white);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  font-family: var(--font-mono);
+}
+
+.closeBtn:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.closeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Course Info */
+.courseInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9f9f9;
+  border: 2px solid var(--black);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.courseLabel,
+.durationLabel {
+  font-weight: 700;
+  color: var(--black);
+  text-transform: uppercase;
+}
+
+.courseValue,
+.durationValue {
+  font-weight: 600;
+  color: #2563eb;
+  text-transform: uppercase;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--black);
+  text-transform: uppercase;
+}
+
+/* Type Options */
+.typeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.typeOption {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  user-select: none;
+}
+
+.typeOption:hover:not([aria-disabled="true"]) {
+  background: #f5f5f5;
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
+}
+
+.typeOption.selected {
+  background: var(--black);
+  color: var(--white);
+}
+
+.typeOption[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.typeOption:focus-visible {
+  outline: 2px solid var(--black);
+  outline-offset: 2px;
+}
+
+.typeOptionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.typeNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.typeLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.typeDescription {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: inherit;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Percentage Selector */
+.percentageSelector {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.percentageBtn {
+  flex: 1;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.percentageBtn:hover:not(:disabled) {
+  background: var(--black);
+  color: var(--white);
+}
+
+.percentageBtn.selected {
+  background: var(--black);
+  color: var(--white);
+}
+
+.percentageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Extend Input */
+.extendInput,
+.compactInput {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+}
+
+.inputLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.numberInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 4px;
+}
+
+.numberInput:focus {
+  border-color: #666;
+}
+
+.numberInput:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Duration Preview */
+.durationPreview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #e8f4fd;
+  border: 2px solid #3498db;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.previewLabel {
+  font-weight: 700;
+  color: #2980b9;
+  text-transform: uppercase;
+}
+
+.previewValue {
+  font-weight: 700;
+  color: #2980b9;
+}
+
+/* Confirmation Box */
+.confirmBox {
+  background: #fef9e7;
+  border: 2px solid var(--black);
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.confirmHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.confirmIcon {
+  font-size: 20px;
+}
+
+.confirmTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--black);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.confirmContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmText {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: #333;
+  margin: 0;
+}
+
+.confirmSummary {
+  background: var(--white);
+  border: 2px solid var(--black);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confirmSummary strong {
+  font-weight: 700;
+  color: var(--black);
+  text-transform: uppercase;
+}
+
+.confirmSummary p {
+  margin: 0;
+  color: #555;
+}
+
+.confirmNote {
+  background: #fff3cd;
+  border: 1px solid var(--black);
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #333;
+}
+
+/* Error Text */
+.errorText {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #e74c3c;
+  margin: 4px 0 0 0;
+  font-weight: 600;
+}
+
+/* Modal Footer */
+.modalFooter {
+  padding: 20px 24px;
+  border-top: 2px solid var(--black);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cancelBtn,
+.backBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 12px 24px;
+  background: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancelBtn:hover:not(:disabled),
+.backBtn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.cancelBtn:disabled,
+.backBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submitBtn,
+.confirmBtn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 12px 24px;
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.submitBtn:hover:not(:disabled),
+.confirmBtn:hover:not(:disabled) {
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
+}
+
+.submitBtn:disabled,
+.confirmBtn:disabled,
+.submitBtn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-left: 2px solid var(--black);
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: var(--black);
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
