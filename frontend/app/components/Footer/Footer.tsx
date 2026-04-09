@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from './Footer.module.css';
 
-export default function Footer() {
+interface FooterProps {
+  isAuthenticated: boolean;
+}
+
+export default function Footer({ isAuthenticated }: FooterProps) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -25,9 +29,9 @@ export default function Footer() {
           {/* Brand column */}
           <div className={styles.brandColumn}>
             <span className={styles.logo}>CourseForge</span>
-            <p className={styles.tagline}>AI-Powered Course Generation</p>
+            <p className={styles.tagline}>AI-POWERED COURSES</p>
             <p className={styles.description}>
-              Create comprehensive courses in minutes with AI. 
+              Create comprehensive courses in minutes with AI.
               Built with Fine-tuned Qwen 7B · AMD MI300x ROCm
             </p>
           </div>
@@ -37,8 +41,9 @@ export default function Footer() {
             <h4 className={styles.linksTitle}>QUICK LINKS</h4>
             <a href="/" className={styles.linkItem}>Home</a>
             <a href="#process" className={styles.linkItem}>How it Works</a>
-            <a href="/dashboard" className={styles.linkItem}>Dashboard</a>
-            <a href="/login" className={styles.linkItem}>Login</a>
+            <a href={isAuthenticated ? "/dashboard" : "/login"} className={styles.linkItem}>
+              {isAuthenticated ? 'Dashboard' : 'Login'}
+            </a>
           </div>
 
           {/* Newsletter */}

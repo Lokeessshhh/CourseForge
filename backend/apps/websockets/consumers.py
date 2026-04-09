@@ -413,36 +413,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def _process_message(self, query: str, message_id: str, include_sources: bool, web_search: bool = False):
         """
-        Process message with LLM + user context (no RAG).
-        Optionally performs web search using Tavily API.
-
-        Steps:
-        1. Load user context (lightweight - parallel)
-        2. Perform web search if enabled (Tavily API)
-        3. Stream LLM response with web search results
-        4. Save conversation (awaited before response completes)
-        5. Update session metadata (title generation)
-        6. Send stream_end signal
-
-        IMPORTANT: This continues processing even if client disconnects.
-        All data is saved to database before attempting to send to client.
+        Process message with full RAG pipeline:
+        1. Web search if enabled (Tavily API)
+        2. Load user context + knowledge state
+        3. Check semantic cache (Redis)
+        4. If cache miss → hybrid RAG retrieval + rerank
+        5. Build RAG prompt with chunks + history + knowledge state
+        6. Stream LLM response
+        7. Save conversation + cache response
+        8. Update session metadata
         """
         from services.chat.context import UserContextLoader
         from services.chat.session import ChatSession
         from services.llm.qwen_client import get_client
-        
-        # Web search results
-        web_search_results = None
-        search_query = None
 
-        # Step 1: Perform web search if enabled (silent - no UI events)
+        # ── Step 1: Web search if enabled ──
+        web_search_results = None
+        enhanced_query = query
+
         if web_search:
             try:
                 from services.chat.web_search import perform_web_search, format_web_search_for_prompt
 
                 logger.info("WS performing SILENT web search for: %s", query[:100])
-                
-                # Send web search start event
+
                 try:
                     await self.send(json.dumps({
                         "type": "web_search_start",
@@ -450,12 +444,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "query": query,
                     }))
                 except Exception:
-                    pass  # Continue even if client disconnected
+                    pass
 
-                # Perform search (no UI events sent)
                 web_search_results = await perform_web_search(query)
-                
-                # Send web search end event with results
+
                 try:
                     await self.send(json.dumps({
                         "type": "web_search_end",
@@ -465,25 +457,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "query": web_search_results.get('query', query) if web_search_results else query,
                     }))
                 except Exception:
-                    pass  # Continue even if client disconnected
+                    pass
 
                 if web_search_results and web_search_results.get('success'):
-                    # Format search results for LLM prompt
                     search_formatted = format_web_search_for_prompt(web_search_results)
                     enhanced_query = search_formatted + "\n\nUser Question: " + query
                     logger.info("WS silent web search successful: %d results", len(web_search_results.get('frontend_results', [])))
                 else:
                     error_msg = web_search_results.get('error', 'Unknown error') if web_search_results else 'Search failed'
                     logger.warning("WS silent web search failed: %s", error_msg)
-                    enhanced_query = query  # Use original query if search fails
 
             except Exception as exc:
                 logger.exception("WS silent web search error: %s", exc)
-                enhanced_query = query
-        else:
-            enhanced_query = query
 
-        # Step 2: Load user context (run in parallel for speed)
+        # ── Step 2: Load user context ──
         context_loader = UserContextLoader()
         try:
             user_context = await asyncio.wait_for(
@@ -494,7 +481,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     week=self.week,
                     day=self.day,
                 ),
-                timeout=5.0  # Timeout to prevent hanging
+                timeout=5.0,
             )
         except asyncio.TimeoutError:
             logger.warning("Context loading timed out, using minimal context")
@@ -503,10 +490,76 @@ class ChatConsumer(AsyncWebsocketConsumer):
             logger.exception("Context loading failed: %s", exc)
             user_context = {"profile": {"name": "Student"}, "knowledge_state": {}}
 
-        # Step 2: Build context string
         context_string = context_loader.build_context_string(user_context)
 
-        # Step 4: Stream LLM response (enhanced_query already includes web search if enabled)
+        # ── Step 3: Check semantic cache ──
+        try:
+            from apps.memory.cache import get_cached_response
+            cached = await get_cached_response(query)
+            if cached:
+                logger.info("WS semantic cache HIT for: %s", query[:80])
+                await self._stream_cached_response(cached, message_id, include_sources)
+                await self._save_conversation(query, cached)
+                return
+        except Exception as exc:
+            logger.warning("Semantic cache check failed: %s", exc)
+
+        # ── Step 4: RAG retrieval + rerank ──
+        rag_chunks = []
+        knowledge_state = {}
+
+        try:
+            # Load knowledge state for adaptive prompting
+            from apps.memory.knowledge import get_knowledge_state
+            knowledge_state = await get_knowledge_state(self.user_id)
+
+            # Run hybrid RAG retrieval
+            from services.rag_pipeline.retriever import hybrid_retrieve
+            rag_chunks = await hybrid_retrieve(
+                query=query,
+                top_k=60,
+                course_id=self.course_id,
+                use_hyde=True,
+                use_decomposition=True,
+            )
+
+            if rag_chunks:
+                # Rerank
+                from services.rag_pipeline.reranker import reranker
+                rag_chunks = reranker.rerank(query, rag_chunks, top_k=10)
+                logger.info("WS RAG retrieved %d chunks for: %s", len(rag_chunks), query[:80])
+            else:
+                logger.info("WS RAG returned no chunks for: %s", query[:80])
+
+        except Exception as exc:
+            logger.warning("WS RAG retrieval failed (falling back to no-RAG): %s", exc)
+            rag_chunks = []
+            knowledge_state = {}
+
+        # ── Step 5: Build RAG prompt ──
+        if rag_chunks:
+            # Use RAG prompt with context chunks
+            from services.rag_pipeline.generator import build_rag_prompt
+
+            # Load conversation history for context
+            try:
+                from apps.memory.history import get_recent_history
+                conversation_history = await get_recent_history(self.session_id, limit=6)
+            except Exception:
+                conversation_history = []
+
+            rag_prompt = build_rag_prompt(
+                question=enhanced_query,
+                context_chunks=rag_chunks,
+                conversation_history=conversation_history,
+                knowledge_state=knowledge_state,
+            )
+            logger.info("WS RAG prompt built with %d chunks", len(rag_chunks))
+        else:
+            # Fallback: use original enhanced query
+            rag_prompt = enhanced_query
+
+        # ── Step 6: Stream LLM response ──
         full_response = ""
         client = get_client()
 
@@ -515,10 +568,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id, message_id
         )
 
-        # Track if client is still connected
         client_connected = True
 
-        # Try to send stream_start, but continue even if client disconnected
         try:
             await self.send(json.dumps({
                 "type": "stream_start",
@@ -530,7 +581,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         try:
             async for token in client.stream_generate(
-                prompt=enhanced_query,
+                prompt=rag_prompt,
                 context=context_string,
                 max_tokens=2000,
             ):
@@ -540,7 +591,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "WS first_token: session=%s message_id=%s",
                         self.session_id, message_id
                     )
-                # Only try to send tokens if client is still connected
                 if client_connected:
                     try:
                         await self.send(json.dumps({
@@ -551,21 +601,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     except Exception as exc:
                         logger.warning("Client disconnected during streaming: %s", exc)
                         client_connected = False
-                        # Continue processing - don't break the loop
         except Exception as exc:
             logger.error("Streaming error: %s", exc)
             if not full_response:
                 full_response = "I apologize, but I encountered an error generating a response. Please try again."
 
-        # Step 4: Save conversation BEFORE sending stream_end
-        # This ensures data is persisted even if client disconnects immediately
+        # ── Step 7: Save conversation ──
         try:
             await self._save_conversation(query, full_response)
             logger.info("Conversation saved to database (user query + response)")
         except Exception as exc:
             logger.warning("Failed to save conversation: %s", exc)
 
-        # Step 5: Update session BEFORE stream_end (title generation happens AFTER)
+        # ── Step 8: Cache response ──
+        try:
+            from apps.memory.cache import set_cached_response
+            await set_cached_response(query, full_response)
+        except Exception as exc:
+            logger.warning("Response caching failed: %s", exc)
+
+        # ── Step 9: Update session ──
         try:
             self.session = await ChatSession.get_or_create(
                 user_id=self.user_id,
@@ -583,31 +638,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as exc:
             logger.warning("Session update failed: %s", exc)
 
-        # Step 6: NOW send stream_end (all data is saved, title gen happens after)
+        # ── Step 10: Send stream_end ──
         logger.info(
             "WS stream_end: session=%s message_id=%s response_len=%s",
             self.session_id, message_id, len(full_response)
         )
 
-        # Try to send stream_end, but continue even if client disconnected
         if client_connected:
             try:
+                sources = []
+                if include_sources and rag_chunks:
+                    sources = [
+                        {
+                            "chunk_id": c.get("chunk_id", ""),
+                            "title": c.get("title", "Document"),
+                            "content": c.get("content", "")[:300],
+                            "score": c.get("rerank_score", c.get("score", 0.0)),
+                        }
+                        for c in rag_chunks[:5]
+                    ]
+
                 await self.send(json.dumps({
                     "type": "stream_end",
                     "message_id": message_id,
-                    "sources": [],
+                    "sources": sources,
                     "full_response": full_response,
                 }))
             except Exception as exc:
                 logger.warning("Client disconnected before stream_end: %s", exc)
                 client_connected = False
 
-        # Step 7: Generate session title AFTER stream_end (non-blocking)
-        # This ensures the client receives the response even if they disconnect immediately
+        # ── Step 11: Generate session title (background) ──
         try:
-            if hasattr(self, 'session') and len(self.session.messages) == 2:  # First message
-                logger.info("Generating title in background: session=%s", self.session_id)
-                # Run title generation in background - don't await
+            if hasattr(self, 'session') and len(self.session.messages) == 2:
                 asyncio.create_task(self._generate_session_title_background(query))
             else:
                 logger.info("Skipping title generation (not first message): session=%s", self.session_id)
@@ -615,8 +678,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             logger.warning("Title generation failed: %s", exc)
 
         logger.info(
-            "Chat message processed (no RAG): user=%s session=%s",
-            self.user_id, self.session_id
+            "Chat message processed: user=%s session=%s rag_chunks=%d",
+            self.user_id, self.session_id, len(rag_chunks)
         )
 
     async def _save_conversation(self, query: str, full_response: str):

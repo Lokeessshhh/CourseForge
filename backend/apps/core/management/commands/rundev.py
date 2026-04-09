@@ -154,7 +154,7 @@ class Command(BaseCommand):
             return None
 
     def stream_celery_logs(self, process):
-        """Stream Celery logs - shows all important logs with proper formatting."""
+        """Stream Celery logs - shows all logs."""
         try:
             # Signal that Celery has started
             self.celery_started.set()
@@ -174,90 +174,20 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING(f'⚠️ [Celery] {line.rstrip()}'))
                     continue
 
-                # SKIP debug spam - Celery internal noise
+                # SKIP only Celery internal debug noise
                 skip_patterns = [
                     "Timer wake-up",
                     "pidbox received",
                     "basic.qos",
                     "Celery beat:",
-                    "DEBUG",
                 ]
                 if any(pattern in line for pattern in skip_patterns):
                     continue
 
-                # Standard Celery task logs - ALWAYS SHOW these
-                # Format: "Task <name>[<id>] received" or "Task <name>[<id>] succeeded"
-                if "Task " in line and ("received" in line or "succeeded" in line or "failed" in line or "started" in line):
-                    self.stdout.write(self.style.SUCCESS(f'🎯 [Celery] {line.rstrip()}'))
-                    continue
+                # Show all other Celery logs
+                self.stdout.write(f'📦 [Celery] {line.rstrip()}')
 
-                # Running task logs
-                if "Running " in line and "task" in line.lower():
-                    self.stdout.write(self.style.SUCCESS(f'🎯 [Celery] {line.rstrip()}'))
-                    continue
-
-                # Custom course generation logs
-                if "CELERY TASK" in line:
-                    self.stdout.write(self.style.SUCCESS(f'🎯 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Task ID:" in line or "Course ID:" in line or "Week:" in line or "Attempt:" in line:
-                    self.stdout.write(self.style.SUCCESS(f'📋 [Celery] {line.rstrip()}'))
-                    continue
-
-                # Day generation logs
-                if "[DAY GENERATION]" in line or "[DAY COMPLETE]" in line:
-                    self.stdout.write(self.style.SUCCESS(f'📝 [Celery] {line.rstrip()}'))
-                    continue
-
-                # LLM call logs
-                if "[LLM CALL]" in line:
-                    self.stdout.write(self.style.SUCCESS(f'🤖 [Celery] {line.rstrip()}'))
-                    continue
-
-                # Web search logs
-                if "[WEB SEARCH]" in line:
-                    self.stdout.write(self.style.SUCCESS(f'📊 [Celery] {line.rstrip()}'))
-                    continue
-
-                # Week update logs
-                if "STARTING WEEK" in line or "Generating week theme" in line:
-                    self.stdout.write(self.style.SUCCESS(f'📝 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Generated" in line and ("test" in line.lower() or "quiz" in line.lower() or "questions" in line.lower() or "problems" in line.lower()):
-                    self.stdout.write(self.style.SUCCESS(f'📝 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Questions:" in line or "Problems:" in line or "Test ID:" in line:
-                    self.stdout.write(self.style.SUCCESS(f'📝 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Broadcast" in line or "progress" in line.lower():
-                    self.stdout.write(self.style.WARNING(f'📡 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "GENERATION COMPLETE" in line or "LAST TASK" in line or "marked as READY" in line:
-                    self.stdout.write(self.style.SUCCESS(f'✅ [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Starting" in line and ("weekly test" in line.lower() or "course" in line.lower()):
-                    self.stdout.write(self.style.SUCCESS(f'📨 [Celery] {line.rstrip()}'))
-                    continue
-
-                if "Complete" in line or "generated" in line.lower():
-                    self.stdout.write(self.style.SUCCESS(f'✅ [Celery] {line.rstrip()}'))
-                    continue
-
-                # Fallback: Show any remaining INFO lines from Celery
-                # This ensures we don't miss valid logs that don't match specific patterns
-                if "INFO" in line or "[celery]" in line.lower():
-                    self.stdout.write(self.style.SUCCESS(f'📨 [Celery] {line.rstrip()}'))
-                    continue
-
-                # Default: Show any other non-empty line (prevents losing valid logs)
-                # This is the key fix - don't silently drop lines
-                self.stdout.write(f'[Celery] {line.rstrip()}\n')
+            self.stdout.write(self.style.WARNING('\n⚠️  Celery worker stopped unexpectedly\n'))
 
         except Exception as e:
             if not self.shutting_down:

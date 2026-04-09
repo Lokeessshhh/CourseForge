@@ -27,8 +27,12 @@ function ScrambleWord({ word, delay }: { word: string; delay: number }) {
   return <span>{displayText}</span>;
 }
 
-function ParallaxSticker({ sticker, isInView, mouseX, mouseY }: { 
-  sticker: typeof stickers[0]; 
+interface HeroProps {
+  isAuthenticated: boolean;
+}
+
+function ParallaxSticker({ sticker, isInView, mouseX, mouseY }: {
+  sticker: typeof stickers[0];
   isInView: boolean;
   mouseX: ReturnType<typeof useMousePosition>['mouseX'];
   mouseY: ReturnType<typeof useMousePosition>['mouseY'];
@@ -48,7 +52,7 @@ function ParallaxSticker({ sticker, isInView, mouseX, mouseY }: {
   );
 }
 
-export default function Hero() {
+export default function Hero({ isAuthenticated }: HeroProps) {
   const [displayedLines, setDisplayedLines] = useState<number[]>([]);
   const [charCounts, setCharCounts] = useState<{ [key: number]: number }>({});
   const [courseCount, setCourseCount] = useState(1247);
@@ -141,12 +145,12 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <motion.a
-              href="/login"
+              href={isAuthenticated ? "/dashboard" : "/login"}
               className={styles.primaryBtn}
               whileHover={{ x: -3, y: -3 }}
               transition={{ type: 'spring', stiffness: 400 }}
             >
-              CREATE MY COURSE →
+              {isAuthenticated ? "GO TO MY COURSE →" : "CREATE MY COURSE →"}
             </motion.a>
             <motion.a
               href="#how-it-works"

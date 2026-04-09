@@ -664,9 +664,9 @@ Return ONLY the JSON, no other text."""
             if week_num and day_num:
                 # Get specific day content
                 try:
-                    day = DayPlan.objects.get(course=course, week_number=week_num, day_number=day_num)
-                    content_to_summarize = f"""Day {day_num} of Week {week_num}: {day.day_title}
-                    
+                    day = DayPlan.objects.get(week_plan__course=course, week_plan__week_number=week_num, day_number=day_num)
+                    content_to_summarize = f"""Day {day_num} of Week {week_num}: {day.title or 'No title'}
+
 Theory Content:
 {day.theory_content or 'No theory content'}
 
@@ -674,7 +674,7 @@ Code Content:
 {day.code_content or 'No code examples'}
 
 Tasks:
-{chr(10).join([f"- {task.title}: {task.description}" for task in day.tasks.all()]) if day.tasks.exists() else 'No tasks'}
+{chr(10).join([f"- {k}: {v}" for k, v in day.tasks.items()]) if isinstance(day.tasks, dict) and day.tasks else 'No tasks'}
 """
                     summary_type = "day"
                 except DayPlan.DoesNotExist:
@@ -689,13 +689,13 @@ Tasks:
                     week = WeekPlan.objects.get(course=course, week_number=week_num)
                     days_content = []
                     for day in week.days.all().order_by('day_number'):
-                        days_content.append(f"""Day {day.day_number}: {day.day_title}
+                        days_content.append(f"""Day {day.day_number}: {day.title or 'No title'}
 - Theory: {day.theory_content[:200] if day.theory_content else 'No content'}...
-- Tasks: {day.tasks.count()} tasks
+- Tasks: {len(day.tasks) if isinstance(day.tasks, dict) else 0} tasks
 """)
-                    content_to_summarize = f"""Week {week_num}: {week.week_title}
+                    content_to_summarize = f"""Week {week_num}: {week.theme or 'No theme'}
 
-Description: {week.description or 'No description'}
+Description: {week.objectives or 'No description'}
 
 Days Overview:
 {chr(10).join(days_content)}

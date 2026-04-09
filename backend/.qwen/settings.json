@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(taskkill *)",
+      "Bash(start-sleep *)",
+      "Bash(daphne *)"
+    ]
+  }
+}

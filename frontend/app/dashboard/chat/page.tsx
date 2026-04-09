@@ -99,7 +99,9 @@ export default function ChatPage() {
   }, [onTitleUpdate, refetchSessions, stopTitlePolling]);
 
   const messages = wsMessages;
-  const isThinking = isWsThinking || isCrudThinking || (currentSessionId && historyLoading && messages.length === 0);
+  // isThinking only blocks input during actual chat responses, not during course generation
+  // This allows users to continue chatting while courses are being generated in the background
+  const isThinking = isWsThinking || isCrudThinking;
 
   // Course management state
   const {
@@ -163,25 +165,15 @@ export default function ChatPage() {
     }
   }, [sessions.length, sessionsLoading, courseId, createSession]);
 
-  // Get the currently generating course for this chat session
-  // Show progress bar for all stages: pending, generating, updating, and recently completed
-  // This ensures progress bar shows from initialization through completion
-  const generatingCourseInThisSession = Array.from(generatingCourses.values()).find(
-    c => (c.generation_status === 'pending' || c.generation_status === 'generating' || c.generation_status === 'updating' || c.generation_status === 'ready') &&
-    // Match if both are null/undefined OR both match exactly
-    (c.createdBySessionId === currentSessionId ||
-     (!c.createdBySessionId && !currentSessionId))  // Handle null/undefined case
-  );
-  const generatingCourseId = generatingCourseInThisSession?.courseId;
-  const generatingCourse = generatingCourseId ? generatingCourses.get(generatingCourseId) : undefined;
-  
-  // Debug logging
+  // Debug logging - show all generating courses for this session
   useEffect(() => {
+    const sessionCourses = Array.from(generatingCourses.values()).filter(
+      c => c.createdBySessionId === currentSessionId
+    );
     console.log('[DEBUG] generatingCourses:', Array.from(generatingCourses.entries()));
     console.log('[DEBUG] currentSessionId:', currentSessionId);
-    console.log('[DEBUG] generatingCourseInThisSession:', generatingCourseInThisSession);
-    console.log('[DEBUG] generatingCourseId:', generatingCourseId);
-  }, [generatingCourses, currentSessionId, generatingCourseInThisSession, generatingCourseId]);
+    console.log('[DEBUG] Session courses count:', sessionCourses.length);
+  }, [generatingCourses, currentSessionId]);
   
   // Restore session ID on mount (when sessions are loaded) - ONLY RUNS ONCE
   useEffect(() => {
@@ -510,16 +502,84 @@ export default function ChatPage() {
     setViewingSessionId(currentSessionId);
   }, [currentSessionId, clearMessages, setMessages, stopTitlePolling]);
 
-  // Load history when fetched
+  // Load history when fetched - runs only once when viewingSessionId changes
   useEffect(() => {
-    if (viewingSessionId && !historyLoading && historyMessages.length > 0) {
-      console.log('[CHAT] History loaded:', historyMessages.length, 'messages');
+    if (viewingSessionId && !historyLoading) {
+      console.log('[CHAT] History loading for session:', viewingSessionId);
 
-      // Set messages from history (always, since we cleared on session switch)
-      setMessages(historyMessages);
-      setHasSentFirstMessage(true);  // Mark as loaded
+      // First try localStorage (has progress placeholder messages with correct positions)
+      const localStorageMessages = storage.getSessionMessages(viewingSessionId);
+      
+      if (localStorageMessages && localStorageMessages.length > 0) {
+        console.log('[CHAT] Loaded from localStorage:', localStorageMessages.length, 'messages');
+        // Convert timestamps back to Date objects
+        const messagesWithDates = localStorageMessages.map(m => ({
+          ...m,
+          timestamp: new Date(m.timestamp),
+        }));
+        setMessages(messagesWithDates);
+        setHasSentFirstMessage(true);
+      } else if (historyMessages.length > 0) {
+        // Fallback to database (doesn't have progress placeholders)
+        console.log('[CHAT] Loaded from DB:', historyMessages.length, 'messages (no localStorage)');
+
+        // Find any generating courses created by this session
+        const sessionGeneratingCourses = Array.from(generatingCourses.values()).filter(
+          c => c.createdBySessionId === viewingSessionId
+        );
+
+        // If there are generating courses but no progress placeholder messages, add them
+        let messagesWithProgress = [...historyMessages];
+        
+        if (sessionGeneratingCourses.length > 0) {
+          // Check if progress placeholder messages already exist
+          const existingProgressIds = historyMessages
+            .filter(m => m.isProgressPlaceholder)
+            .map(m => m.courseId);
+
+          // Add placeholder messages for courses that don't have them yet
+          // INSERT at the position where course was mentioned (after the AI response that started generation)
+          for (const course of sessionGeneratingCourses) {
+            if (!existingProgressIds.includes(course.courseId)) {
+              console.log('[CHAT] Adding progress placeholder for course:', course.courseId);
+              // Find the message that mentions this course being generated
+              const insertIndex = historyMessages.findIndex(m => 
+                m.role === 'assistant' && 
+                (m.content.includes('Generating') || m.content.includes('Updating')) &&
+                m.content.includes(course.courseName)
+              );
+              
+              if (insertIndex >= 0) {
+                // Insert after the generation start message
+                messagesWithProgress.splice(insertIndex + 1, 0, {
+                  id: `progress-${course.courseId}`,
+                  role: 'assistant' as const,
+                  content: `🔄 ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
+                  timestamp: new Date(course.startedAt),
+                  isProgressPlaceholder: true,
+                  courseId: course.courseId,
+                });
+              } else {
+                // Fallback: add at end if can't find position
+                messagesWithProgress.push({
+                  id: `progress-${course.courseId}`,
+                  role: 'assistant' as const,
+                  content: `🔄 ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
+                  timestamp: new Date(course.startedAt),
+                  isProgressPlaceholder: true,
+                  courseId: course.courseId,
+                });
+              }
+            }
+          }
+        }
+
+        setMessages(messagesWithProgress);
+        setHasSentFirstMessage(true);
+      }
     }
-  }, [historyMessages, historyLoading, viewingSessionId, setMessages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingSessionId, historyLoading]); // Don't depend on historyMessages array to avoid infinite loop
 
   // Scroll to bottom
   useEffect(() => {
@@ -642,7 +702,9 @@ export default function ChatPage() {
   }, [refetchSessions, getToken]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isThinking) return;
+    // Only block if disconnected - allow sending messages even while AI is thinking
+    // This enables continuous conversation flow and parallel course generation
+    if (!inputValue.trim()) return;
     if (!isConnected) return;
 
     const isFirstMessage = !hasSentFirstMessage;
@@ -899,6 +961,17 @@ export default function ChatPage() {
               // Add to global generation progress context
               // Always add, even without session_id (for fallback)
               if (newCourseId) {
+                // First, add a progress placeholder message to the chat
+                const progressPlaceholderMessage: ChatMessage = {
+                  id: `progress-${newCourseId}`,
+                  role: 'assistant',
+                  content: `🔄 Generating course: **${course_data.course_name}**`,
+                  timestamp: new Date(),
+                  isProgressPlaceholder: true,
+                  courseId: newCourseId,
+                };
+                setMessages([...messages, progressPlaceholderMessage]);
+
                 addGeneratingCourse({
                   courseId: newCourseId,
                   courseName: course_data.course_name,
@@ -925,10 +998,8 @@ export default function ChatPage() {
           else if (command === 'update_course' && action === 'show_options') {
             // Show update modal for user to select
             if (course_id && user_query && update_options) {
-              // Find current duration from the first available option or default
-              const currentDuration = update_options[0]?.duration_change 
-                ? parseInt(update_options[0].duration_change.replace(/\D/g, '')) || 4
-                : 4;
+              // Use current_duration_weeks from backend response (already correct)
+              const currentDuration = responseData.current_duration_weeks || 4;
 
               setPendingUpdateData({
                 course_id,
@@ -1363,6 +1434,17 @@ export default function ChatPage() {
 
           // Add to global generation progress context
           if (newCourseId) {
+            // First, add a progress placeholder message to the chat
+            const progressPlaceholderMessage: ChatMessage = {
+              id: `progress-${newCourseId}`,
+              role: 'assistant',
+              content: `🔄 Generating course: **${course_data.course_name}**`,
+              timestamp: new Date(),
+              isProgressPlaceholder: true,
+              courseId: newCourseId,
+            };
+            setMessages([...messages, progressPlaceholderMessage]);
+
             addGeneratingCourse({
               courseId: newCourseId,
               courseName: course_data.course_name,
@@ -1744,7 +1826,7 @@ export default function ChatPage() {
           <button className={styles.backBtn} onClick={() => router.push('/dashboard')}>
             ← DASHBOARD
           </button>
-          
+
           <div className={styles.sessionInfo}>
             {currentSessionId && currentSession ? (
               <>
@@ -1851,6 +1933,12 @@ export default function ChatPage() {
                       const hasPendingAction = pendingAction && pendingAction.type === 'delete' &&
                         msg.content.includes('Are you sure') && msg.role === 'assistant';
 
+                      // Check if this is a progress placeholder message
+                      const isProgressPlaceholder = msg.isProgressPlaceholder && msg.courseId;
+                      const progressCourse = isProgressPlaceholder ? generatingCourses.get(msg.courseId!) : undefined;
+                      // Show progress bar for all statuses (including ready/failed) to maintain chat history
+                      const showProgress = isProgressPlaceholder && progressCourse;
+
                       return (
                       <motion.div
                         key={msg.id}
@@ -1862,13 +1950,14 @@ export default function ChatPage() {
                         onMouseLeave={() => setHoveredMessageId(null)}
                       >
                         <div className={styles.messageInner}>
-                        {msg.role === 'assistant' && (
+                        {msg.role === 'assistant' && !isProgressPlaceholder && (
                           <div className={styles.aiAvatar}>
                             <span className={styles.aiMonogram}>CF</span>
                           </div>
                         )}
 
                         <div className={styles.messageBody}>
+                          {!isProgressPlaceholder && (
                           <div className={styles.messageHeader}>
                             <span className={styles.messageRole}>
                               {msg.role === 'user' ? 'YOU' : 'COURSEFORGE AI'}
@@ -1877,8 +1966,35 @@ export default function ChatPage() {
                               {msg.date || msg.timestamp.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </span>
                           </div>
+                          )}
                           <div className={styles.messageContent}>
-                            {editingMessageId === msg.id && msg.role === 'user' ? (
+                            {showProgress ? (
+                              <ChatGenerationProgress
+                                courseId={msg.courseId!}
+                                courseName={progressCourse.courseName || progressCourse.topic || 'Course'}
+                                onComplete={() => {
+                                  console.log('[Chat] Generation complete');
+                                }}
+                                onCancel={async () => {
+                                  console.log('[Chat] Generation cancelled by user');
+                                  const cancelMessage: ChatMessage = {
+                                    id: `ai-${Date.now()}`,
+                                    role: 'assistant',
+                                    content: `⚠️ **Course Generation Cancelled**\n\nThe generation for '${progressCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
+                                    timestamp: new Date(),
+                                  };
+                                  setMessages([...messages, cancelMessage]);
+
+                                  let sessionIdToUse = currentSessionId;
+                                  if (!sessionIdToUse) {
+                                    sessionIdToUse = await createSession({ course_id: courseId });
+                                  }
+                                  if (sessionIdToUse) {
+                                    persistConversation(sessionIdToUse, `Cancel generation of ${progressCourse.courseName}`, cancelMessage.content);
+                                  }
+                                }}
+                              />
+                            ) : editingMessageId === msg.id && msg.role === 'user' ? (
                               <div className={styles.editContainer}>
                                 <textarea
                                   className={styles.editTextarea}
@@ -2017,60 +2133,6 @@ export default function ChatPage() {
                 {/* Web Search Status */}
                 <WebSearchStatus webSearchState={webSearchState} />
 
-                {/* Course Generation Progress - Rendered as part of message flow */}
-                {generatingCourseId && generatingCourse && (
-                  <motion.div
-                    key={`progress-${generatingCourseId}`}
-                    className={styles.message}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className={styles.messageInner}>
-                      <div className={styles.aiAvatar}>
-                        <span className={styles.aiMonogram}>CF</span>
-                      </div>
-                      <div className={styles.messageBody}>
-                        <div className={styles.messageHeader}>
-                          <span className={styles.messageRole}>COURSEFORGE AI</span>
-                          <span className={styles.messageDate}>
-                            {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                          </span>
-                        </div>
-                        <div className={styles.messageContent}>
-                          <ChatGenerationProgress
-                            courseId={generatingCourseId}
-                            courseName={generatingCourse.courseName || generatingCourse.topic || 'Course'}
-                            onComplete={() => {
-                              console.log('[Chat] Generation complete, removing from chat view');
-                            }}
-                            onCancel={async () => {
-                              console.log('[Chat] Generation cancelled by user');
-                              // Add cancellation message to chat
-                              const cancelMessage: ChatMessage = {
-                                id: `ai-${Date.now()}`,
-                                role: 'assistant',
-                                content: `⚠️ **Course Generation Cancelled**\n\nThe generation for '${generatingCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
-                                timestamp: new Date(),
-                              };
-                              setMessages([...messages, cancelMessage]);
-
-                              // Persist cancellation message to database
-                              let sessionIdToUse = currentSessionId;
-                              if (!sessionIdToUse) {
-                                sessionIdToUse = await createSession({ course_id: courseId });
-                              }
-                              if (sessionIdToUse) {
-                                persistConversation(sessionIdToUse, `Cancel generation of ${generatingCourse.courseName}`, cancelMessage.content);
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
                 <div ref={messagesEndRef} />
               </>
             )}
@@ -2126,23 +2188,81 @@ export default function ChatPage() {
 
             if (result) {
               const updateData: any = result;
-              const weeksToUpdate = updateData?.data?.weeks_to_update || [];
-              const newDuration = updateData?.data?.new_duration_weeks || 0;
 
-              // Add updating course to generation progress
-              addGeneratingCourse({
-                courseId: pendingUpdateData.course_id,
-                courseName: pendingUpdateData.course_name,
-                progress: 0,
-                completed_days: 0,
-                total_days: newDuration * 5,
-                generation_status: 'updating',
-                current_stage: 'Starting update...',
-                topic: pendingUpdateData.course_name,
-                createdBySessionId: currentSessionId || undefined,
-              });
+              // Check if update was rejected (error returned) or successful (course_id present)
+              if (updateData?.error) {
+                // Update was rejected (e.g., course still generating)
+                const errorMessage = updateData.error;
+                const errorResponse: ChatMessage = {
+                  id: `ai-${Date.now()}`,
+                  role: 'assistant',
+                  content: `⚠️ **Update Failed**\n\n${errorMessage}`,
+                  timestamp: new Date(),
+                };
+                setMessages([...messages, errorResponse]);
+                console.log('[CRUD] Course update rejected:', errorMessage);
+              } else if (!updateData?.course_id) {
+                // Fallback error handling
+                const errorMessage = updateData?.error || "Course update failed. Please try again later.";
+                const errorResponse: ChatMessage = {
+                  id: `ai-${Date.now()}`,
+                  role: 'assistant',
+                  content: `⚠️ **Update Failed**\n\n${errorMessage}`,
+                  timestamp: new Date(),
+                };
+                setMessages([...messages, errorResponse]);
+                console.log('[CRUD] Course update rejected:', errorMessage);
+              } else {
+                const weeksToUpdate = updateData?.weeks_to_update || [];
+                const newDuration = updateData?.new_duration_weeks || 0;
 
-              console.log('[CRUD] Course update started:', pendingUpdateData.course_id, 'type:', updateType, 'options:', options);
+                console.log('[CRUD] Update started successfully:', {
+                  courseId: pendingUpdateData.course_id,
+                  weeksToUpdate,
+                  newDuration,
+                });
+
+                // Add updating course to generation progress
+                if (pendingUpdateData.course_id) {
+                  // Create a UNIQUE progress placeholder for this update (not the generation one)
+                  // Use timestamp to ensure unique ID even for same course
+                  const progressPlaceholderMessage: ChatMessage = {
+                    id: `progress-update-${pendingUpdateData.course_id}-${Date.now()}`,
+                    role: 'assistant',
+                    content: `🔄 Updating course: **${pendingUpdateData.course_name}**`,
+                    timestamp: new Date(),
+                    isProgressPlaceholder: true,
+                    courseId: pendingUpdateData.course_id,
+                    isUpdateProgress: true,  // Flag to distinguish from generation progress
+                  };
+                  
+                  console.log('[CRUD] Adding progress placeholder:', progressPlaceholderMessage);
+                  const newMessages = [...messages, progressPlaceholderMessage];
+                  setMessages(newMessages);
+                  // Save to localStorage immediately (convert Date to string)
+                  const storedMessages = newMessages.map(m => ({
+                    ...m,
+                    timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+                  }));
+                  storage.saveSessionMessages(currentSessionId || '', storedMessages);
+
+                  addGeneratingCourse({
+                    courseId: pendingUpdateData.course_id,
+                    courseName: pendingUpdateData.course_name,
+                    progress: 0,
+                    completed_days: 0,
+                    total_days: newDuration * 5,
+                    generation_status: 'updating',
+                    current_stage: 'Starting update...',
+                    topic: pendingUpdateData.course_name,
+                    createdBySessionId: currentSessionId || undefined,
+                  });
+                  
+                  console.log('[CRUD] Progress bar added, generating course added to context');
+                }
+
+                console.log('[CRUD] Course update started:', pendingUpdateData.course_id, 'type:', updateType, 'options:', options);
+              }
 
               // Clear modal state
               setIsUpdateModalOpen(false);
@@ -2173,7 +2293,9 @@ export default function ChatPage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                disabled={Boolean(!isConnected || isThinking)}
+                // Input is only disabled when WebSocket is disconnected or actively processing chat response
+                // Course generation runs in background and does NOT block chat input
+                disabled={!isConnected}
               />
             </div>
 
@@ -2182,21 +2304,21 @@ export default function ChatPage() {
                 <WebSearchToggle
                   enabled={webSearchEnabled}
                   onToggle={() => setWebSearchEnabled(!webSearchEnabled)}
-                  disabled={Boolean(isThinking)}
+                  disabled={!isConnected}
                 />
                 <CrudToggle
                   enabled={crudEnabled}
                   onToggle={() => setCrudEnabled(!crudEnabled)}
-                  disabled={Boolean(isThinking)}
+                  disabled={!isConnected}
                 />
               </div>
               <span className={styles.charCount}>
                 {inputValue.length} / 4000
               </span>
               <button
-                className={`${styles.sendBtn} ${(!inputValue.trim() || !isConnected || isThinking) ? styles.disabled : ''}`}
+                className={`${styles.sendBtn} ${(!inputValue.trim() || !isConnected) ? styles.disabled : ''}`}
                 onClick={handleSend}
-                disabled={Boolean(!inputValue.trim() || !isConnected || isThinking)}
+                disabled={!inputValue.trim() || !isConnected}
               >
                 <span className={styles.sendIcon}>➤</span>
               </button>

@@ -1,14 +1,14 @@
-# ──────────────────────────────────────────────
-# Environment & Secrets
-# ──────────────────────────────────────────────
+# Environment variables
 .env
 .env.local
 .env.*.local
-*.env
 
-# ──────────────────────────────────────────────
+# Virtual environment
+.venv/
+venv/
+ENV/
+
 # Python
-# ──────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -29,91 +29,40 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Virtual Environment
-.venv/
-venv/
-ENV/
-env/
-env.bak/
-venv.bak/
-
-# ──────────────────────────────────────────────
-# Node.js (Frontend)
-# ──────────────────────────────────────────────
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite3
+db.sqlite3
+
+# Media files
+media/
+staticfiles/
 
 # Next.js
 .next/
 out/
-next-env.d.ts
-*.tsbuildinfo
 
-# ──────────────────────────────────────────────
-# IDE & Editors
-# ──────────────────────────────────────────────
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.DS_Store
-*.sublime-project
-*.sublime-workspace
+# Embedded git repo
+rag_reference
 
-# ──────────────────────────────────────────────
-# Database
-# ──────────────────────────────────────────────
-*.db
-*.sqlite3
-*.sqlite
-
-# ──────────────────────────────────────────────
-# Logs
-# ──────────────────────────────────────────────
-*.log
-logs/
-
-# ──────────────────────────────────────────────
-# Testing
-# ──────────────────────────────────────────────
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-.nox/
-
-# ──────────────────────────────────────────────
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# ──────────────────────────────────────────────
-# Git
-# ──────────────────────────────────────────────
-.git/
-.gitignore
-.gitattributes
-
-# ──────────────────────────────────────────────
-# Documentation (optional - include if you want)
-# ──────────────────────────────────────────────
-# *.md
-# !README.md
-
-# ──────────────────────────────────────────────
-# OS
-# ──────────────────────────────────────────────
-Thumbs.db
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# ──────────────────────────────────────────────
-# Qwen Code
-# ──────────────────────────────────────────────
-.qwen/
+# Temporary files
+my.html
+my.md
+my.pdf
+backend/_*.py

@@ -51,13 +51,14 @@ LOCAL_APPS = [
     "apps.core",  # Core utilities and management commands (must be first)
     "apps.users",
     "apps.courses",
-    "apps.rag",
+    "apps.rag.apps.RagConfig",  # RAG (Retrieval-Augmented Generation) with reranker preload
     "apps.conversations",
     "apps.quizzes",
     "apps.certificates",
     "apps.cache",
     "apps.websockets",
     "apps.chat",  # Chat course management
+    "apps.memory",  # Memory system (history, knowledge, cache, progress)
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -284,7 +285,12 @@ EMBEDDING_MODEL_PRIMARY = os.environ.get(
 EMBEDDING_MODEL_FALLBACK = os.environ.get(
     "EMBEDDING_MODEL_FALLBACK", "sentence-transformers/all-MiniLM-L6-v2"
 )
-EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "384"))
+EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "1536"))
+EMBEDDING_API_URL = os.environ.get(
+    "EMBEDDING_API_URL", ""  # External embedding API URL (e.g. http://129.212.183.140:8000)
+)
+EMBEDDING_API_KEY = os.environ.get("EMBEDDING_API_KEY", "")
+EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "qwen3-embedding")
 
 # ──────────────────────────────────────────────
 # External APIs

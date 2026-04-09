@@ -45,7 +45,9 @@
   letter-spacing: 1px;
   padding: 4px 8px;
   border: 2px solid var(--black);
+  background-color: var(--yellow);
   width: fit-content;
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 /* Streak Badge */
@@ -56,7 +58,10 @@
   letter-spacing: 1px;
   padding: 8px 12px;
   border: 2px solid var(--black);
+  background-color: var(--black);
+  color: var(--yellow);
   margin-bottom: 32px;
+  box-shadow: 4px 4px 0px var(--black);
 }
 
 /* Navigation */
@@ -83,6 +88,13 @@
   font-weight: 500;
   letter-spacing: 1px;
   cursor: pointer;
+  border: 2px solid transparent;
+  transition: var(--transition);
+}
+
+.navItem:hover {
+  background-color: var(--yellow-light);
+  border-color: var(--black);
 }
 
 .navIcon {
@@ -95,8 +107,10 @@
 }
 
 .navItem.active {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  border-color: var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .navItem.active .navIcon {
@@ -113,7 +127,7 @@
 }
 
 .navItem.active .activeIndicator {
-  background-color: var(--white);
+  background-color: var(--black);
 }
 
 /* Model Status */
@@ -121,6 +135,8 @@
   margin-top: auto;
   padding: 12px;
   border: 2px solid var(--black);
+  background-color: var(--yellow-light);
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .statusHeader {
@@ -135,12 +151,13 @@
 }
 
 .statusDot.online {
-  color: #22c55e;
+  color: var(--black);
   animation: pulse 2s infinite;
 }
 
 .statusDot.offline {
-  color: #ef4444;
+  color: var(--black);
+  opacity: 0.4;
 }
 
 .statusText {
@@ -169,11 +186,12 @@
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .signOutBtn:hover {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   transform: translate(-2px, -2px);
   box-shadow: 4px 4px 0 var(--black);
 }

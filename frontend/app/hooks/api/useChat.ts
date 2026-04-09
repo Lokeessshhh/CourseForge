@@ -19,6 +19,10 @@ export interface ChatMessage {
   sources?: { title: string; page?: number | null }[];
   timestamp: Date;
   date?: string;
+  // Progress placeholder message properties
+  isProgressPlaceholder?: boolean;
+  courseId?: string;
+  isUpdateProgress?: boolean;  // Distinguish update progress from generation progress
 }
 
 export interface ChatSession {

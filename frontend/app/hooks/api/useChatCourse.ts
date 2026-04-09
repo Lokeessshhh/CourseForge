@@ -42,6 +42,7 @@ export interface ChatCourseResponse {
       progress: number;
       status: string;
     };
+    current_duration_weeks?: number;  // For update modal
     courses?: Array<{
       id: string;
       course_name: string;

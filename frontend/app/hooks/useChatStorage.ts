@@ -15,6 +15,10 @@ interface StoredMessage {
   content: string;
   timestamp: string;
   sessionId?: string;
+  // Progress placeholder message properties
+  isProgressPlaceholder?: boolean;
+  courseId?: string;
+  isUpdateProgress?: boolean;  // Distinguish update progress from generation progress
 }
 
 interface StoredSession {

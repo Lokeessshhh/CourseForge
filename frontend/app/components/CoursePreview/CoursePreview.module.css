@@ -1,55 +1,68 @@
 .section {
-  padding: 120px 0;
-  background-color: var(--gray);
+  padding: 100px 0;
+  background-color: var(--white);
   border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .label {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--black);
-  opacity: 0.6;
   margin-bottom: 16px;
   text-align: center;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background-color: var(--yellow-light);
+  border: 2px solid var(--black);
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .title {
   font-family: var(--font-heading);
   font-size: clamp(32px, 5vw, 48px);
-  font-weight: 700;
+  font-weight: 900;
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 56px;
+  text-transform: uppercase;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 28px;
 }
 
 .inputPanel,
 .outputPanel {
   padding: 32px;
   border: 3px solid var(--black);
-  box-shadow: 6px 6px 0px var(--black);
+  box-shadow: var(--shadow-lg);
   background-color: var(--white);
 }
 
 .panelLabel {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 2px;
   margin-bottom: 24px;
-  opacity: 0.6;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  background-color: var(--yellow);
+  border: 2px solid var(--black);
+  display: inline-block;
 }
 
 .field {
@@ -59,26 +72,28 @@
 .fieldLabel {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
   display: block;
   margin-bottom: 8px;
-  opacity: 0.7;
+  text-transform: uppercase;
 }
 
 .input {
   width: 100%;
   padding: 14px 16px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   border: 2px solid var(--black);
   background-color: var(--white);
   color: var(--black);
+  font-weight: 600;
 }
 
 .input:focus {
   outline: none;
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: var(--shadow);
+  background-color: var(--yellow-light);
 }
 
 .options {
@@ -91,43 +106,46 @@
   padding: 10px 14px;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
   background-color: var(--white);
   color: var(--black);
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
+  text-transform: uppercase;
 }
 
 .optionBtn:hover {
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
 }
 
 .optionBtn.selected {
-  background-color: var(--black);
-  color: var(--white);
-  box-shadow: 4px 4px 0px var(--black);
+  background-color: var(--yellow);
+  box-shadow: var(--shadow);
+  transform: translate(-2px, -2px);
 }
 
 .generateBtn {
   width: 100%;
   padding: 16px;
-  margin-top: 8px;
+  margin-top: 10px;
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: var(--shadow);
   cursor: pointer;
   transition: var(--transition);
+  text-transform: uppercase;
 }
 
 .generateBtn:hover:not(:disabled) {
-  box-shadow: 6px 6px 0px var(--black);
+  box-shadow: var(--shadow-hover);
+  transform: translate(-3px, -3px);
 }
 
 .generateBtn:disabled {
@@ -136,8 +154,8 @@
 }
 
 .output {
-  min-height: 300px;
-  padding: 16px;
+  min-height: 280px;
+  padding: 18px;
   border: 2px solid var(--black);
   background-color: var(--gray);
   margin-bottom: 16px;
@@ -148,11 +166,16 @@
   font-size: 12px;
   line-height: 1.8;
   color: var(--black);
+  font-weight: 600;
 }
 
 .outputLine.weekHeader {
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 12px;
+  color: var(--black);
+  background-color: var(--yellow-light);
+  padding: 3px 6px;
+  display: inline-block;
 }
 
 .outputLine.weekHeader:first-child {
@@ -163,20 +186,22 @@
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--black);
-  opacity: 0.4;
+  font-weight: 600;
   text-align: center;
   padding: 80px 0;
+  opacity: 0.5;
 }
 
 .statsStrip {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1px;
   padding: 12px 16px;
   border: 2px solid var(--black);
-  background-color: var(--white);
+  background-color: var(--yellow);
   text-align: center;
+  text-transform: uppercase;
 }
 
 @media (max-width: 900px) {
@@ -191,7 +216,7 @@
   }
 
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .title {

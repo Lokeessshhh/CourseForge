@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+interface NavbarProps {
+  isAuthenticated: boolean;
+}
+
+export default function Navbar({ isAuthenticated }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -30,15 +34,26 @@ export default function Navbar() {
 
         <div className={styles.right}>
           <a href="#how-it-works" className={styles.link}>How it works</a>
-          <a href="#features" className={styles.link}>Pricing</a>
-          <motion.a
-            href="/login"
-            className={styles.cta}
-            whileHover={{ x: -3, y: -3 }}
-            transition={{ type: 'spring', stiffness: 400 }}
-          >
-            START BUILDING →
-          </motion.a>
+          <a href="#features" className={styles.link}>Features</a>
+          {isAuthenticated ? (
+            <motion.a
+              href="/dashboard"
+              className={`${styles.cta} ${styles.dashboardCta}`}
+              whileHover={{ x: -3, y: -3 }}
+              transition={{ type: 'spring', stiffness: 400 }}
+            >
+              GO TO DASHBOARD →
+            </motion.a>
+          ) : (
+            <motion.a
+              href="/login"
+              className={styles.cta}
+              whileHover={{ x: -3, y: -3 }}
+              transition={{ type: 'spring', stiffness: 400 }}
+            >
+              START BUILDING →
+            </motion.a>
+          )}
         </div>
       </div>
     </motion.nav>

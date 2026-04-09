@@ -9,6 +9,12 @@
   max-width: 100%;
 }
 
+/* When inside chat message, inherit full width */
+.message .container {
+  max-width: none;
+  width: 100%;
+}
+
 .container.complete {
   border-color: #00aa00;
   box-shadow: 2px 2px 0px #00aa00;

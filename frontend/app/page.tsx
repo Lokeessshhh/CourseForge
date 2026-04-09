@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
 import Navbar from './components/Navbar/Navbar';
 import Hero from './components/Hero/Hero';
 import ProblemSolution from './components/ProblemSolution/ProblemSolution';
@@ -19,59 +18,55 @@ import EasterEgg from './components/EasterEgg/EasterEgg';
 
 export default async function Home() {
   const { userId } = await auth();
-  
-  // Redirect to dashboard if already logged in
-  if (userId) {
-    redirect('/dashboard');
-  }
-  
+  const isAuthenticated = !!userId;
+
   return (
     <main>
       <LoadingScreen />
       <Cursor />
       <StickyNav />
       <EasterEgg />
-      <Navbar />
-      
+      <Navbar isAuthenticated={isAuthenticated} />
+
       <section id="hero">
-        <Hero />
+        <Hero isAuthenticated={isAuthenticated} />
       </section>
-      
+
       <section id="problem">
         <ProblemSolution />
       </section>
-      
+
       <section id="process">
         <HowItWorks />
       </section>
-      
+
       <section id="preview">
         <CoursePreview />
       </section>
-      
+
       <section id="features">
         <FeaturesGrid />
       </section>
-      
+
       <Marquee />
-      
+
       <section id="testimonials">
         <Testimonials />
       </section>
-      
+
       <section id="stats">
         <Stats />
       </section>
-      
+
       <section id="faq">
         <FAQ />
       </section>
-      
+
       <section id="cta">
-        <CTA />
+        <CTA isAuthenticated={isAuthenticated} />
       </section>
-      
-      <Footer />
+
+      <Footer isAuthenticated={isAuthenticated} />
     </main>
   );
 }

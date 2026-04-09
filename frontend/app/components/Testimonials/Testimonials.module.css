@@ -1,40 +1,49 @@
 .section {
-  padding: 120px 0;
+  padding: 100px 0;
   background-color: var(--white);
   border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
   overflow: hidden;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .label {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--black);
-  opacity: 0.6;
   margin-bottom: 16px;
   text-align: center;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background-color: var(--yellow-light);
+  border: 2px solid var(--black);
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .title {
   font-family: var(--font-heading);
   font-size: clamp(32px, 5vw, 48px);
-  font-weight: 700;
+  font-weight: 900;
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 56px;
+  text-transform: uppercase;
 }
 
 .scrollContainer {
   display: flex;
   gap: 24px;
   cursor: grab;
-  padding: 8px 0;
+  padding: 6px 0;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -45,17 +54,18 @@
 }
 
 .card {
-  flex: 0 0 350px;
+  flex: 0 0 340px;
   padding: 32px;
   border: 3px solid var(--black);
-  box-shadow: 6px 6px 0px var(--black);
+  box-shadow: var(--shadow-lg);
   background-color: var(--white);
   transition: var(--transition);
   position: relative;
 }
 
 .card:hover {
-  box-shadow: 8px 8px 0px var(--black);
+  box-shadow: var(--shadow-hover);
+  transform: translate(-3px, -3px);
 }
 
 .darkCard {
@@ -69,47 +79,59 @@
 
 .darkCard .authorName,
 .darkCard .authorRole {
-  color: var(--white);
-  opacity: 0.8;
+  color: var(--yellow);
+  opacity: 0.9;
 }
 
 .bigQuote {
   font-family: var(--font-heading);
   font-size: 80px;
   line-height: 1;
-  opacity: 0.3;
+  opacity: 0.2;
   position: absolute;
   top: 16px;
   left: 24px;
+  color: var(--yellow);
 }
 
 .quote {
-  font-family: var(--font-body);
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
   line-height: 1.6;
   margin-bottom: 24px;
   color: var(--black);
+  font-weight: 600;
 }
 
 .author {
   font-family: var(--font-mono);
   font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .authorName {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .authorRole {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .dragHint {
   text-align: center;
   font-family: var(--font-mono);
   font-size: 11px;
-  opacity: 0.4;
+  font-weight: 700;
   margin-top: 32px;
+  padding: 8px 14px;
+  border: 2px solid var(--black);
+  background-color: var(--yellow);
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 @media (max-width: 768px) {
@@ -118,7 +140,7 @@
   }
 
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .title {

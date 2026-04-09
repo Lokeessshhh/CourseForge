@@ -376,9 +376,16 @@ def course_update(request, course_id):
     except Course.DoesNotExist:
         return _err("Course not found.", status.HTTP_404_NOT_FOUND)
 
+    # Refresh to get latest generation_status from database
+    course.refresh_from_db()
+    
     # Check if course is ready for update
     if course.generation_status == "generating":
         return _err("Course is still being generated. Please wait for completion.", status.HTTP_400_BAD_REQUEST)
+    
+    # Also block if currently being updated (prevent concurrent updates)
+    if course.generation_status == "updating":
+        return _err("Course is currently being updated. Please wait for completion.", status.HTTP_400_BAD_REQUEST)
 
     current_weeks = course.duration_weeks
     new_duration_weeks = current_weeks

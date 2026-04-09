@@ -1,32 +1,41 @@
 .section {
-  padding: 120px 0;
+  padding: 100px 0;
   background-color: var(--white);
   border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .label {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--black);
-  opacity: 0.6;
   margin-bottom: 16px;
   text-align: center;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background-color: var(--yellow-light);
+  border: 2px solid var(--black);
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .title {
   font-family: var(--font-heading);
   font-size: clamp(32px, 5vw, 48px);
-  font-weight: 700;
+  font-weight: 900;
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 56px;
+  text-transform: uppercase;
 }
 
 .grid {
@@ -39,7 +48,7 @@
 .card {
   padding: 28px;
   border: 3px solid var(--black);
-  box-shadow: 6px 6px 0px var(--black);
+  box-shadow: var(--shadow-lg);
   background-color: var(--white);
   transition: var(--transition);
   display: flex;
@@ -48,7 +57,8 @@
 }
 
 .card:hover {
-  box-shadow: 8px 8px 0px var(--black);
+  box-shadow: var(--shadow-hover);
+  transform: translate(-3px, -3px);
 }
 
 /* Size variants */
@@ -72,18 +82,18 @@
 
 .small-dark .cardTitle,
 .medium-dark .cardTitle {
-  color: var(--white);
+  color: var(--yellow);
 }
 
 .small-dark .cardDesc,
 .medium-dark .cardDesc {
   color: var(--white);
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .svg {
-  width: 60px;
-  height: 50px;
+  width: 56px;
+  height: 48px;
   margin-bottom: 8px;
 }
 
@@ -95,21 +105,24 @@
 .cardTitle {
   font-family: var(--font-heading);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 900;
   line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .subtitle {
   font-family: var(--font-mono);
-  font-size: 12px;
-  opacity: 0.7;
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 600;
 }
 
 .cardDesc {
-  font-family: var(--font-body);
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
   line-height: 1.5;
-  opacity: 0.8;
+  opacity: 0.9;
+  font-weight: 500;
 }
 
 /* Specific card styling */
@@ -133,8 +146,8 @@
 .dashboardCard {
   padding: 24px;
   border: 3px solid var(--black);
-  box-shadow: 6px 6px 0px var(--black);
-  background-color: var(--white);
+  box-shadow: var(--shadow-lg);
+  background-color: var(--yellow-light);
   font-family: var(--font-mono);
 }
 
@@ -147,17 +160,23 @@
 
 .dashboardName {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .dashboardStreak {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: var(--yellow);
+  padding: 3px 8px;
+  border: 2px solid var(--black);
 }
 
 .dashboardCourse {
   font-size: 11px;
-  opacity: 0.6;
+  opacity: 0.8;
   margin-bottom: 16px;
+  font-weight: 600;
 }
 
 .dashboardProgress {
@@ -169,7 +188,9 @@
 
 .progressLabel {
   font-size: 10px;
-  opacity: 0.6;
+  opacity: 0.8;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .progressBar {
@@ -181,12 +202,12 @@
 
 .progressFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .progressPercent {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .weekGrid {
@@ -203,13 +224,14 @@
 }
 
 .weekFilled {
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .dashboardStat {
   font-size: 11px;
   margin-bottom: 16px;
-  opacity: 0.7;
+  opacity: 0.8;
+  font-weight: 700;
 }
 
 .knowledgeBars {
@@ -226,31 +248,33 @@
 
 .knowledgeLabel {
   font-size: 10px;
-  width: 70px;
-  opacity: 0.7;
+  width: 72px;
+  opacity: 0.8;
+  font-weight: 700;
 }
 
 .knowledgeBar {
   flex: 1;
-  height: 6px;
-  border: 1px solid var(--black);
+  height: 7px;
+  border: 2px solid var(--black);
   background-color: var(--white);
 }
 
 .knowledgeFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .knowledgeWeak {
   background-color: var(--black);
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 .knowledgePercent {
   font-size: 10px;
-  width: 30px;
+  width: 32px;
   text-align: right;
+  font-weight: 700;
 }
 
 /* Responsive */
@@ -270,7 +294,7 @@
   }
 
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .title {
@@ -296,6 +320,6 @@
   }
 
   .cardDesc {
-    font-size: 13px;
+    font-size: 12px;
   }
 }

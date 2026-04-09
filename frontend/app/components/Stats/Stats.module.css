@@ -1,24 +1,32 @@
 .section {
-  padding: 120px 0;
-  background-color: var(--gray);
+  padding: 100px 0;
+  background-color: var(--yellow-light);
   border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .label {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--black);
-  opacity: 0.6;
   margin-bottom: 48px;
   text-align: center;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background-color: var(--yellow);
+  border: 2px solid var(--black);
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .grid {
@@ -30,32 +38,32 @@
 .card {
   padding: 40px 24px;
   border: 3px solid var(--black);
-  box-shadow: 6px 6px 0px var(--black);
+  box-shadow: var(--shadow-lg);
   background-color: var(--white);
   text-align: center;
   transition: var(--transition);
 }
 
 .card:hover {
-  box-shadow: 8px 8px 0px var(--black);
-  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+  transform: translate(-3px, -3px);
 }
 
 .value {
   font-family: var(--font-heading);
-  font-size: clamp(48px, 6vw, 72px);
-  font-weight: 700;
+  font-size: clamp(48px, 6vw, 68px);
+  font-weight: 900;
   line-height: 1;
   margin-bottom: 16px;
+  text-transform: uppercase;
 }
 
 .labelText {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  opacity: 0.7;
 }
 
 @media (max-width: 900px) {
@@ -70,11 +78,11 @@
   }
 
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .label {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
   }
 
   .grid {
@@ -83,7 +91,7 @@
   }
 
   .card {
-    padding: 32px 16px;
+    padding: 32px 18px;
   }
 
   .value {

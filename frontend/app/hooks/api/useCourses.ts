@@ -309,16 +309,19 @@ export function useUpdateCourse() {
     setIsUpdating(true);
     setError(null);
     try {
-      const result = await api.post<{ 
-        course_id: string; 
-        status: string; 
+      const result = await api.post<{
+        course_id: string;
+        status: string;
         weeks_to_update: number[];
         new_duration_weeks: number;
       }>(`/api/courses/${courseId}/update/`, data);
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      return null;
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      console.error('[useCourses] Update course error:', errorMessage, err);
+      // Return error object with message for frontend to display
+      return { error: errorMessage };
     } finally {
       setIsUpdating(false);
     }

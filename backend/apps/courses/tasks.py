@@ -276,6 +276,34 @@ async def _generate_in_blocks_with_web_search(
             print(f"[BLOCK {block_num}] ❌ Web search failed: {search_exc}")
             web_search_data = None
         
+        # ========== STEP 2b: RAG retrieval from knowledge base ==========
+        rag_context = None
+        try:
+            from services.rag_pipeline.retriever import hybrid_retrieve
+
+            # Build search query from block themes and titles
+            all_titles = " ".join(str(t) for t in block_day_titles.values())
+            all_themes = " ".join(str(t) for t in block_week_themes.values())
+            rag_query = f"{topic} {all_themes} {all_titles}"
+
+            rag_context = await hybrid_retrieve(
+                query=rag_query,
+                top_k=30,
+                course_id=str(course.id),
+                use_hyde=True,
+                use_decomposition=False,
+            )
+
+            if rag_context:
+                from services.rag_pipeline.reranker import reranker
+                rag_context = reranker.rerank(rag_query, rag_context, top_k=10)
+                print(f"[BLOCK {block_num}] RAG retrieved {len(rag_context)} chunks from knowledge base")
+            else:
+                print(f"[BLOCK {block_num}] No RAG documents found for topic: {topic}")
+        except Exception as rag_exc:
+            print(f"[BLOCK {block_num}] RAG retrieval failed: {rag_exc}")
+            rag_context = None
+
         # ========== STEP 3: Generate content for all days in this block ==========
         print(f"\n[BLOCK {block_num}] Step 3: Generating content with web results...")
         
@@ -310,6 +338,7 @@ async def _generate_in_blocks_with_web_search(
                     previous_titles=[t for w in range(block_start, week_num) for t in [block_day_titles.get((w, day.day_number), None)] if t],
                     progress_lock=progress_lock,
                     web_search_data=web_search_data,
+                    rag_context=rag_context,
                 )
                 day_tasks.append(task)
         
@@ -339,6 +368,7 @@ async def _generate_single_day_with_titles(
     previous_titles: list = None,
     progress_lock: asyncio.Lock = None,
     web_search_data=None,
+    rag_context=None,  # RAG retrieved chunks from knowledge base
 ):
     """
     Generate content for a single day (titles already generated).
@@ -389,8 +419,21 @@ async def _generate_single_day_with_titles(
         else:
             logger.debug("[WEB_USAGE] Week %d Day %d: No web search data", week_number, day_num)
 
+        # Combine web search + RAG context for theory generation
+        combined_context = web_results_formatted
+        if rag_context:
+            rag_formatted = "\n\n--- Knowledge Base Context ---\n" + "\n\n".join(
+                f"[Source {i+1}: {c.get('title', 'Document')}]\n{c['content']}"
+                for i, c in enumerate(rag_context[:5])
+            )
+            combined_context = web_results_formatted + rag_formatted
+            logger.info(
+                "[RAG_USAGE] Week %d Day %d: Injecting %d RAG chunks into theory generation",
+                week_number, day_num, len(rag_context[:5])
+            )
+
         theory_task = generator._generate_theory_content(
-            title, theme, topic, level, description, web_results_formatted
+            title, theme, topic, level, description, combined_context
         )
         code_task = generator._generate_code_content(title, theme, topic, level)
         theory, code = await asyncio.gather(theory_task, code_task)
@@ -1323,6 +1366,16 @@ EXAMPLE OF WHAT TO GENERATE:
         logger.info(f"   Weeks Updated: {weeks_to_update}")
         logger.info(f"   Total Tasks: {total_tasks} (100%)")
         logger.info("=" * 80)
+
+        # Broadcast final completion status to frontend
+        from apps.courses.sse import broadcast_generation_complete
+        broadcast_generation_complete(course_id, {
+            "progress": 100,
+            "completed_days": total_days_to_update,
+            "total_days": total_days_to_update,
+            "generation_status": "ready",
+            "current_stage": "Update complete!",
+        })
 
     except Exception as exc:
         logger.exception("Error updating course %s: %s", course_id, exc)

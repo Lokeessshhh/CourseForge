@@ -4,7 +4,11 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import styles from './CTA.module.css';
 
-export default function CTA() {
+interface CTAProps {
+  isAuthenticated: boolean;
+}
+
+export default function CTA({ isAuthenticated }: CTAProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -24,7 +28,7 @@ export default function CTA() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
         >
-          Ready to learn?
+          {isAuthenticated ? 'READY TO LEARN?' : 'READY TO LEARN?'}
         </motion.h2>
 
         <motion.p
@@ -33,18 +37,18 @@ export default function CTA() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Your AI course is one prompt away.
+          {isAuthenticated ? 'Your courses are waiting in the dashboard.' : 'Your AI course is one prompt away.'}
         </motion.p>
 
         <motion.a
-          href="/login"
+          href={isAuthenticated ? "/dashboard" : "/login"}
           className={styles.button}
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.2 }}
           whileHover={{ x: -4, y: -4 }}
         >
-          START FOR FREE →
+          {isAuthenticated ? "GO TO DASHBOARD →" : "START FOR FREE →"}
         </motion.a>
 
         <motion.p
@@ -53,7 +57,7 @@ export default function CTA() {
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          No credit card required · Powered by CourseForge AI
+          {isAuthenticated ? 'Keep learning · Powered by CourseForge AI' : 'No credit card required · Powered by CourseForge AI'}
         </motion.p>
       </div>
     </section>
