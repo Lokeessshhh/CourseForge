@@ -32,14 +32,6 @@ export function GenerationProgressProvider({ children }: { children: ReactNode }
     setGeneratingCourseId(null);
   }, []);
 
-  // Log initial state on mount
-  React.useEffect(() => {
-    console.log('[GenerationProgress] Provider initialized, courseId:', generatingCourseId);
-    return () => {
-      console.log('[GenerationProgress] Provider unmounting');
-    };
-  }, []);
-
   return (
     <GenerationProgressContext.Provider
       value={{

@@ -1,0 +1,37 @@
+# Celery Worker Log - Started: 2026-04-09 18:36:10
+================================================================================
+[Celery] INFO 2026-04-09 18:36:12 celery [Celery] Starting with settings: config.settings.development
+INFO 2026-04-09 18:36:14,258 apps RAG app loaded - using OpenRouter for embeddings and reranking
+ -------------- celery@DESKTOP-U88LM22 v5.6.2 (recovery)
+--- ***** ----- 
+-- ******* ---- Windows-11-10.0.26200-SP0 2026-04-09 18:36:18
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         learnai:0x20c41da8590
+- ** ---------- .> transport:   redis://localhost:6379/0
+- ** ---------- .> results:     
+- *** --- * --- .> concurrency: 4 (thread)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                .> certificates     exchange=certificates(direct) key=certificates
+                .> course_generation exchange=course_generation(direct) key=course_generation
+                .> quiz_generation  exchange=quiz_generation(direct) key=quiz_generation
+[tasks]
+  . apps.certificates.tasks.generate_certificate_pdf
+  . apps.courses.tasks.generate_all_quizzes
+  . apps.courses.tasks.generate_certificate_task
+  . apps.courses.tasks.generate_coding_test_task
+  . apps.courses.tasks.generate_course_content_task
+  . apps.courses.tasks.generate_day_content_task
+  . apps.courses.tasks.generate_weekly_test_task
+  . apps.courses.tasks.generate_weekly_tests_for_course
+  . apps.courses.tasks.send_streak_reminder
+  . apps.courses.tasks.unlock_next_day
+  . apps.courses.tasks.update_course_content_task
+  . apps.courses.tasks.update_knowledge_state_task
+  . apps.quizzes.tasks.generate_quiz_for_day
+  . apps.rag.tasks.build_raptor_for_document
+  . apps.rag.tasks.index_document_task
+  . config.celery.debug_task

@@ -55,11 +55,11 @@ export const lessonApi = {
     ),
 
   // Coding Test APIs
-  getCodingTest: (courseId: string, week: number) =>
-    api.get<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/`),
+  getCodingTest: (courseId: string, week: number, testNumber: number = 1) =>
+    api.get<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/`),
 
-  startCodingTest: (courseId: string, week: number) =>
-    api.post<{ attempt_id: string }>(`/api/courses/${courseId}/weeks/${week}/coding-test/start/`),
+  startCodingTest: (courseId: string, week: number, testNumber: number = 1) =>
+    api.post<{ attempt_id: string }>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/start/`),
 
   executeCodingChallenge: (courseId: string, week: number, attemptId: string, problemIndex: number, sourceCode: string, language: string, stdin: string, expectedOutput: string) =>
     api.post(`/api/courses/${courseId}/weeks/${week}/coding-test/execute/`, {
@@ -71,9 +71,10 @@ export const lessonApi = {
       expected_output: expectedOutput,
     }),
 
-  submitCodingTest: (courseId: string, week: number, attemptId: string) =>
-    api.post<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/submit/`, {
+  submitCodingTest: (courseId: string, week: number, testNumber: number = 1, attemptId: string, challengeResults?: any[]) =>
+    api.post<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/submit/`, {
       attempt_id: attemptId,
+      challenge_results: challengeResults || [],
     }),
 };
 
@@ -116,11 +117,11 @@ export const quizApi = {
   },
 
   // Coding Test APIs
-  getCodingTest: (courseId: string, week: number) =>
-    api.get<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/`),
+  getCodingTest: (courseId: string, week: number, testNumber: number = 1) =>
+    api.get<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/`),
 
-  startCodingTest: (courseId: string, week: number) =>
-    api.post<{ attempt_id: string }>(`/api/courses/${courseId}/weeks/${week}/coding-test/start/`),
+  startCodingTest: (courseId: string, week: number, testNumber: number = 1) =>
+    api.post<{ attempt_id: string }>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/start/`),
 
   executeCodingChallenge: (courseId: string, week: number, attemptId: string, problemIndex: number, sourceCode: string, language: string, stdin: string, expectedOutput: string) =>
     api.post(`/api/courses/${courseId}/weeks/${week}/coding-test/execute/`, {
@@ -132,9 +133,10 @@ export const quizApi = {
       expected_output: expectedOutput,
     }),
 
-  submitCodingTest: (courseId: string, week: number, attemptId: string) =>
-    api.post<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/submit/`, {
+  submitCodingTest: (courseId: string, week: number, testNumber: number = 1, attemptId: string, challengeResults?: any[]) =>
+    api.post<any>(`/api/courses/${courseId}/weeks/${week}/coding-test/${testNumber}/submit/`, {
       attempt_id: attemptId,
+      challenge_results: challengeResults || [],
     }),
 };
 

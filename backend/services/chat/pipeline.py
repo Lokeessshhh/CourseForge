@@ -159,27 +159,17 @@ async def _run_retrieval_pipeline(
     retriever = HybridRetriever()
     
     retrieval_tasks = []
-    
+
     # Main query retrieval
-    @sync_to_async
-    def retrieve_main():
-        return retriever.hybrid_retrieve(query, top_k=20, course_id=course_id)
-    
-    retrieval_tasks.append(retrieve_main())
-    
+    retrieval_tasks.append(retriever.hybrid_retrieve(query, top_k=20, course_id=course_id))
+
     # HyDE retrieval (if available)
     if hyde_embedding:
-        @sync_to_async
-        def retrieve_hyde():
-            return retriever.retrieve_by_vector(hyde_embedding, top_k=20, course_id=course_id)
-        retrieval_tasks.append(retrieve_hyde())
-    
+        retrieval_tasks.append(retriever.retrieve_by_vector(hyde_embedding, top_k=20, course_id=course_id))
+
     # Sub-query retrievals
     for sq in sub_queries[:3]:  # Limit to 3 sub-queries
-        @sync_to_async
-        def retrieve_sub(q=sq):
-            return retriever.hybrid_retrieve(q, top_k=15, course_id=course_id)
-        retrieval_tasks.append(retrieve_sub())
+        retrieval_tasks.append(retriever.hybrid_retrieve(sq, top_k=15, course_id=course_id))
     
     # Run all retrievals in parallel
     all_results = await asyncio.gather(*retrieval_tasks, return_exceptions=True)

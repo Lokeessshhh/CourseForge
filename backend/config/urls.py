@@ -60,20 +60,30 @@ def health_check(request):
         status = "degraded"
         logger.error("Health check: redis error: %s", e)
 
-    # vLLM check
+    # OpenRouter check
     try:
-        vllm_url = getattr(settings, "VLLM_BASE_URL", "http://localhost:8000")
-        with httpx.Client(timeout=5.0) as client:
-            resp = client.get(f"{vllm_url}/health")
-            if resp.status_code == 200:
-                services["vllm"] = "ok"
-            else:
-                services["vllm"] = "error"
-                status = "degraded"
+        openrouter_api_key = getattr(settings, "OPENROUTER_API_KEY", "")
+        if openrouter_api_key:
+            headers = {
+                "Authorization": f"Bearer {openrouter_api_key}",
+                "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+                "X-Title": "AI Course Generator",
+            }
+            with httpx.Client(timeout=10.0, headers=headers) as client:
+                resp = client.get(f"{settings.OPENROUTER_BASE_URL}/models")
+                # 200 means models listed, 401 means auth issue but server is up
+                if resp.status_code in [200, 401]:
+                    services["openrouter"] = "ok"
+                else:
+                    services["openrouter"] = "error"
+                    status = "degraded"
+        else:
+            services["openrouter"] = "not_configured"
+            status = "degraded"
     except Exception as e:
-        services["vllm"] = "error"
+        services["openrouter"] = "error"
         status = "degraded"
-        logger.warning("Health check: vLLM error: %s", e)
+        logger.warning("Health check: OpenRouter error: %s", e)
 
     # Celery check (via Redis)
     try:

@@ -3,6 +3,7 @@ Hybrid retriever: pgvector (dense) + PostgreSQL full-text BM25 (sparse) + RRF fu
 Returns top-N ranked chunk dicts ready for reranking.
 Adapted from reference FastAPI repo to work with Django.
 """
+import asyncio
 import logging
 from typing import List, Optional, Dict, Any
 
@@ -16,7 +17,7 @@ RRF_K = 60  # RRF constant
 class HybridRetriever:
     """Hybrid vector + BM25 retriever with RRF score fusion."""
 
-    def hybrid_retrieve(
+    async def hybrid_retrieve(
         self,
         query: str,
         top_k: int = 60,
@@ -30,12 +31,13 @@ class HybridRetriever:
         Returns up to top_k chunk dicts.
         """
         from services.rag_pipeline.embedder import embedder
-        query_vec = embedder.embed(query)
-        return self.retrieve_by_vector(
+        # Run sync embed in thread to avoid blocking
+        query_vec = await asyncio.to_thread(embedder.embed, query)
+        return await self.retrieve_by_vector(
             query_vec, top_k=top_k, course_id=course_id, query_text=query
         )
 
-    def retrieve_by_vector(
+    async def retrieve_by_vector(
         self,
         query_vec: List[float],
         top_k: int = 60,
@@ -102,18 +104,33 @@ LIMIT %s
         """
 
         q_text = query_text or ""
-        params = [vec_str]
+        params = []
+
+        # Dense section params
+        params.append(vec_str)  # ROW_NUMBER() OVER (... <=> %s::vector)
         if course_id:
-            params.append(str(course_id))
-        params += [vec_str, top_k, q_text, q_text]
+            params.append(str(course_id))  # course_filter in WHERE
+        params.append(vec_str)  # ORDER BY ... <=> %s::vector
+        params.append(top_k)    # LIMIT %s
+
+        # Sparse section params
+        params.append(q_text)   # plainto_tsquery('english', %s) in ROW_NUMBER
+        params.append(q_text)   # plainto_tsquery('english', %s) in WHERE
         if course_id:
-            params.append(str(course_id))
+            params.append(str(course_id))  # course_filter in WHERE
+        params.append(top_k)    # LIMIT %s
+
+        # Final LIMIT
         params.append(top_k)
 
         try:
-            with connection.cursor() as cursor:
-                cursor.execute(sql, params)
-                rows = cursor.fetchall()
+            # Run sync DB query in thread pool to avoid blocking event loop
+            def _execute_query():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, params)
+                    return cursor.fetchall()
+
+            rows = await asyncio.to_thread(_execute_query)
 
             return [
                 {
@@ -176,10 +193,10 @@ async def hybrid_retrieve(
         else:
             hyde_embedding = await embedder.aembed(q)
 
-        v_results = retriever.retrieve_by_vector(
+        v_results = await retriever.retrieve_by_vector(
             hyde_embedding, top_k=20, course_id=course_id
         )
-        k_results = retriever.retrieve_by_vector(
+        k_results = await retriever.retrieve_by_vector(
             [0.0] * len(hyde_embedding),  # dummy — keyword search uses text
             top_k=20,
             course_id=course_id,

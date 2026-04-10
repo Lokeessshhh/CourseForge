@@ -51,8 +51,8 @@ urlpatterns = [
     path("<uuid:course_id>/weeks/<int:week_number>/debug/", views_debug_completion.debug_course_completion, name="debug-completion"),
     path("<uuid:course_id>/weeks/<int:week_number>/test/unlock/",   views_debug.unlock_weekly_test, name="week-test-unlock"),
     # Weekly Coding Test with Judge0 integration
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/",          views_coding_test.get_coding_test,         name="coding-test"),
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/start/",   views_coding_test.start_coding_test,        name="coding-test-start"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/<int:test_number>/",          views_coding_test.get_coding_test,         name="coding-test"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/<int:test_number>/start/",   views_coding_test.start_coding_test,        name="coding-test-start"),
     path("<uuid:course_id>/weeks/<int:week_number>/coding-test/execute/", views_coding_test.execute_coding_challenge, name="coding-test-execute"),
-    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/submit/",   views_coding_test.submit_coding_test,       name="coding-test-submit"),
+    path("<uuid:course_id>/weeks/<int:week_number>/coding-test/<int:test_number>/submit/",   views_coding_test.submit_coding_test,       name="coding-test-submit"),
 ]

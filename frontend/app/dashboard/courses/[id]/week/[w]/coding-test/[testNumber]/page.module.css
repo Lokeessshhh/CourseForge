@@ -76,6 +76,28 @@
   gap: 16px;
 }
 
+/* Problem Status Indicators */
+.statusPassed {
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 18px;
+  margin-left: 4px;
+}
+
+.statusFailed {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 18px;
+  margin-left: 4px;
+}
+
+.statusNotAttempted {
+  color: #9ca3af;
+  font-weight: 700;
+  font-size: 18px;
+  margin-left: 4px;
+}
+
 .problemList {
   display: flex;
   flex-direction: column;
@@ -484,8 +506,41 @@
   background-color: var(--white);
 }
 
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.retakeBtn {
+  flex: 1;
+  padding: 16px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--black);
+  transition: all 0.1s;
+  text-align: center;
+}
+
+.retakeBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--gray);
+}
+
+.retakeBtn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 2px 2px 0px var(--black);
+}
+
 .continueBtn {
-  width: 100%;
+  flex: 1;
   padding: 16px;
   border: 2px solid var(--black);
   background-color: var(--black);

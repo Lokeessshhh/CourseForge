@@ -116,14 +116,21 @@ def course_generate(request):
 
     # Fire Celery task in background (returns immediately)
     from apps.courses.tasks import generate_course_content_task
-    generate_course_content_task.delay(
-        course_id=str(course.id),
-        course_name=data["course_name"],
-        duration_weeks=duration_weeks,
-        level=data.get("level", "beginner"),
-        goals=data.get("goals", []),
-        description=data.get("description"),  # Pass optional description to task
-    )
+    
+    try:
+        task = generate_course_content_task.delay(
+            course_id=str(course.id),
+            course_name=data["course_name"],
+            duration_weeks=duration_weeks,
+            level=data.get("level", "beginner"),
+            goals=data.get("goals", []),
+            description=data.get("description"),
+        )
+        logger.info("[OK] Course generation task queued: %s", task.id)
+    except Exception as task_exc:
+        logger.exception("[ERROR] Failed to queue course generation task: %s", task_exc)
+        # Don't fail the request - course is already created
+        # User can retry manually if needed
 
     # Return course_id instantly - user can create another course immediately
     return _ok({
@@ -808,7 +815,7 @@ def day_quiz_submit(request, course_id, week_number, day_number):
 
     # Calculate score
     percentage = round((correct_count / total * 100), 1) if total > 0 else 0
-    
+
     # Get current quiz attempts count for this day
     current_attempts = QuizAttempt.objects.filter(
         user=request.user,
@@ -816,20 +823,102 @@ def day_quiz_submit(request, course_id, week_number, day_number):
         question__week_number=week_number,
         question__day_number=day_number,
     ).count()
-    
-    # Use completion service for production-grade logic
-    completion_service = get_completion_service()
-    completion_result = completion_service.complete_day(
-        user_id=str(request.user.id),
-        course_id=str(course.id),
-        week_number=week_number,
-        day_number=day_number,
-        quiz_score=percentage,
-        quiz_attempts=current_attempts,
-        time_spent_minutes=0,
-    )
 
-    logger.info(f"Quiz submit: Completion result - {completion_result}")
+    # Mark day as completed and unlock next day unconditionally
+    # Next day unlocks immediately after ANY quiz attempt, regardless of score
+    from django.utils import timezone
+    from apps.courses.models import DayPlan, WeekPlan
+    
+    now = timezone.now()
+    day.is_completed = True
+    day.completed_at = now
+    day.quiz_score = percentage
+    day.quiz_attempts = current_attempts
+    if not day.started_at:
+        day.started_at = now
+    day.save(update_fields=[
+        "is_completed", "completed_at", "quiz_score",
+        "quiz_attempts", "started_at",
+    ])
+
+    # Unlock next day unconditionally
+    next_day_unlocked = False
+    if day_number < 5:  # Not the last day of the week
+        next_day = DayPlan.objects.filter(
+            week_plan=week,
+            day_number=day_number + 1,
+        ).first()
+        if next_day and next_day.is_locked:
+            next_day.is_locked = False
+            next_day.save(update_fields=["is_locked"])
+            next_day_unlocked = True
+            logger.info(
+                f"Unlocked next day: course={course.id}, "
+                f"week={week_number}, day={day_number + 1}"
+            )
+    elif day_number == 5:  # Last day of week, unlock next week's day 1
+        try:
+            next_week = course.weeks.get(week_number=week_number + 1)
+            next_day = next_week.days.filter(day_number=1).first()
+            if next_day and next_day.is_locked:
+                next_day.is_locked = False
+                next_day.save(update_fields=["is_locked"])
+                next_day_unlocked = True
+                logger.info(
+                    f"Unlocked next week day 1: course={course.id}, "
+                    f"week={week_number + 1}, day=1"
+                )
+        except WeekPlan.DoesNotExist:
+            pass  # Course complete
+
+    # Update course progress
+    from apps.courses.models import CourseProgress
+    progress, created = CourseProgress.objects.get_or_create(
+        user=request.user,
+        course=course,
+        defaults={
+            "total_days": course.total_days,
+            "total_weeks": course.duration_weeks,
+            "completed_days": 1,
+        }
+    )
+    if not created:
+        progress.completed_days = DayPlan.objects.filter(
+            week_plan__course=course,
+            is_completed=True,
+        ).count()
+    progress.overall_percentage = round(
+        (progress.completed_days / progress.total_days) * 100, 1
+    ) if progress.total_days > 0 else 0
+    progress.last_activity = now
+    
+    # Update current position
+    if day_number < 5:
+        progress.current_day = day_number + 1
+        progress.current_week = week_number
+    else:
+        progress.current_day = 1
+        if week_number < course.duration_weeks:
+            progress.current_week = week_number + 1
+        else:
+            progress.current_week = week_number
+    
+    progress.save()
+
+    # Check if all 5 days of week are done to unlock weekly test
+    week_test_unlocked = False
+    all_days_done = not week.days.filter(is_completed=False).exists()
+    if all_days_done and not week.test_unlocked:
+        week.test_unlocked = True
+        week.save(update_fields=["test_unlocked"])
+        week_test_unlocked = True
+        
+        # Trigger weekly test generation
+        from apps.courses.tasks import generate_weekly_test_task
+        generate_weekly_test_task.delay(str(course.id), week_number)
+        logger.info(
+            f"Weekly test unlocked and generation triggered: course={course.id}, week={week_number}"
+        )
 
     # Prepare response
     response_data = {
@@ -838,21 +927,15 @@ def day_quiz_submit(request, course_id, week_number, day_number):
         "total": total,
         "correct": correct_count,
         "passed": True,  # Always pass as per requirement
-        "day_completed": completion_result.get("day_completed", False),
+        "day_completed": True,
         "quiz_attempts": current_attempts,
-        "attempts_remaining": completion_result.get("attempts_remaining", 0),
+        "attempts_remaining": 0,
+        "week_test_unlocked": week_test_unlocked,
+        "next_day_unlocked": next_day_unlocked,
+        "overall_percentage": progress.overall_percentage,
+        "current_week": progress.current_week,
+        "current_day": progress.current_day,
     }
-
-    # Add completion bonuses if day is complete
-    if completion_result.get("day_completed"):
-        response_data.update({
-            "week_test_unlocked": completion_result.get("week_test_unlocked", False),
-            "next_day_unlocked": completion_result.get("next_day_unlocked", False),
-            "streak_days": completion_result.get("streak_days", 0),
-            "overall_percentage": completion_result.get("overall_percentage", 0),
-            "current_week": completion_result.get("current_week", 0),
-            "current_day": completion_result.get("current_day", 0),
-        })
 
     return _ok(response_data)
 
@@ -1045,20 +1128,24 @@ def week_test_submit(request, course_id, week_number):
     elif passed:
         recommendation = "Great job! Ready for next week"
 
-    # Complete week if passed
-    next_week_unlocked = False
+    # Complete week if passed (unlock coding test 1)
+    coding_test_1_unlocked = False
     if passed:
-        from services.progress.tracker import get_tracker
-        tracker = get_tracker()
-        result = tracker.complete_week(
-            user_id=str(request.user.id),
-            course_id=course_id,
-            week_number=week_number,
-            test_score=percentage,
-            passed=passed,  # NEW: Pass the passed parameter
-        )
-        next_week_unlocked = result.get("next_week_unlocked", False)
-        logger.info(f"Weekly test submit: Week completed, next_week_unlocked={next_week_unlocked}")
+        # Mark coding test 1 as unlocked
+        week.coding_test_1_unlocked = True
+        week.save(update_fields=["coding_test_1_unlocked"])
+        coding_test_1_unlocked = True
+        logger.info(f"Weekly MCQ test passed, coding test 1 unlocked: course={course_id}, week={week_number}")
+        
+        # Generate coding tests if not already generated
+        if not week.coding_tests_generated:
+            from apps.courses.tasks import generate_coding_test_task
+            # Generate both coding tests
+            generate_coding_test_task.delay(str(course.id), week_number, 1)  # Test 1
+            generate_coding_test_task.delay(str(course.id), week_number, 2)  # Test 2
+            week.coding_tests_generated = True
+            week.save(update_fields=["coding_tests_generated"])
+            logger.info(f"Coding tests generation triggered: course={course_id}, week={week_number}")
     else:
         logger.warning(f"Weekly test failed: score={percentage}%, required=60%")
 
@@ -1067,7 +1154,7 @@ def week_test_submit(request, course_id, week_number):
         "total": total,
         "percentage": percentage,
         "passed": passed,
-        "next_week_unlocked": next_week_unlocked,
+        "coding_test_1_unlocked": coding_test_1_unlocked,
         "results": results,
         "week_summary": {
             "strong_days": strong_days,

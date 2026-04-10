@@ -84,30 +84,9 @@ class CourseCompletionService:
                     "error": "Day is locked",
                     "error_code": "DAY_LOCKED",
                 }
-            
-            # Check if day should be marked complete (3 quiz attempts)
-            should_complete = quiz_attempts >= self.QUIZ_ATTEMPTS_REQUIRED
-            
-            if not should_complete:
-                # Update day progress but don't mark complete
-                day.quiz_score = quiz_score
-                day.quiz_attempts = quiz_attempts
-                day.time_spent_minutes += time_spent_minutes
-                if not day.started_at:
-                    day.started_at = timezone.now()
-                day.save(update_fields=[
-                    "quiz_score", "quiz_attempts", "time_spent_minutes", "started_at"
-                ])
-                
-                return {
-                    "success": True,
-                    "day_completed": False,
-                    "quiz_attempts": quiz_attempts,
-                    "attempts_remaining": self.QUIZ_ATTEMPTS_REQUIRED - quiz_attempts,
-                    "message": f"Complete {self.QUIZ_ATTEMPTS_REQUIRED - quiz_attempts} more quiz attempt(s) to unlock next day",
-                }
-            
-            # Mark day as complete
+
+            # Mark day as complete on ANY quiz attempt (no minimum attempts required)
+            # Next day unlocks immediately regardless of score
             now = timezone.now()
             day.is_completed = True
             day.completed_at = now
@@ -120,7 +99,7 @@ class CourseCompletionService:
                 "is_completed", "completed_at", "quiz_score",
                 "quiz_attempts", "time_spent_minutes", "started_at",
             ])
-            
+
             logger.info(
                 f"Day completed: user={user_id}, course={course_id}, "
                 f"week={week_number}, day={day_number}, score={quiz_score}"
@@ -324,10 +303,12 @@ class CourseCompletionService:
     ) -> bool:
         """
         Unlock the next day after current day completion.
-        
+
         Returns:
             True if next day was unlocked, False otherwise
         """
+        from apps.courses.models import DayPlan
+
         try:
             if day_number < self.DAYS_PER_WEEK:
                 # Unlock next day in same week

@@ -120,9 +120,8 @@ def quiz_submit(request, course_id, week_number, day_number):
     total = len(answers)
     score_pct = round((correct_count / total * 100) if total > 0 else 0, 1)
 
-    # Unlock next day if score > 50%
-    if score_pct > 50:
-        _unlock_next_day(course, week, day)
+    # Unlock next day unconditionally (regardless of score)
+    _unlock_next_day(course, week, day)
 
     # Update user knowledge state
     _update_knowledge_state(request.user, course, answers, results)
@@ -200,7 +199,7 @@ def _evaluate_answer(question: QuizQuestion, user_answer: str) -> bool:
 
 
 def _unlock_next_day(course, week, day):
-    """Mark the next day as completable (is_completed flag unlocking logic)."""
+    """Mark the next day as unlocked by setting is_locked = False."""
     from apps.courses.models import DayPlan, WeekPlan
     from django.utils import timezone
 
@@ -212,15 +211,17 @@ def _unlock_next_day(course, week, day):
         # Try first day of next week
         try:
             next_week = course.weeks.get(week_number=week.week_number + 1)
-            next_day = next_week.days.order_by("day_number").first()
+            next_day = next_week.days.filter(day_number=1).first()
         except WeekPlan.DoesNotExist:
             return  # Course complete
 
-    if next_day:
-        # "Unlock" == we allow content_completed=True on the current day
-        day.content_completed = True
-        day.completed_at = timezone.now()
-        day.save(update_fields=["content_completed", "completed_at"])
+    if next_day and next_day.is_locked:
+        next_day.is_locked = False
+        next_day.save(update_fields=["is_locked"])
+        logger.info(
+            f"Unlocked next day: course={course.id}, "
+            f"week={week.week_number}, day={day.day_number + 1}"
+        )
 
 
 def _update_knowledge_state(user, course, answers, results):

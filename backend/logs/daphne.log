@@ -1,0 +1,720 @@
+# Daphne ASGI Server Log - Started: 2026-04-09 18:36:10
+================================================================================
+2026-04-09 18:36:13,185 INFO     [Celery] Starting with settings: config.settings.development
+2026-04-09 18:36:13,584 INFO     [ASGI] Starting with settings: config.settings.development
+INFO 2026-04-09 18:36:14,625 apps RAG app loaded - using OpenRouter for embeddings and reranking
+INFO 2026-04-09 18:36:14,639 asgi [ASGI] HTTP application loaded
+INFO 2026-04-09 18:36:17,704 asgi [ASGI] WebSocket patterns loaded
+INFO 2026-04-09 18:36:17,704 asgi [ASGI] ProtocolTypeRouter configured
+INFO 2026-04-09 18:36:17,704 cli Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2026-04-09 18:36:17,706 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-04-09 18:36:17,706 server Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2026-04-09 18:36:17,706 server Listening on TCP address 0.0.0.0:8000
+INFO 2026-04-09 18:36:26,748 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:26,750 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:26,795 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:26,795 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:26,887 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:26,897 middleware Request: {"method": "GET", "path": "/api/users/me/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 3556.64, "content_length": 201}
+127.0.0.1:59155 - - [09/Apr/2026:18:36:26] "GET /api/users/me/" 200 201
+INFO 2026-04-09 18:36:26,909 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:26,941 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 3601.89, "content_length": 749}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:26] "GET /api/courses/" 200 749
+127.0.0.1:54000 - - [09/Apr/2026:18:36:28] "GET /api/health/" 200 156
+INFO 2026-04-09 18:36:28,766 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:28,766 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:28,857 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:28,878 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:28,907 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 152.34, "content_length": 749}
+127.0.0.1:54000 - - [09/Apr/2026:18:36:28] "GET /api/courses/" 200 749
+INFO 2026-04-09 18:36:31,753 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:31,753 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:32,003 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:32,024 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:32,040 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 293.97, "content_length": 749}
+127.0.0.1:54000 - - [09/Apr/2026:18:36:32] "GET /api/courses/" 200 749
+127.0.0.1:49337 - - [09/Apr/2026:18:36:32] "GET /api/health/" 200 156
+INFO 2026-04-09 18:36:34,756 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:34,756 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:34,832 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:34,852 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:34,863 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 114.81, "content_length": 749}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:34] "GET /api/courses/" 200 749
+INFO 2026-04-09 18:36:37,772 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:37,772 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:37,868 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:37,888 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:37,903 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 136.81, "content_length": 749}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:37] "GET /api/courses/" 200 749
+INFO 2026-04-09 18:36:40,768 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:40,768 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:40,852 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:40,873 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:40,893 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 132.54, "content_length": 749}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:40] "GET /api/courses/" 200 749
+INFO 2026-04-09 18:36:41,250 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:41,250 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:42,627 views \u2705 Course generation task queued: 393bea24-f3d6-4a41-89db-53e59445d921
+INFO 2026-04-09 18:36:42,630 middleware Request: {"method": "POST", "path": "/api/courses/generate/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 202, "latency_ms": 1397.22, "content_length": 289}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:42] "POST /api/courses/generate/" 202 289
+INFO 2026-04-09 18:36:43,777 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:43,777 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:43,866 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:43,895 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:43,916 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:43,932 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 168.09, "content_length": 1094}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:43] "GET /api/courses/" 200 1094
+INFO 2026-04-09 18:36:46,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:46,923 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:46,969 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:46,986 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:46,999 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:47,018 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 105.99, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:47] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:36:50,919 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:50,919 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:50,972 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:50,986 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:51,004 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:51,017 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 103.87, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:51] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:36:53,927 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:53,928 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:53,990 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:54,000 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:54,014 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:54,027 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 124.3, "content_length": 1097}
+127.0.0.1:54000 - - [09/Apr/2026:18:36:54] "GET /api/courses/" 200 1097
+127.0.0.1:49337 - - [09/Apr/2026:18:36:55] "GET /api/health/" 200 156
+INFO 2026-04-09 18:36:56,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:56,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:56,965 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:56,980 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:56,993 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:57,004 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 96.48, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:57] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:36:59,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:36:59,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:36:59,966 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:59,976 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:59,987 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:36:59,994 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 88.05, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:36:59] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:02,913 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:02,913 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:02,960 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:02,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:02,980 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:02,986 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 83.44, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:02] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:05,919 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:05,919 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:05,973 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:05,981 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:05,988 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:05,994 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 85.87, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:05] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:08,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:08,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:08,973 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:08,981 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:08,994 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:09,004 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 89.1, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:09] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:11,911 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:11,912 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:11,960 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:11,967 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:11,976 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:11,985 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 81.9, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:11] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:14,910 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:14,910 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:14,951 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:14,960 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:14,972 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:14,980 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 76.69, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:14] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:17,926 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:17,928 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:17,968 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:17,977 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:17,987 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:17,996 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 78.26, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:17] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:20,935 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:20,935 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:20,972 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:20,982 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:20,991 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:20,998 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 67.86, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:20] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:23,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:23,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:23,958 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:23,965 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:23,978 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:23,985 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 80.82, "content_length": 1097}
+127.0.0.1:54000 - - [09/Apr/2026:18:37:23] "GET /api/courses/" 200 1097
+127.0.0.1:49337 - - [09/Apr/2026:18:37:24] "GET /api/health/" 200 156
+INFO 2026-04-09 18:37:26,908 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:26,908 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:26,984 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:26,994 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:27,006 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:27,018 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 116.2, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:27] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:29,916 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:29,916 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:29,954 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:29,962 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:29,981 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:29,993 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 87.02, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:29] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:32,922 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:32,922 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:32,962 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:32,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:32,980 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:32,992 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 78.91, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:32] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:35,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:35,923 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:35,974 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:35,985 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:35,992 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:35,998 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 84.84, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:36] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:38,921 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:38,922 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:38,966 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:38,972 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:38,980 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:38,992 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 79.41, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:38] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:41,914 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:41,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:41,967 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:41,975 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:41,989 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:41,999 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 94.52, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:41] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:44,918 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:44,919 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:44,968 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:44,975 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:44,986 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:44,993 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 85.11, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:44] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:47,834 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:47,834 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:47,902 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:47,923 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:47,944 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:47,956 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 134.56, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:47] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:50,159 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:50,159 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:50,265 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:50,289 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:50,318 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:50,342 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 193.21, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:50] "GET /api/courses/" 200 1097
+127.0.0.1:49337 - - [09/Apr/2026:18:37:51] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/" 200 -
+127.0.0.1:54000 - - [09/Apr/2026:18:37:51] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/" 200 -
+127.0.0.1:49337 - - [09/Apr/2026:18:37:51] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/" 200 -
+INFO 2026-04-09 18:37:51,421 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:51,421 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:51,461 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:51,461 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:51,541 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:51,542 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:51,633 serializers CourseSerializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:51,666 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 296.79, "content_length": 2150}
+127.0.0.1:54000 - - [09/Apr/2026:18:37:51] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/" 200 2150
+INFO 2026-04-09 18:37:51,733 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 295.82, "content_length": 291}
+127.0.0.1:49337 - - [09/Apr/2026:18:37:51] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/" 200 291
+INFO 2026-04-09 18:37:51,833 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 312.03, "content_length": 1794}
+127.0.0.1:55047 - - [09/Apr/2026:18:37:51] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/" 200 1794
+127.0.0.1:55047 - - [09/Apr/2026:18:37:55] "GET /api/health/" 200 156
+INFO 2026-04-09 18:37:55,552 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:55,554 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:55,615 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:55,639 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:55,659 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:55,677 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 134.95, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:37:55] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:37:58,511 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:37:58,512 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:37:58,574 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:58,591 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:58,608 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:37:58,623 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 121.6, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:37:58] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:01,496 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:01,496 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:01,594 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:01,613 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:01,640 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:01,660 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 177.63, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:01] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:04,491 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:04,492 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:04,589 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:04,625 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:04,644 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:04,658 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 177.2, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:04] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:07,505 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:07,505 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:07,605 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:07,629 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:07,658 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:07,677 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 187.03, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:07] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:10,479 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:10,479 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:10,558 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:10,575 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:10,596 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:10,617 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 145.32, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:10] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:13,492 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:13,492 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:13,575 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:13,595 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:13,618 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:13,640 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 161.49, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:13] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:16,485 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:16,486 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:16,604 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:16,630 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:16,656 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:16,688 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 211.68, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:16] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:19,479 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:19,481 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:19,588 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:19,602 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:19,622 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:19,642 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 166.07, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:19] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:22,483 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:22,483 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:22,569 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:22,587 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:22,631 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:22,668 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 200.66, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:22] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:25,480 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:25,480 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:25,572 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:25,595 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:25,626 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:25,643 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 174.34, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:25] "GET /api/courses/" 200 1097
+127.0.0.1:55047 - - [09/Apr/2026:18:38:26] "GET /api/health/" 200 156
+INFO 2026-04-09 18:38:28,481 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:28,481 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:28,565 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:28,590 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:28,649 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:28,677 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 207.23, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:28] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:31,281 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:31,281 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:31,284 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:31,284 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:31,421 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:31,422 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:31,567 serializers CourseSerializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:31,580 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 318.6, "content_length": 4311}
+127.0.0.1:54000 - - [09/Apr/2026:18:38:31] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/" 200 4311
+INFO 2026-04-09 18:38:31,609 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 353.14, "content_length": 4667}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:31] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/" 200 4667
+INFO 2026-04-09 18:38:31,707 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 444.97, "content_length": 291}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:31] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/" 200 291
+INFO 2026-04-09 18:38:36,942 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:36,942 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:37,056 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:37,072 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:37,094 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:37,107 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 176.72, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:37] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:39,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:39,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:39,984 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:39,997 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:40,009 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:40,019 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 113.7, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:40] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:42,914 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:42,914 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:42,956 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:42,967 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:42,976 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:42,985 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 76.9, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:42] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:45,917 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:45,917 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:45,961 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:45,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:45,982 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:45,989 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 77.07, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:45] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:48,919 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:48,920 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:48,956 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:48,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:48,982 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:48,987 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 77.63, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:48] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:51,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:51,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:52,095 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:52,105 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:52,114 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:52,122 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 205.41, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:52] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:38:54,912 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:54,913 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:54,967 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:54,976 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:54,985 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:54,992 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 89.46, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:38:54] "GET /api/courses/" 200 1097
+127.0.0.1:49337 - - [09/Apr/2026:18:38:55] "GET /api/health/" 200 156
+INFO 2026-04-09 18:38:57,909 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:38:57,909 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:38:57,942 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:57,952 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:57,962 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:38:57,968 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 65.54, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:38:57] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:00,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:00,923 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:00,987 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:01,003 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:01,022 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:01,035 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 121.39, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:01] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:03,912 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:03,912 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:03,972 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:03,985 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:03,999 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:04,008 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 103.1, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:04] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:06,917 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:06,917 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:06,960 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:06,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:06,984 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:06,993 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 83.2, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:06] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:09,930 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:09,932 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:10,021 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:10,026 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:10,041 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:10,049 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 125.91, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:10] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:12,913 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:12,913 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:12,971 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:12,981 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:12,997 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:13,007 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 98.16, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:13] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:15,908 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:15,908 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:15,944 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:15,958 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:15,969 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:15,976 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 73.95, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:15] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:18,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:18,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:18,963 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:18,975 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:18,982 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:18,991 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 78.72, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:18] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:21,909 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:21,909 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:21,955 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:21,967 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:21,976 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:21,987 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 83.54, "content_length": 1097}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:21] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:39:24,867 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:24,869 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:24,949 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:24,978 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:25,000 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:25,014 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 157.87, "content_length": 1097}
+127.0.0.1:55047 - - [09/Apr/2026:18:39:25] "GET /api/courses/" 200 1097
+127.0.0.1:49337 - - [09/Apr/2026:18:39:25] "GET /api/health/" 200 156
+INFO 2026-04-09 18:39:27,522 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:27,522 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:27,523 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:27,533 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:27,524 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:39:27,540 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:39:27,769 serializers CourseSerializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:39:27,805 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 304.83, "content_length": 4667}
+127.0.0.1:49337 - - [09/Apr/2026:18:39:27] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/" 200 4667
+INFO 2026-04-09 18:39:27,829 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 326.0, "content_length": 4311}
+127.0.0.1:54000 - - [09/Apr/2026:18:39:27] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/" 200 4311
+INFO 2026-04-09 18:39:27,842 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 338.51, "content_length": 291}
+127.0.0.1:55047 - - [09/Apr/2026:18:39:27] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/progress/" 200 291
+127.0.0.1:55047 - - [09/Apr/2026:18:39:55] "GET /api/health/" 200 156
+127.0.0.1:55047 - - [09/Apr/2026:18:40:25] "GET /api/health/" 200 156
+127.0.0.1:55047 - - [09/Apr/2026:18:40:56] "GET /api/health/" 200 156
+127.0.0.1:55047 - - [09/Apr/2026:18:41:07] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/" 200 -
+127.0.0.1:55047 - - [09/Apr/2026:18:41:07] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/" 200 -
+127.0.0.1:55047 - - [09/Apr/2026:18:41:07] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/" 200 -
+127.0.0.1:55047 - - [09/Apr/2026:18:41:07] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/" 200 -
+127.0.0.1:55047 - - [09/Apr/2026:18:41:07] "OPTIONS /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/" 200 -
+INFO 2026-04-09 18:41:08,022 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:08,023 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:08,145 serializers CourseSerializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:08,202 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 213.48, "content_length": 4667}
+INFO 2026-04-09 18:41:08,214 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+127.0.0.1:55047 - - [09/Apr/2026:18:41:08] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/" 200 4667
+INFO 2026-04-09 18:41:08,216 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:08,238 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:08,238 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:08,252 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:08,252 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:08,288 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:08,289 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:08,378 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 221.33, "content_length": 837}
+127.0.0.1:64274 - - [09/Apr/2026:18:41:08] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/" 200 837
+WARNING 2026-04-09 18:41:08,423 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 400, "latency_ms": 260.52, "content_length": 63}
+WARNING 2026-04-09 18:41:08,432 log Bad Request: /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/
+127.0.0.1:59812 - - [09/Apr/2026:18:41:08] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/" 400 63
+INFO 2026-04-09 18:41:08,471 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:08,471 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+WARNING 2026-04-09 18:41:08,631 middleware Request: {"method": "GET", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 400, "latency_ms": 173.25, "content_length": 63}
+WARNING 2026-04-09 18:41:08,633 log Bad Request: /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/
+127.0.0.1:64274 - - [09/Apr/2026:18:41:08] "GET /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/quiz/" 400 63
+INFO 2026-04-09 18:41:08,673 middleware Request: {"method": "POST", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 508.68, "content_length": 117}
+127.0.0.1:59404 - - [09/Apr/2026:18:41:08] "POST /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/" 200 117
+INFO 2026-04-09 18:41:08,743 middleware Request: {"method": "POST", "path": "/api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 575.14, "content_length": 117}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:08] "POST /api/courses/bf3c3fbc-a4cb-4afb-8310-dda58b15791c/weeks/1/days/1/start/" 200 117
+INFO 2026-04-09 18:41:10,983 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:10,984 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:11,084 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:11,110 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:11,136 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:11,162 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 186.84, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:11] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:14,921 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:14,922 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:14,981 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:14,990 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:14,999 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:15,007 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 91.78, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:15] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:17,917 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:17,917 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:17,977 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:17,984 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:17,996 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:18,005 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 92.44, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:18] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:20,922 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:20,924 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:20,994 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:21,006 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:21,015 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:21,029 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 117.29, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:21] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:23,909 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:23,909 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:24,076 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:24,089 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:24,096 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:24,106 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 203.36, "content_length": 1097}
+127.0.0.1:59404 - - [09/Apr/2026:18:41:24] "GET /api/courses/" 200 1097
+127.0.0.1:60902 - - [09/Apr/2026:18:41:25] "GET /api/health/" 200 156
+INFO 2026-04-09 18:41:28,099 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:28,100 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:28,156 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:28,169 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:28,181 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:28,191 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 1281.42, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:28] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:29,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:29,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:29,987 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:30,003 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:30,018 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:30,030 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 113.37, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:30] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:32,929 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:32,929 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:33,005 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:33,022 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:33,042 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:33,052 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 133.04, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:33] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:34,932 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:34,932 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:34,974 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:34,985 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:34,994 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:35,007 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 86.2, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:35] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:37,910 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:37,910 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:37,950 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:37,960 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:37,969 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:37,978 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 72.98, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:37] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:41,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:41,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:41,976 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:41,985 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:41,995 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:42,002 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 87.17, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:42] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:43,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:43,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:43,967 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:43,978 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:43,987 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:43,996 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 77.9, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:43] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:47,913 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:47,913 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:47,950 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:47,958 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:47,969 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:47,977 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 73.76, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:47] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:50,908 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:50,908 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:50,970 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:50,976 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:50,985 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:50,992 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 90.67, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:50] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:52,916 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:52,917 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:53,017 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:53,027 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:53,037 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:53,044 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 135.95, "content_length": 1097}
+127.0.0.1:59404 - - [09/Apr/2026:18:41:53] "GET /api/courses/" 200 1097
+127.0.0.1:60902 - - [09/Apr/2026:18:41:55] "GET /api/health/" 200 156
+INFO 2026-04-09 18:41:55,931 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:55,931 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:55,967 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:55,976 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:55,986 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:55,992 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 68.25, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:55] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:41:58,918 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:41:58,918 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:41:58,972 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:58,982 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:58,991 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:41:58,998 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 87.47, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:41:58] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:02,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:02,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:02,969 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:02,977 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:02,989 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:02,997 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 81.68, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:03] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:05,919 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:05,919 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:06,015 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:06,025 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:06,035 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:06,043 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 132.98, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:06] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:08,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:08,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:08,979 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:08,990 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:09,001 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:09,006 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 92.15, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:09] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:10,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:10,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:10,965 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:10,971 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:10,980 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:10,990 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 82.11, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:10] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:13,925 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:13,925 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:13,973 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:13,984 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:13,994 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:14,002 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 83.56, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:14] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:17,910 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:17,910 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:17,950 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:17,960 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:17,969 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:17,979 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 73.62, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:17] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:19,918 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:19,918 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:19,971 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:19,987 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:19,998 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:20,008 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 98.58, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:20] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:22,913 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:22,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:22,964 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:22,975 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:22,987 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:22,994 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 91.36, "content_length": 1097}
+127.0.0.1:59404 - - [09/Apr/2026:18:42:22] "GET /api/courses/" 200 1097
+127.0.0.1:60902 - - [09/Apr/2026:18:42:24] "GET /api/health/" 200 156
+INFO 2026-04-09 18:42:26,923 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:26,924 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:26,985 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:27,000 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:27,017 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:27,029 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 116.67, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:27] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:28,918 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:28,918 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:28,970 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:28,981 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:28,989 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:28,998 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 90.52, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:28] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:32,916 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:32,916 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:32,958 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:32,967 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:32,975 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:32,982 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 75.77, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:32] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:34,931 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:34,931 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:34,965 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:34,974 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:34,984 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:34,991 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 68.96, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:34] "GET /api/courses/" 200 1097
+INFO 2026-04-09 18:42:53,915 clerk JWT payload keys: ['azp', 'exp', 'fva', 'iat', 'iss', 'nbf', 'sid', 'sts', 'sub', 'v']
+INFO 2026-04-09 18:42:53,915 clerk Extracted email: lokeshhlohar80@gmail.com, name: Lokesh for clerk_id: user_3BR7JB2iMDXgbSSmJBZhixli3Kr
+INFO 2026-04-09 18:42:53,956 serializers Serializer: Course bf3c3fbc-a4cb-4afb-8310-dda58b15791c, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:53,966 serializers Serializer: Course f2c60c20-86e8-406c-9952-d80167ada389, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:53,976 serializers Serializer: Course 93525660-eb76-451a-8d11-fca7cce66c32, User c3525eeb-2f66-49cb-be79-363d36a16eb2, progress=0.0, completed_days=0
+INFO 2026-04-09 18:42:53,983 middleware Request: {"method": "GET", "path": "/api/courses/", "query": {}, "user_id": null, "ip": "127.0.0.1", "status": 200, "latency_ms": 74.75, "content_length": 1097}
+127.0.0.1:60902 - - [09/Apr/2026:18:42:53] "GET /api/courses/" 200 1097
+127.0.0.1:59404 - - [09/Apr/2026:18:42:55] "GET /api/health/" 200 156

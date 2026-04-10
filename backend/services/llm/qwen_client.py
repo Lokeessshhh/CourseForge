@@ -1,6 +1,6 @@
 """
-Qwen LLM client via vLLM OpenAI-compatible API.
-Local vLLM server at http://localhost:8000 with model 'qwen-coder'.
+Qwen LLM client via OpenRouter API (OpenAI-compatible).
+Uses OpenRouter for qwen/qwen-2.5-7b-instruct model.
 Supports both sync (generate) and async streaming (stream_generate).
 """
 import json
@@ -18,7 +18,7 @@ DEFAULT_SYSTEM_PROMPT = """You are an expert coding tutor. Explain clearly and i
 
 
 class QwenClient:
-    """Client for Qwen running on local vLLM (OpenAI-compatible API)."""
+    """Client for Qwen running on OpenRouter (OpenAI-compatible API)."""
 
     def __init__(
         self,
@@ -28,16 +28,16 @@ class QwenClient:
         temperature: Optional[float] = None,
         timeout: int = 120,
     ):
-        base = base_url or getattr(settings, "VLLM_BASE_URL", "http://localhost:8000")
+        base = base_url or getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
         base = base.rstrip("/")
         if base.endswith("/v1"):
             base = base[:-3]
         self.base_url = base
-        self.model = model or getattr(settings, "VLLM_MODEL", "qwen-coder")
-        self.max_tokens = max_tokens or getattr(settings, "VLLM_MAX_TOKENS", 2000)
+        self.model = model or getattr(settings, "OPENROUTER_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+        self.max_tokens = max_tokens or getattr(settings, "OPENROUTER_MAX_TOKENS", 2000)
         self.temperature = temperature or getattr(settings, "VLLM_TEMPERATURE", 0.7)
         self.timeout = timeout
-        # No API key needed for local vLLM
+        self.api_key = getattr(settings, "OPENROUTER_API_KEY", "")
 
     def _build_messages(
         self,
@@ -118,23 +118,28 @@ class QwenClient:
             "max_tokens": max_tokens or self.max_tokens,
             "temperature": self.temperature,
             "stream": True,
+            "reasoning": {"enabled": False},  # Disable Qwen thinking/reasoning
         }
 
         try:
-            # Use a more robust async client configuration
-            # Set environment to bypass proxy for remote vLLM server
-            import os
-            os.environ['NO_PROXY'] = '*'  # Bypass proxy for all hosts
-            
+            # OpenRouter requires specific headers
+            headers = {
+                "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+                "X-Title": "AI Course Generator",
+            }
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
             async with httpx.AsyncClient(
                 timeout=self.timeout,
-                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+                headers=headers,
             ) as client:
                 async with client.stream("POST", url, json=payload) as response:
                     if response.status_code != 200:
                         error_text = await response.aread()
-                        logger.error("vLLM stream error: %d - %s", response.status_code, error_text)
-                        yield f"\n\n[Error: vLLM returned status {response.status_code}]"
+                        logger.error("OpenRouter stream error: %d - %s", response.status_code, error_text)
+                        yield f"\n\n[Error: OpenRouter returned status {response.status_code}]"
                         return
 
                     async for line in response.aiter_lines():
@@ -153,10 +158,10 @@ class QwenClient:
                                 continue
 
         except httpx.TimeoutException:
-            logger.error("vLLM stream_generate timed out after %ds", self.timeout)
+            logger.error("OpenRouter stream_generate timed out after %ds", self.timeout)
             yield "\n\n[Error: Request timed out]"
         except Exception as exc:
-            logger.exception("vLLM stream_generate failed: %s", exc)
+            logger.exception("OpenRouter stream_generate failed: %s", exc)
             yield f"\n\n[Error: {exc}]"
         finally:
             latency_ms = (time.time() - start_time) * 1000
@@ -199,35 +204,63 @@ class QwenClient:
             "max_tokens": max_tokens or self.max_tokens,
             "temperature": self.temperature,
             "stream": False,
+            "reasoning": {"enabled": False},  # Disable Qwen thinking/reasoning
         }
 
         try:
-            # Use a more robust client configuration
-            # Set environment to bypass proxy for remote vLLM server
-            import os
-            os.environ['NO_PROXY'] = '*'  # Bypass proxy for all hosts
-            
+            # OpenRouter requires specific headers
+            headers = {
+                "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+                "X-Title": "AI Course Generator",
+            }
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
             with httpx.Client(
                 timeout=self.timeout,
-                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+                headers=headers,
             ) as client:
-                response = client.post(url, json=payload)
+                response = client.post(url, json=payload, headers=headers)
 
                 if response.status_code != 200:
-                    logger.error("vLLM generate error: %d - %s", response.status_code, response.text)
-                    return f"[Error: vLLM returned status {response.status_code}]"
+                    logger.error("OpenRouter generate error: %d - %s", response.status_code, response.text)
+                    return f"[Error: OpenRouter returned status {response.status_code}]"
 
                 data = response.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                response_len = len(content)
+                
+                # Debug: Log the response structure if content is missing
+                if "choices" not in data or not data.get("choices"):
+                    logger.warning("OpenRouter response missing 'choices': %s", str(data)[:500])
+                    return "[Error: Invalid response from OpenRouter]"
+                
+                choice = data.get("choices", [{}])[0]
+                message = choice.get("message", {})
+                
+                # Qwen models may return reasoning in a separate field
+                # Try content first, then reasoning, then empty string
+                content = message.get("content")
+                if not content:
+                    reasoning = message.get("reasoning")
+                    if reasoning:
+                        logger.info("Using reasoning field as fallback for response")
+                        content = reasoning
+                    else:
+                        content = ""
+                
+                response_len = len(content) if content else 0
+
+                if not content:
+                    logger.warning("OpenRouter returned empty content. Finish reason: %s", choice.get("finish_reason"))
+                    return "[Error: Empty response from OpenRouter - model may have hit token limit]"
 
                 return content
 
         except httpx.TimeoutException:
-            logger.error("vLLM generate timed out after %ds", self.timeout)
+            logger.error("OpenRouter generate timed out after %ds", self.timeout)
             return "[Error: Request timed out]"
         except Exception as exc:
-            logger.exception("vLLM generate failed: %s", exc)
+            logger.exception("OpenRouter generate failed: %s", exc)
             return f"[Error: {exc}]"
         finally:
             latency_ms = (time.time() - start_time) * 1000
@@ -451,18 +484,23 @@ Format using markdown with headers, bullet points, and code blocks."""
 
     def check_health(self) -> bool:
         """
-        Check if vLLM server is healthy.
+        Check if OpenRouter API is accessible.
 
         Returns:
             True if healthy, False otherwise
         """
-        url = f"{self.base_url}/health"
+        # OpenRouter doesn't have a health endpoint, just check if we can reach it
+        url = f"{self.base_url}/models"
         try:
-            with httpx.Client(timeout=5.0) as client:
+            headers = {}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            
+            with httpx.Client(timeout=5.0, headers=headers) as client:
                 response = client.get(url)
-                return response.status_code == 200
+                return response.status_code in [200, 401]  # 401 means API key issue but server is up
         except Exception as exc:
-            logger.warning("vLLM health check failed: %s", exc)
+            logger.warning("OpenRouter health check failed: %s", exc)
             return False
 
 

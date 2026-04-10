@@ -9,6 +9,7 @@ import BottomBar from '../components/dashboard/BottomBar/BottomBar';
 import { ToastProvider } from '../components/Toast';
 import { GenerationProgressProvider } from '../context/GenerationProgressContext';
 import GlobalGenerationToastWrapper from '../components/GenerationProgressToast/GlobalGenerationToastWrapper';
+import GenerationProgressBridge from '../components/GenerationProgressProvider/GenerationProgressBridge';
 import { SidebarSkeleton } from '../components/Skeleton';
 import styles from './layout.module.css';
 
@@ -46,6 +47,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return (
       <ToastProvider>
         <GenerationProgressProvider>
+          <GenerationProgressBridge />
           {children}
           <AnimatePresence>
             <GlobalGenerationToastWrapper />
@@ -59,6 +61,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
       <GenerationProgressProvider>
+        <GenerationProgressBridge />
         <div className={styles.layout}>
           {/* Left Sidebar */}
           <motion.aside

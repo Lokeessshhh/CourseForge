@@ -15,19 +15,23 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 # LLM Configuration
-BASE_URL = getattr(settings, "VLLM_BASE_URL", "http://localhost:8000")
-if not BASE_URL.rstrip("/").endswith("/v1"):
-    BASE_URL = BASE_URL.rstrip("/") + "/v1"
-MODEL_NAME = "qwen-coder"
-API_KEY = "none"
+BASE_URL = getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+MODEL_NAME = getattr(settings, "OPENROUTER_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+API_KEY = getattr(settings, "OPENROUTER_API_KEY", "")
 
 # Initialize LangChain LLM
 llm = ChatOpenAI(
     base_url=BASE_URL,
-    api_key=API_KEY,
+    api_key=API_KEY if API_KEY else "sk-or-placeholder",
     model=MODEL_NAME,
     temperature=0.3,
     max_tokens=3000,
+    model_kwargs={
+        "extra_headers": {
+            "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+            "X-Title": "AI Course Generator",
+        }
+    } if API_KEY else {},
 )
 
 

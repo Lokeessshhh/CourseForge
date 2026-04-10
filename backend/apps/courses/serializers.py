@@ -56,10 +56,22 @@ class WeekPlanSerializer(serializers.ModelSerializer):
     days = DayPlanSerializer(many=True, read_only=True)
     test_unlocked = serializers.BooleanField(read_only=True)
     test_generated = serializers.BooleanField(read_only=True)
+    coding_tests_generated = serializers.BooleanField(read_only=True)
+    coding_test_1_unlocked = serializers.BooleanField(read_only=True)
+    coding_test_1_completed = serializers.BooleanField(read_only=True)
+    coding_test_2_unlocked = serializers.BooleanField(read_only=True)
+    coding_test_2_completed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = WeekPlan
-        fields = ["id", "week_number", "theme", "objectives", "is_completed", "test_unlocked", "test_generated", "days"]
+        fields = [
+            "id", "week_number", "theme", "objectives", "is_completed",
+            "test_unlocked", "test_generated",
+            "coding_tests_generated",
+            "coding_test_1_unlocked", "coding_test_1_completed",
+            "coding_test_2_unlocked", "coding_test_2_completed",
+            "days"
+        ]
         read_only_fields = ["id"]
 
 

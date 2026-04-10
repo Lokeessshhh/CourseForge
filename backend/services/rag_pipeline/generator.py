@@ -1,5 +1,6 @@
 """
-LLM generator — calls the vLLM server, builds RAG prompts, supports streaming.
+LLM generator — calls OpenRouter API for RAG operations.
+Uses the same OpenRouter configuration as the main course generation.
 """
 import json
 import logging
@@ -10,8 +11,13 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-LLM_URL = f"{settings.VLLM_BASE_URL.rstrip('/')}/v1/chat/completions"
-MODEL_NAME = settings.VLLM_MODEL
+# Use OpenRouter instead of local vLLM
+OPENROUTER_BASE_URL = getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+OPENROUTER_API_KEY = getattr(settings, "OPENROUTER_API_KEY", "")
+MODEL_NAME = getattr(settings, "OPENROUTER_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+
+# OpenRouter URL
+LLM_URL = f"{OPENROUTER_BASE_URL.rstrip('/')}/chat/completions"
 
 
 def get_llm_url() -> str:
@@ -25,16 +31,23 @@ async def call_llm(
     temperature: float = 0.7,
     stream: bool = False,
 ) -> str:
-    """Call the vLLM server."""
+    """Call OpenRouter API."""
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
     timeout = httpx.Timeout(connect=30.0, read=180.0, write=30.0, pool=180.0)
+    
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+        "X-Title": "AI Course Generator",
+    }
+    
     async with httpx.AsyncClient(timeout=timeout) as client:
         response = await client.post(
-            LLM_URL,
+            OPENROUTER_BASE_URL + "/chat/completions",
             json={
                 "model": MODEL_NAME,
                 "messages": messages,
@@ -42,9 +55,7 @@ async def call_llm(
                 "temperature": temperature,
                 "stream": stream,
             },
-            headers={
-                "Authorization": f"Bearer {settings.VLLM_API_KEY}",
-            },
+            headers=headers,
         )
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]

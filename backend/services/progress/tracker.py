@@ -184,10 +184,8 @@ class ProgressTracker:
                 from apps.courses.tasks import generate_weekly_test_task
                 generate_weekly_test_task.delay(course_id, week_number)
 
-            # Unlock next day if quiz passed (>50%)
-            next_day_unlocked = False
-            if quiz_score >= 50:
-                next_day_unlocked = self._unlock_next_day(course, week_number, day_number)
+            # Unlock next day unconditionally (regardless of score)
+            next_day_unlocked = self._unlock_next_day(course, week_number, day_number)
 
             # Update knowledge state
             self._update_knowledge_state(user_id, course_id, day)

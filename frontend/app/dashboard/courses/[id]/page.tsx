@@ -108,10 +108,22 @@ export default function CoursePage() {
   // Build weeks data from progress and weekPlans
   const weeks = weekPlans?.map((w: any) => {
     const p = progress?.week_progress?.find((wp: any) => wp.week === w.week_number);
+    
+    // Check coding test completion from week plan
+    const codingTest1Completed = w.coding_test_1_completed || false;
+    const codingTest2Completed = w.coding_test_2_completed || false;
+    const allCodingTestsCompleted = codingTest1Completed && codingTest2Completed;
+    
+    // Week is fully complete when all days AND coding tests are done
+    const weekFullyComplete = p?.completed_days === p?.total_days && allCodingTestsCompleted;
+
     return {
       week: w.week_number,
       title: w.theme || `Week ${w.week_number}`,
       completed: p?.completed_days === p?.total_days,
+      fullyComplete: weekFullyComplete,
+      codingTest1Completed,
+      codingTest2Completed,
       days: w.days?.map((d: any) => ({
         day: d.day_number,
         title: d.title || `Day ${d.day_number}`,
@@ -119,8 +131,10 @@ export default function CoursePage() {
         current: course?.current_week === w.week_number && course?.current_day === d.day_number,
         locked: d.is_locked,
       })) || [],
-      testCompleted: p?.test_completed || false,
+      testCompleted: p?.test_completed || w.test_unlocked || false,
       testScore: p?.test_score,
+      codingTest1Unlocked: w.coding_test_1_unlocked || false,
+      codingTest2Unlocked: w.coding_test_2_unlocked || false,
     };
   }) || [];
 
@@ -219,17 +233,40 @@ export default function CoursePage() {
                         {day.completed && <span className={styles.dayCheck}>✓</span>}
                       </Link>
                     ))}
-                    
+
                     <Link
                       href={`/dashboard/courses/${courseId}/week/${weekData.week}/test`}
-                      className={`${styles.testLink} ${weekData.testCompleted ? styles.completed : ''} ${!weekData.completed && weekData.days.every((d: any) => d.completed) ? '' : styles.locked}`}
+                      className={`${styles.testLink} ${weekData.testCompleted ? styles.completed : ''} ${!weekData.completed ? styles.locked : ''}`}
                     >
                       <span className={styles.testIcon}>[TEST]</span>
                       <span>Week {weekData.week} Test</span>
-                      {weekData.testCompleted && (
+                      {weekData.testCompleted && <span className={styles.dayCheck}>✓</span>}
+                      {weekData.testScore !== null && weekData.testScore !== undefined && !weekData.testCompleted && (
                         <span className={styles.testScore}>{weekData.testScore}%</span>
                       )}
                     </Link>
+
+                    {weekData.codingTest1Unlocked && (
+                      <Link
+                        href={`/dashboard/courses/${courseId}/week/${weekData.week}/coding-test/1`}
+                        className={`${styles.testLink} ${weekData.codingTest1Completed ? styles.completed : ''}`}
+                      >
+                        <span className={styles.testIcon}>[CODE 1]</span>
+                        <span>Week {weekData.week} Coding Test 1</span>
+                        {weekData.codingTest1Completed && <span className={styles.dayCheck}>✓</span>}
+                      </Link>
+                    )}
+
+                    {weekData.codingTest2Unlocked && (
+                      <Link
+                        href={`/dashboard/courses/${courseId}/week/${weekData.week}/coding-test/2`}
+                        className={`${styles.testLink} ${weekData.codingTest2Completed ? styles.completed : ''}`}
+                      >
+                        <span className={styles.testIcon}>[CODE 2]</span>
+                        <span>Week {weekData.week} Coding Test 2</span>
+                        {weekData.codingTest2Completed && <span className={styles.dayCheck}>✓</span>}
+                      </Link>
+                    )}
                   </motion.div>
                 )}
               </div>

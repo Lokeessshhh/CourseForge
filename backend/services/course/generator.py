@@ -131,12 +131,28 @@ class CourseGenerator:
         if self._llm is None:
             # Import here to avoid circular imports
             from services.llm.client import generate, safe_json_generate
-            
+
             # Async version for use in async methods
-            async def _generate_json_async(self, prompt: str, max_tokens: int = 2000) -> dict:
-                """Async wrapper for safe_json_generate."""
-                return await safe_json_generate(prompt, "course_generator", "course")
-            
+            async def _generate_json_async(prompt: str, max_tokens: int = 2000, use_fresh_client: bool = False) -> dict:
+                """Async wrapper for safe_json_generate with optional fresh client."""
+                custom_client = None
+                if use_fresh_client:
+                    # Create a fresh HTTP client for each call to prevent connection pool corruption
+                    from services.llm.client import create_fresh_client
+                    fresh_openai_client, http_client = create_fresh_client()
+                    custom_client = fresh_openai_client
+                
+                result = await safe_json_generate(prompt, "course_generator", "course", custom_client=custom_client)
+                
+                # Close the HTTP client if we created one
+                if use_fresh_client and http_client:
+                    try:
+                        await http_client.aclose()
+                    except Exception:
+                        pass  # Ignore cleanup errors
+                
+                return result
+
             self._llm = type('LLMClient', (), {
                 'generate': generate,
                 'safe_json_generate': safe_json_generate,
@@ -204,7 +220,7 @@ Previous weeks covered: {previous_str}
 
 Return ONLY valid JSON:
 {{
-  "theme": "Week {week_number}: <theme name>",
+  "theme": "<THEME NAME ONLY - NO WEEK PREFIX>",
   "objectives": ["objective 1", "objective 2", "objective 3", "objective 4"]
 }}
 
@@ -222,7 +238,7 @@ Previous weeks covered: {previous_str}
 
 Return ONLY valid JSON:
 {{
-  "theme": "Week {week_number}: <theme name>",
+  "theme": "<THEME NAME ONLY - NO WEEK PREFIX>",
   "objectives": ["objective 1", "objective 2", "objective 3"]
 }}"""
 
@@ -233,14 +249,151 @@ Return ONLY valid JSON:
             expected_keys=["theme", "objectives"],
         )
 
+        # LOG RAW AI OUTPUT for debugging
+        logger.info("="*70)
+        logger.info("🤖 RAW AI OUTPUT: Week %d Theme Generation", week_number)
+        logger.info("="*70)
+        logger.info("RAW RESULT: %s", result)
+        logger.info("="*70)
+
         if "error" in result:
             logger.warning("Week theme generation failed: %s", result.get("error"))
-            return f"Week {week_number}: {topic} - Part {week_number}", []
+            return f"{topic} - Part {week_number}", []
 
-        theme = result.get("theme", f"Week {week_number}: {topic}")
+        theme = result.get("theme", f"{topic} - Part {week_number}")
         objectives = result.get("objectives", [])
+        
+        # Strip "Week N:" prefix if AI still adds it
+        import re
+        theme = re.sub(r'^Week\s+\d+:\s*', '', theme).strip()
 
         return theme, objectives
+
+    async def _generate_week_day_titles(
+        self,
+        week_number: int,
+        week_theme: str,
+        topic: str,
+        skill_level: str,
+        description: str = None,
+        previous_week_titles: Dict[int, List[str]] = None,
+    ) -> List[Tuple[str, Dict[str, Any]]]:
+        """
+        Generate titles and tasks for ALL 5 days in a week with ONE LLM call.
+
+        Args:
+            week_number: Week number (1-N)
+            week_theme: Theme of the current week
+            topic: Course topic
+            skill_level: Skill level
+            previous_week_titles: Dict of week_num -> [day titles] from previous weeks
+
+        Returns:
+            List of 5 tuples: [(title, tasks), ...]
+        """
+        from services.llm.client import safe_json_generate
+
+        # Build context from previous weeks
+        prev_context = ""
+        if previous_week_titles:
+            for wn, titles in sorted(previous_week_titles.items()):
+                prev_context += f"Week {wn}: {', '.join(titles)}\n"
+
+        # Add user description if provided
+        description_str = ""
+        if description and isinstance(description, str) and description.strip():
+            description_str = f"\n\nUSER REQUIREMENTS:\n{description.strip()}\n\nIMPORTANT: Tailor the daily content to meet these specific user requirements."
+
+        prompt = f"""You are a curriculum designer for a {skill_level} {topic} course.
+
+Week {week_number} theme: {week_theme}
+{f"Previously covered:\n{prev_context}" if prev_context else ""}{description_str}
+
+Generate titles and tasks for ALL 5 days of this week.
+Each day should build progressively on the previous one.
+
+CRITICAL: You MUST return EXACTLY 5 days in the "days" array. No more, no less.
+
+Return ONLY valid JSON with this exact structure:
+{{
+  "days": [
+    {{
+      "title": "Day 1: <specific topic>",
+      "tasks": {{
+        "concepts": ["concept 1", "concept 2"],
+        "key_points": ["point 1", "point 2"],
+        "practice": "what to practice"
+      }}
+    }},
+    {{
+      "title": "Day 2: <specific topic>",
+      "tasks": {{
+        "concepts": ["concept 1"],
+        "key_points": ["point 1"],
+        "practice": "what to practice"
+      }}
+    }},
+    {{
+      "title": "Day 3: <specific topic>",
+      "tasks": {{
+        "concepts": ["concept 1"],
+        "key_points": ["point 1"],
+        "practice": "what to practice"
+      }}
+    }},
+    {{
+      "title": "Day 4: <specific topic>",
+      "tasks": {{
+        "concepts": ["concept 1"],
+        "key_points": ["point 1"],
+        "practice": "what to practice"
+      }}
+    }},
+    {{
+      "title": "Day 5: <specific topic>",
+      "tasks": {{
+        "concepts": ["concept 1"],
+        "key_points": ["point 1"],
+        "practice": "what to practice"
+      }}
+    }}
+  ]
+}}"""
+
+        result = await safe_json_generate(
+            prompt,
+            system_type="course_generator",
+            param_type="course",
+            expected_keys=["days"],
+        )
+
+        # LOG RAW AI OUTPUT for debugging
+        logger.info("="*70)
+        logger.info("🤖 RAW AI OUTPUT: Week %d Day Titles Generation", week_number)
+        logger.info("="*70)
+        logger.info("RAW RESULT: %s", result)
+        logger.info("="*70)
+
+        if "error" in result:
+            logger.warning("Week day titles generation failed (week %d): %s", week_number, result.get("error"))
+            # Return fallback for all 5 days
+            return [(f"Day {i}: {week_theme}", {}) for i in range(1, 6)]
+
+        days_data = result.get("days", [])
+        if not days_data or len(days_data) < 5:
+            logger.warning("Week day titles returned incomplete data (week %d): got %d days", week_number, len(days_data))
+            # Fill missing days with fallback
+            while len(days_data) < 5:
+                days_data.append({"title": f"Day {len(days_data) + 1}: {week_theme}", "tasks": {}})
+
+        # Extract exactly 5 days
+        result_list = []
+        for i, day_data in enumerate(days_data[:5]):
+            title = day_data.get("title", f"Day {i + 1}")
+            tasks = day_data.get("tasks", {})
+            result_list.append((title, tasks))
+
+        return result_list
 
     async def _generate_day_title_tasks(
         self,
@@ -252,22 +405,13 @@ Return ONLY valid JSON:
         previous_titles: List[str] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
-        Generate title and tasks for a day.
-
-        Args:
-            day_number: Day number (1-5)
-            week_theme: Theme of the current week
-            topic: Course topic
-            skill_level: Skill level
-            previous_titles: Titles of previous days in this week
-
-        Returns:
-            Tuple of (title, tasks_dict)
+        DEPRECATED: Use _generate_week_day_titles instead.
+        Kept for backward compatibility.
         """
         from services.llm.client import safe_json_generate
 
         previous_str = ", ".join(previous_titles) if previous_titles else "None"
-        
+
         # Add user description if provided (ensure it's a string)
         description_str = ""
         if description and isinstance(description, str) and description.strip():
@@ -403,15 +547,44 @@ Structure your response like this:
 ## Summary
 [Recap of key points - 200+ words]
 
-Return comprehensive markdown text."""
+Return comprehensive markdown text. MINIMUM LENGTH: 3000 characters (approximately 500+ words)."""
 
-        content = await generate(
-            prompt,
-            system_type="tutor",
-            param_type="course",  # Use 'course' param type for longer content (3000 tokens)
-        )
+        # Add validation and retry logic for minimum length
+        max_retries = 3
+        min_length = 3000  # Minimum 3000 characters
+        
+        for attempt in range(max_retries):
+            content = await generate(
+                prompt,
+                system_type="tutor",
+                param_type="course",  # Use 'course' param type for longer content (3000 tokens)
+            )
 
-        return content
+            # Validate that content meets minimum length requirement
+            if content and len(content.strip()) >= min_length:
+                logger.info("Theory generation successful (%d chars, attempt %d/%d)", len(content), attempt + 1, max_retries)
+                return content
+            elif content and len(content.strip()) > 0:
+                logger.warning("Theory generation too short (attempt %d/%d): %d chars (minimum: %d)", 
+                             attempt + 1, max_retries, len(content), min_length)
+                if attempt < max_retries - 1:
+                    import asyncio
+                    await asyncio.sleep(2 + attempt * 2)  # 2s, 4s delay
+                    # Add emphasis on length requirement for retry
+                    prompt = prompt + f"\n\nIMPORTANT: Your previous attempt was only {len(content)} characters. Please provide a MUCH MORE DETAILED explanation with at least {min_length} characters."
+            else:
+                logger.warning("Theory generation returned empty content (attempt %d/%d)", attempt + 1, max_retries)
+                if attempt < max_retries - 1:
+                    import asyncio
+                    await asyncio.sleep(2 + attempt * 2)
+
+        # If all retries failed, return what we have or a placeholder
+        if content and len(content.strip()) > 0:
+            logger.error("Theory generation failed after %d retries, returning partial content (%d chars)", max_retries, len(content))
+            return content
+        else:
+            logger.error("Theory generation failed after %d retries, returning placeholder", max_retries)
+            return f"## {day_title}\n\nTheory content could not be generated. Please refer to external resources for learning about this topic."
 
     async def _generate_code_content(
         self,
@@ -473,13 +646,33 @@ Requirements:
 
 Return markdown with properly formatted code blocks."""
 
-        content = await generate(
-            prompt,
-            system_type="code_teacher",
-            param_type="code",
-        )
+        # Add validation and retry logic for code generation
+        max_retries = 3
+        for attempt in range(max_retries):
+            content = await generate(
+                prompt,
+                system_type="code_teacher",
+                param_type="code",
+            )
 
-        return content
+            # Validate that content was actually generated
+            if content and content.strip() and len(content.strip()) > 50:
+                logger.info("Code generation successful (%d chars, attempt %d/%d)", len(content), attempt + 1, max_retries)
+                return content
+            else:
+                logger.warning("Code generation returned empty/short content (attempt %d/%d): %d chars", 
+                             attempt + 1, max_retries, len(content) if content else 0)
+                if attempt < max_retries - 1:
+                    import asyncio
+                    await asyncio.sleep(2 + attempt * 2)  # 2s, 4s delay
+
+        # If all retries failed, return a placeholder
+        if content:
+            logger.error("Code generation failed after %d retries, returning partial content", max_retries)
+            return content
+        else:
+            logger.error("Code generation failed after %d retries, returning empty placeholder", max_retries)
+            return f"## Code Examples for {day_title}\n\nCode examples could not be generated. Please refer to the theory content for conceptual understanding."
 
     async def _generate_quiz_questions(
         self,
@@ -800,40 +993,47 @@ Return ONLY this exact JSON structure:
             day_data["title"], week_theme, topic, skill_level, goals
         )
 
-    async def generate_weekly_test(
+    async def _generate_single_batch(
         self,
-        course_id: str,
+        course,
+        week,
         week_number: int,
-    ) -> Dict[str, Any]:
+        batch_idx: int,
+        batch_size: int,
+        difficulties: list,
+        day_focus: list,
+        day_titles: list,
+        existing_questions: list,
+    ) -> dict:
         """
-        Generate a weekly test covering all 5 days of a week.
-        10 MCQ questions covering entire week content.
-
+        Generate a single batch of questions independently (for parallel execution).
+        
         Args:
-            course_id: Course ID
+            course: Course object
+            week: WeekPlan object
             week_number: Week number
-
+            batch_idx: Batch index (0, 1, 2)
+            batch_size: Number of questions to generate
+            difficulties: List of difficulty levels
+            day_focus: List of day numbers to focus on
+            day_titles: List of day titles
+            existing_questions: List of previously generated questions (can be empty for parallel)
+            
         Returns:
-            Dict with test data
+            Dict with batch_questions key
         """
-        from asgiref.sync import sync_to_async
-        from apps.courses.models import Course, WeekPlan, WeeklyTest
-
-        max_retries = 3
+        max_retries = 3  # Reduced from 5 for faster execution
         
         for retry in range(max_retries):
             try:
-                course = await sync_to_async(Course.objects.get)(id=course_id)
-                week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+                # Build prompt - in parallel mode, existing_questions will be empty
+                existing_questions_text = ""
+                if existing_questions:
+                    existing_questions_text = "\n\nPREVIOUSLY GENERATED QUESTIONS (DO NOT REPEAT THESE):\n"
+                    for i, q in enumerate(existing_questions, 1):
+                        existing_questions_text += f"{i}. {q.get('question_text', '')[:150]}\n"
 
-                # Get all 5 days content
-                days = await sync_to_async(list)(week.days.all().order_by("day_number"))
-                if len(days) != 5:
-                    logger.warning("Week %d does not have 5 days", week_number)
-                    return {"error": "Week incomplete"}
-
-                # Build context from all days
-                day_titles = [d.title or f"Day {d.day_number}" for d in days]
+                day_focus_text = ", ".join([f"Day {d}: {day_titles[d-1]}" for d in day_focus])
 
                 prompt = f"""You are an expert {course.topic} instructor.
 
@@ -845,69 +1045,216 @@ Day 3: {day_titles[2]}
 Day 4: {day_titles[3]}
 Day 5: {day_titles[4]}
 
-Generate a 10-question MCQ test. Difficulty: 4 easy, 4 medium, 2 hard.
+CURRENT BATCH FOCUS: {day_focus_text}
 
-IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep explanations brief (max 20 words).
+Generate {batch_size} MCQ questions.
+Difficulties for this batch: {', '.join(difficulties)}
+{existing_questions_text}
+
+IMPORTANT:
+- Each question MUST be completely unique
+- Do NOT repeat the same concept or question style
+- Cover different topics from the focus days listed above
+- Return ONLY valid JSON. No markdown. No extra text.
+- Keep explanations brief (max 20 words)
 
 JSON format:
-{{"week_test": [{{"question_number": 1, "question_text": "Question?", "difficulty": "easy", "day_reference": 1, "options": {{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}, "correct_answer": "a", "explanation": "Brief explanation"}}]}}"""
+{{"questions": [{{"question_number": 1, "question_text": "Question?", "difficulty": "{difficulties[0]}", "day_reference": {day_focus[0]}, "options": {{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}}, "correct_answer": "a", "explanation": "Brief explanation"}}]}}"""
 
-                result = await self.llm._generate_json(prompt, max_tokens=4000)
+                # Use fresh client for each parallel call to avoid connection pool issues
+                result = await self.llm._generate_json(prompt, max_tokens=3000, use_fresh_client=True)
 
-                if "error" in result or "week_test" not in result:
-                    logger.warning("Weekly test generation failed (attempt %d/%d): %s", 
-                                  retry + 1, max_retries, result.get("error"))
+                # LOG RAW AI OUTPUT
+                logger.info("="*70)
+                logger.info("🤖 RAW AI OUTPUT: Weekly Test Week %d Batch %d", week_number, batch_idx + 1)
+                logger.info("="*70)
+                logger.info("RAW RESULT: %s", result)
+                logger.info("="*70)
+
+                if "error" in result or "questions" not in result:
+                    logger.warning("Batch %d generation failed (attempt %d/%d): %s",
+                                 batch_idx + 1, retry + 1, max_retries, result.get("error"))
                     if retry < max_retries - 1:
-                        await asyncio.sleep(3)  # Wait before retry
+                        await asyncio.sleep(1 + retry)  # Shorter delay: 1s, 2s
                         continue
-                    return {"error": "Generation failed", "questions": []}
+                    return {"batch_questions": [], "error": result.get("error")}
 
-                questions = result.get("week_test", [])
-                
-                # Validate we got 10 questions
-                if len(questions) < 10:
-                    logger.warning("Weekly test only generated %d questions (expected 10) - retrying", 
-                                  len(questions))
+                batch_questions = result.get("questions", [])
+
+                # Validate batch questions
+                if not batch_questions or len(batch_questions) == 0:
+                    logger.warning("Batch %d returned empty questions (attempt %d/%d)",
+                                 batch_idx + 1, retry + 1, max_retries)
                     if retry < max_retries - 1:
-                        await asyncio.sleep(3)
+                        await asyncio.sleep(1 + retry)
                         continue
+                    return {"batch_questions": [], "error": "Empty questions"}
 
-                # Save to database
-                @sync_to_async
-                def save_test():
-                    test, created = WeeklyTest.objects.update_or_create(
-                        course=course,
-                        week_number=week_number,
-                        defaults={
-                            "questions": questions,
-                            "total_questions": len(questions),
-                        }
-                    )
-                    week.test_generated = True
-                    week.save(update_fields=["test_generated"])
-                    return test
+                # LOG: Print batch questions
+                logger.info("="*60)
+                logger.info("🤖 BATCH %d: Generated %d unique questions for Week %d",
+                           batch_idx + 1, len(batch_questions), week_number)
+                logger.info("="*60)
+                for i, q in enumerate(batch_questions, 1):
+                    logger.info(f"  Q{i}: [{q.get('difficulty', '?')}] {q.get('question_text', 'N/A')[:100]}...")
+                    logger.info(f"      Day ref: {q.get('day_reference', '?')}")
+                logger.info("="*60)
 
-                test = await save_test()
+                return {"batch_questions": batch_questions}
 
-                logger.info("Generated weekly test for Week %d in course %s (%d questions)", 
-                           week_number, course_id, len(questions))
-
-                return {
-                    "success": True,
-                    "test_id": str(test.id),
-                    "week_number": week_number,
-                    "total_questions": len(questions),
-                }
-
-            except Exception as exc:
-                logger.exception("Error generating weekly test (attempt %d/%d): %s", 
-                               retry + 1, max_retries, exc)
+            except Exception as batch_exc:
+                logger.warning("Batch %d generation error (attempt %d/%d): %s",
+                             batch_idx + 1, retry + 1, max_retries, batch_exc)
                 if retry < max_retries - 1:
-                    await asyncio.sleep(3)
-                else:
-                    return {"error": str(exc)}
+                    await asyncio.sleep(1 + retry)
+                continue
         
-        return {"error": "Max retries exceeded"}
+        return {"batch_questions": [], "error": "Max retries exceeded"}
+
+    async def generate_weekly_test(
+        self,
+        course_id: str,
+        week_number: int,
+    ) -> Dict[str, Any]:
+        """
+        Generate a weekly test covering all 5 days of a week.
+        Uses PARALLEL batch generation for speed (asyncio.gather).
+
+        Args:
+            course_id: Course ID
+            week_number: Week number
+
+        Returns:
+            Dict with test data
+        """
+        from asgiref.sync import sync_to_async
+        from apps.courses.models import Course, WeekPlan, WeeklyTest
+
+        course = await sync_to_async(Course.objects.get)(id=course_id)
+        week = await sync_to_async(WeekPlan.objects.get)(course=course, week_number=week_number)
+
+        # Get all 5 days content
+        days = await sync_to_async(list)(week.days.all().order_by("day_number"))
+        if len(days) != 5:
+            logger.warning("Week %d does not have 5 days", week_number)
+            return {"error": "Week incomplete"}
+
+        # Build context from all days
+        day_titles = [d.title or f"Day {d.day_number}" for d in days]
+
+        # Define batch configurations
+        batch_configs = [
+            {
+                "batch_idx": 0,
+                "batch_size": 4,
+                "difficulties": ["easy", "easy", "medium", "medium"],
+                "day_focus": [1, 2, 3],
+                "existing_questions": [],  # Empty for parallel execution
+            },
+            {
+                "batch_idx": 1,
+                "batch_size": 4,
+                "difficulties": ["easy", "medium", "medium", "hard"],
+                "day_focus": [3, 4, 5],
+                "existing_questions": [],  # Empty for parallel execution
+            },
+            {
+                "batch_idx": 2,
+                "batch_size": 2,
+                "difficulties": ["hard", "medium"],
+                "day_focus": [1, 2, 4, 5],
+                "existing_questions": [],  # Empty for parallel execution
+            },
+        ]
+
+        logger.info("🚀 Starting PARALLEL batch generation for Week %d (%d batches)", 
+                   week_number, len(batch_configs))
+
+        # Execute all batches CONCURRENTLY using asyncio.gather
+        # Each batch gets its own fresh HTTP client to avoid connection pool issues
+        batch_results = await asyncio.gather(
+            *[
+                self._generate_single_batch(
+                    course=course,
+                    week=week,
+                    week_number=week_number,
+                    batch_idx=config["batch_idx"],
+                    batch_size=config["batch_size"],
+                    difficulties=config["difficulties"],
+                    day_focus=config["day_focus"],
+                    day_titles=day_titles,
+                    existing_questions=config["existing_questions"],
+                )
+                for config in batch_configs
+            ],
+            return_exceptions=True
+        )
+
+        # Collect all questions from successful batches
+        all_questions = []
+        successful_batches = 0
+        failed_batches = 0
+
+        for batch_idx, result in enumerate(batch_results):
+            if isinstance(result, Exception):
+                logger.warning("⚠️ Batch %d raised exception: %s", batch_idx + 1, result)
+                failed_batches += 1
+                continue
+            
+            if result.get("error"):
+                logger.warning("⚠️ Batch %d failed: %s", batch_idx + 1, result.get("error"))
+                failed_batches += 1
+                continue
+            
+            batch_questions = result.get("batch_questions", [])
+            if batch_questions:
+                all_questions.extend(batch_questions)
+                successful_batches += 1
+                logger.info("✅ Batch %d complete: %d questions", batch_idx + 1, len(batch_questions))
+            else:
+                failed_batches += 1
+
+        logger.info("📊 Parallel generation complete: %d/%d batches successful, %d total questions",
+                   successful_batches, len(batch_configs), len(all_questions))
+
+        # Assign question numbers sequentially
+        question_number = 1
+        for q in all_questions:
+            q["question_number"] = question_number
+            question_number += 1
+
+        # Save whatever questions we managed to generate
+        if len(all_questions) == 0:
+            return {"error": "Failed to generate any questions", "questions": []}
+
+        # Save to database
+        @sync_to_async
+        def save_test():
+            test, created = WeeklyTest.objects.update_or_create(
+                course=course,
+                week_number=week_number,
+                defaults={
+                    "questions": all_questions,
+                    "total_questions": len(all_questions),
+                }
+            )
+            week.test_generated = True
+            week.save(update_fields=["test_generated"])
+            return test
+
+        test = await save_test()
+
+        logger.info("="*60)
+        logger.info("✅ WEEKLY TEST COMPLETE: Week %d - %d unique MCQ questions",
+                   week_number, len(all_questions))
+        logger.info("="*60)
+
+        return {
+            "success": True,
+            "test_id": str(test.id),
+            "week_number": week_number,
+            "total_questions": len(all_questions),
+        }
 
     async def generate_coding_test(
         self,
@@ -971,14 +1318,17 @@ JSON format:
                     return {"error": "Generation failed", "problems": []}
 
                 problems = result.get("coding_problems", [])
-                
-                # Validate we got 2 problems
-                if len(problems) < 2:
-                    logger.warning("Coding test only generated %d problems (expected 2) - retrying", 
-                                  len(problems))
+
+                # Accept 1-2 problems (don't retry if only 1 generated)
+                if len(problems) < 1:
+                    logger.warning("Coding test generated 0 problems - retrying")
                     if retry < max_retries - 1:
-                        await asyncio.sleep(3)
+                        await asyncio.sleep(2)
                         continue
+                    return {"error": "Generation failed - no problems generated", "problems": []}
+                
+                if len(problems) < 2:
+                    logger.warning("Coding test only generated %d problem(s) instead of 2 - accepting partial result", len(problems))
 
                 # Save to database
                 @sync_to_async

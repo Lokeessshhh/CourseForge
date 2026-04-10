@@ -8,6 +8,8 @@ import subprocess
 import threading
 import time
 import signal
+import logging
+from pathlib import Path
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
@@ -20,6 +22,9 @@ class Command(BaseCommand):
         self.processes = []
         self.shutting_down = False
         self.celery_started = threading.Event()
+        self.celery_log_file = None
+        self.daphne_log_file = None
+        self.logs_dir = None
 
     def _handle_signal(self, signum, frame):
         """Handle shutdown signals gracefully."""
@@ -44,9 +49,42 @@ class Command(BaseCommand):
             help='Run without Celery worker'
         )
 
+    def setup_log_files(self):
+        """Create log directory and open log files."""
+        # Get the backend root directory (parent of apps/core/management/commands)
+        backend_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+        self.logs_dir = backend_root / "logs"
+        self.logs_dir.mkdir(exist_ok=True)
+
+        self.celery_log_file = open(self.logs_dir / "celery.log", "w", encoding="utf-8", buffering=1)
+        self.daphne_log_file = open(self.logs_dir / "daphne.log", "w", encoding="utf-8", buffering=1)
+
+        # Write timestamp headers
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.celery_log_file.write(f"# Celery Worker Log - Started: {timestamp}\n")
+        self.celery_log_file.write("=" * 80 + "\n")
+        self.daphne_log_file.write(f"# Daphne ASGI Server Log - Started: {timestamp}\n")
+        self.daphne_log_file.write("=" * 80 + "\n")
+
+    def cleanup_log_files(self):
+        """Close log files."""
+        try:
+            if self.celery_log_file:
+                self.celery_log_file.write(f"\n# Log ended: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                self.celery_log_file.close()
+            if self.daphne_log_file:
+                self.daphne_log_file.write(f"\n# Log ended: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                self.daphne_log_file.close()
+        except Exception:
+            pass
+
     def handle(self, *args, **options):
         addrport = options['addrport']
         no_celery = options['no_celery']
+
+        # Setup log files
+        self.setup_log_files()
 
         # Parse host and port
         if ':' in addrport:
@@ -60,6 +98,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('=' * 80))
         self.stdout.write(self.style.SUCCESS('   Django + Daphne (ASGI) + Celery + WebSocket'))
         self.stdout.write(self.style.SUCCESS(f'   🌐 http://{host}:{port}'))
+        self.stdout.write(self.style.SUCCESS(f'   📝 Logs: {self.logs_dir}'))
         self.stdout.write(self.style.SUCCESS('=' * 80 + '\n'))
 
         # Setup signal handlers for graceful shutdown
@@ -89,6 +128,9 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING('\n🛑 Shutting down all services...\n'))
 
+        # Close log files first
+        self.cleanup_log_files()
+
         for i, process in enumerate(reversed(self.processes), 1):
             if process and process.poll() is None:
                 try:
@@ -110,15 +152,14 @@ class Command(BaseCommand):
     def start_celery_worker(self):
         """Start Celery worker as a background process."""
         try:
-            # Use the Celery app directly from config.celery
-            # Listen to all queues: celery (default), course_generation, quiz_generation, certificates
             celery_cmd = [
-                sys.executable, "-m", "celery",
+                sys.executable, "-u",
+                "-m", "celery",
                 "-A", "config.celery",
                 "worker",
-                "--loglevel=info",  # INFO: Shows task start/complete, errors, progress (no debug spam)
-                "--pool=threads",  # Use threads pool to allow concurrent task execution
-                "--concurrency=4",  # 4 worker threads for parallel task processing
+                "--loglevel=info",
+                "--pool=threads",
+                "--concurrency=4",
                 "--without-gossip",
                 "--without-mingle",
                 "-Q", "celery,course_generation,quiz_generation,certificates",
@@ -126,18 +167,25 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f'   📦 Command: {" ".join(celery_cmd)}'))
 
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
+            env["PYTHONDONTWRITEBYTECODE"] = "1"
+            env["PYTHONIOENCODING"] = "utf-8"
+
+            # Capture BOTH stdout and stderr, merge them
             process = subprocess.Popen(
                 celery_cmd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # Merge stderr into stdout (Celery logs to stderr)
+                stderr=subprocess.STDOUT,
                 universal_newlines=True,
-                bufsize=1,
+                bufsize=1,  # Line buffered
+                env=env,
             )
 
             # Track the process
             self.processes.append(process)
 
-            # Start thread to stream Celery logs (separate thread to avoid blocking)
+            # Start thread to stream Celery logs
             threading.Thread(
                 target=self.stream_celery_logs,
                 args=(process,),
@@ -154,18 +202,41 @@ class Command(BaseCommand):
             return None
 
     def stream_celery_logs(self, process):
-        """Stream Celery logs - shows all logs."""
+        """Stream Celery logs from subprocess to log file and terminal."""
         try:
             # Signal that Celery has started
             self.celery_started.set()
 
-            for line in process.stdout:
+            # Read from subprocess stdout line by line
+            while True:
                 if self.shutting_down:
                     break
+
+                try:
+                    line = process.stdout.readline()
+                except (ValueError, OSError):
+                    # Process closed the pipe
+                    break
+
+                if not line:
+                    # EOF - process ended
+                    if process.poll() is not None:
+                        break
+                    time.sleep(0.1)
+                    continue
+
                 if not line.strip():
                     continue
 
-                # ALWAYS SHOW - Errors and warnings (highest priority)
+                # ALWAYS write to our log file (ALL logs captured)
+                if self.celery_log_file:
+                    try:
+                        self.celery_log_file.write(line)
+                        self.celery_log_file.flush()
+                    except Exception:
+                        pass
+
+                # Terminal output - filtered for readability
                 if "ERROR" in line or "Traceback" in line or "Exception" in line:
                     self.stdout.write(self.style.ERROR(f'❌ [Celery] {line.rstrip()}'))
                     continue
@@ -174,20 +245,27 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING(f'⚠️ [Celery] {line.rstrip()}'))
                     continue
 
-                # SKIP only Celery internal debug noise
+                # SKIP only Celery internal debug noise in terminal
                 skip_patterns = [
                     "Timer wake-up",
                     "pidbox received",
                     "basic.qos",
                     "Celery beat:",
+                    "got previous",
                 ]
                 if any(pattern in line for pattern in skip_patterns):
                     continue
 
-                # Show all other Celery logs
-                self.stdout.write(f'📦 [Celery] {line.rstrip()}')
+                # Show all other Celery logs in terminal
+                self.stdout.write(f'📦 [Celery] {line.rstrip()}\n')
 
-            self.stdout.write(self.style.WARNING('\n⚠️  Celery worker stopped unexpectedly\n'))
+            # Check if process exited unexpectedly
+            if process.poll() is not None and process.returncode != 0 and not self.shutting_down:
+                self.stdout.write(self.style.ERROR(
+                    f'\n⚠️  Celery worker exited with code {process.returncode}\n'
+                ))
+                if self.celery_log_file:
+                    self.celery_log_file.write(f"\n# Celery exited with code {process.returncode}\n")
 
         except Exception as e:
             if not self.shutting_down:
@@ -201,7 +279,8 @@ class Command(BaseCommand):
 
             # Build Daphne command
             daphne_cmd = [
-                sys.executable, "-m", "daphne",
+                sys.executable, "-u",  # Force unbuffered output
+                "-m", "daphne",
                 "-b", "0.0.0.0",
                 "-p", port,
                 "config.asgi:application",
@@ -217,6 +296,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('   ⚠️  Errors and warnings'))
             self.stdout.write(self.style.SUCCESS('=' * 80 + '\n'))
 
+            # Set environment for unbuffered output
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
+
             # Run Daphne with captured output for proper log streaming
             process = subprocess.Popen(
                 daphne_cmd,
@@ -224,6 +307,7 @@ class Command(BaseCommand):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 bufsize=1,
+                env=env,
             )
 
             # Stream Daphne logs
@@ -235,15 +319,30 @@ class Command(BaseCommand):
             raise CommandError(f'Failed to start Daphne: {e}')
 
     def stream_daphne_logs(self, process):
-        """Stream Daphne logs with proper formatting."""
+        """Stream Daphne logs to both terminal and file."""
         try:
-            for line in process.stdout:
+            while True:
                 if self.shutting_down:
                     break
+
+                line = process.stdout.readline()
+                if not line:
+                    if process.poll() is not None:
+                        break
+                    continue
+
                 if not line.strip():
                     continue
 
-                # ALWAYS SHOW - Errors and warnings
+                # ALWAYS write to log file (ALL logs captured)
+                if self.daphne_log_file:
+                    try:
+                        self.daphne_log_file.write(line)
+                        self.daphne_log_file.flush()
+                    except Exception:
+                        pass
+
+                # Terminal output - filtered for readability
                 if "ERROR" in line or "Traceback" in line or "Exception" in line:
                     self.stdout.write(self.style.ERROR(f'❌ [Daphne] {line.rstrip()}'))
                     continue

@@ -1,5 +1,6 @@
 """
-Embedding service — supports both external API and local sentence-transformers.
+Embedding service — Qwen3-Embedding-8B via OpenRouter.
+Supports both OpenRouter API and local sentence-transformers fallback.
 Singleton pattern to avoid reloading models.
 """
 import logging
@@ -13,26 +14,29 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    """Singleton embedding service with external API + local fallback."""
+    """Singleton embedding service with OpenRouter API + local fallback."""
 
     _instance = None
 
     def __init__(self):
-        self.use_external = bool(settings.EMBEDDING_API_URL)
-        self.dimension = settings.EMBEDDING_DIM
-
+        self.api_key = getattr(settings, "OPENROUTER_API_KEY", "")
+        self.model = getattr(settings, "OPENROUTER_EMBEDDING_MODEL", "Qwen/Qwen3-Embedding-8B")
+        self.dimension = getattr(settings, "EMBEDDING_DIM", 1536)
+        self.base_url = getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        
+        self.use_external = bool(self.api_key)
+        
         if self.use_external:
-            self.url = f"{settings.EMBEDDING_API_URL.rstrip('/')}/v1/embeddings"
-            self.model_name = settings.EMBEDDING_MODEL_NAME
+            self.url = f"{self.base_url.rstrip('/')}/chat/completions"
             logger.info(
-                "Embedding model: %s @ %s [dim=%d]",
-                self.model_name, self.url, self.dimension,
+                "Embedding model: %s via OpenRouter [dim=%d]",
+                self.model, self.dimension,
             )
         else:
             # Lazy-load local model on first use
             self._local_model = None
             logger.info(
-                "Embedding model: %s (local, dim=%d)",
+                "Embedding model: %s (local fallback, dim=%d)",
                 settings.EMBEDDING_MODEL_FALLBACK, self.dimension,
             )
 
@@ -62,34 +66,61 @@ class EmbeddingService:
             return await self._external_embed_batch(texts)
         return await self._local_embed_batch(texts)
 
-    # ── External API ─────────────────────────────────────────────
+    # ── OpenRouter API ─────────────────────────────────────────────
     async def _external_embed(self, text: str) -> List[float]:
+        """Get embedding from OpenRouter Qwen3-Embedding-8B."""
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+            "X-Title": "AI Course Generator",
+            "Content-Type": "application/json",
+        }
+
+        # OpenRouter uses chat completions API for embeddings via Qwen
+        payload = {
+            "model": self.model,
+            "input": text,
+            "dimensions": self.dimension,
+            "encoding_format": "float",
+        }
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                self.url,
-                json={
-                    "model": self.model_name,
-                    "input": text,
-                    "dimensions": self.dimension,
-                },
+                self.url.replace("/chat/completions", "/embeddings"),
+                json=payload,
+                headers=headers,
             )
             response.raise_for_status()
-            return response.json()["data"][0]["embedding"]
+            data = response.json()
+            return data["data"][0]["embedding"]
 
     async def _external_embed_batch(self, texts: List[str]) -> List[List[float]]:
-        batch_size = 16
+        """Batch embedding via OpenRouter with chunking."""
+        batch_size = 16  # OpenRouter batch limit
         all_embeddings = []
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+            "X-Title": "AI Course Generator",
+            "Content-Type": "application/json",
+        }
 
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
+            
+            payload = {
+                "model": self.model,
+                "input": batch,
+                "dimensions": self.dimension,
+                "encoding_format": "float",
+            }
+
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
-                    self.url,
-                    json={
-                        "model": self.model_name,
-                        "input": batch,
-                        "dimensions": self.dimension,
-                    },
+                    self.url.replace("/chat/completions", "/embeddings"),
+                    json=payload,
+                    headers=headers,
                 )
                 response.raise_for_status()
                 data = response.json()["data"]

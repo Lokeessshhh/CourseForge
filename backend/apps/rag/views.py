@@ -166,8 +166,9 @@ def rag_search(request):
 
     try:
         from services.rag_pipeline.retriever import HybridRetriever
+        from asgiref.sync import async_to_sync
         retriever = HybridRetriever()
-        results = retriever.hybrid_retrieve(query, top_k=top_k, course_id=course_id)
+        results = async_to_sync(retriever.hybrid_retrieve)(query, top_k=top_k, course_id=course_id)
 
         return _ok({"results_count": len(results), "results": results})
 

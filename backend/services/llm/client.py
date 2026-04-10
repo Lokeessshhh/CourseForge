@@ -1,6 +1,6 @@
 """
-LLM Client for vLLM server.
-Uses AsyncOpenAI client compatible with vLLM/OpenAI API.
+LLM Client for OpenRouter API.
+Uses AsyncOpenAI client compatible with OpenRouter/OpenAI API.
 """
 import asyncio
 import json
@@ -13,32 +13,61 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# vLLM Server Configuration
-BASE_URL = getattr(settings, "VLLM_BASE_URL", "http://localhost:8000")
-if not BASE_URL.rstrip("/").endswith("/v1"):
-    BASE_URL = BASE_URL.rstrip("/") + "/v1"
-MODEL_NAME = "qwen-coder"
-API_KEY = "none"
+# OpenRouter Configuration
+BASE_URL = getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+MODEL_NAME = getattr(settings, "OPENROUTER_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+API_KEY = getattr(settings, "OPENROUTER_API_KEY", "")
 
-TIMEOUT_SECONDS = getattr(settings, "VLLM_TIMEOUT_SECONDS", 120)
-SDK_MAX_RETRIES = getattr(settings, "VLLM_SDK_MAX_RETRIES", 0)
+TIMEOUT_SECONDS = getattr(settings, "OPENROUTER_TIMEOUT_SECONDS", 120)
+SDK_MAX_RETRIES = getattr(settings, "OPENROUTER_SDK_MAX_RETRIES", 0)
 
 # Configure httpx client with proper connection limits
 # Increased limits to handle concurrent weekly test generation tasks
 # Each Celery task runs in its own thread with asyncio.run(), so we need enough connections
-http_client = httpx.AsyncClient(
-    timeout=TIMEOUT_SECONDS,
-    limits=httpx.Limits(
-        max_connections=100,      # Total connections across all hosts (increased from 50)
-        max_keepalive_connections=50,  # Keep connections alive for reuse (increased from 20)
-        keepalive_expiry=60,     # Close idle connections after 60s (increased from 30s)
-    ),
-)
+# Add proper headers for OpenRouter API
+headers = {
+    "HTTP-Referer": "https://github.com/your-org/ai-course-generator",
+    "X-Title": "AI Course Generator",
+}
+if API_KEY:
+    headers["Authorization"] = f"Bearer {API_KEY}"
 
-# Initialize async client with custom http_client
+
+def create_http_client():
+    """
+    Create a FRESH httpx.AsyncClient for each async context.
+    This prevents connection pool corruption when Celery tasks retry/fail.
+    """
+    return httpx.AsyncClient(
+        timeout=TIMEOUT_SECONDS,
+        limits=httpx.Limits(
+            max_connections=100,
+            max_keepalive_connections=50,
+            keepalive_expiry=60,
+        ),
+        headers=headers,
+    )
+
+
+def create_fresh_client():
+    """
+    Create a FRESH AsyncOpenAI client with a new HTTP connection pool.
+    Use this in Celery tasks to avoid stale connection issues.
+    """
+    http_client = create_http_client()
+    return AsyncOpenAI(
+        base_url=BASE_URL,
+        api_key=API_KEY if API_KEY else "sk-or-placeholder",
+        http_client=http_client,
+        max_retries=SDK_MAX_RETRIES,
+    ), http_client
+
+
+# Module-level client (kept for backward compatibility with day generation)
+http_client = create_http_client()
 client = AsyncOpenAI(
     base_url=BASE_URL,
-    api_key=API_KEY,
+    api_key=API_KEY if API_KEY else "sk-or-placeholder",
     http_client=http_client,
     max_retries=SDK_MAX_RETRIES,
 )
@@ -138,6 +167,7 @@ async def generate(
     param_type: str = "content",
     extra_context: str = "",
     conversation_history: List[Dict] = None,
+    custom_client: AsyncOpenAI = None,  # Allow custom client
 ) -> str:
     """
     Generate a response from the LLM.
@@ -148,10 +178,13 @@ async def generate(
         param_type: Key from GENERATION_PARAMS
         extra_context: Additional context to inject
         conversation_history: List of previous messages
+        custom_client: Optional custom AsyncOpenAI client (use fresh client in Celery tasks)
 
     Returns:
         Generated response string
     """
+    # Use custom client if provided, otherwise use module-level client
+    llm_client = custom_client if custom_client else client
     params = GENERATION_PARAMS.get(param_type, GENERATION_PARAMS["content"])
     system_prompt = SYSTEM_PROMPTS.get(system_type, SYSTEM_PROMPTS["tutor"])
 
@@ -168,23 +201,47 @@ async def generate(
 
     messages.append({"role": "user", "content": prompt})
 
-    # Increased retries from 3 to 5 for better reliability with longer backoff
-    for attempt in range(5):
+    # Reduced retries from 5 to 3 with shorter backoff for faster failure
+    max_retries = 3
+    for attempt in range(max_retries):
         try:
-            response = await client.chat.completions.create(
+            response = await llm_client.chat.completions.create(
                 model=MODEL_NAME,
                 messages=messages,
                 **params
             )
-            return response.choices[0].message.content
+
+            # Extract content from response
+            message = response.choices[0].message
+            content = message.content
+
+            # Qwen models may return reasoning in a separate field
+            # Fallback to reasoning if content is empty
+            if not content or not content.strip():
+                reasoning = getattr(message, 'reasoning', None)
+                if reasoning:
+                    logger.info("Using reasoning field as fallback (%d chars)", len(reasoning))
+                    content = reasoning
+
+            # Validate content is not None or empty
+            if content is None or not content.strip():
+                logger.warning("LLM returned None/empty content (attempt %d/%d), retrying...", attempt + 1, max_retries)
+                await asyncio.sleep(1 + attempt * 2)  # 1s, 3s, 5s instead of 2s, 4s, 8s
+                continue
+
+            return content
 
         except Exception as e:
-            logger.warning("LLM generation attempt %d/5 failed: %s", attempt + 1, e)
-            if attempt == 4:
-                logger.exception("LLM generation failed after 5 attempts")
+            logger.warning("LLM generation attempt %d/%d failed: %s", attempt + 1, max_retries, e)
+            if attempt == max_retries - 1:
+                logger.exception("LLM generation failed after %d attempts", max_retries)
                 raise
-            # Exponential backoff with longer delays (2, 4, 8, 16 seconds)
-            await asyncio.sleep(2 ** (attempt + 1))
+            # Shorter exponential backoff (1s, 2s)
+            await asyncio.sleep(1 + attempt)
+    
+    # This should not be reached due to the raise above, but added for safety
+    logger.error("LLM generation exhausted all retries without returning content")
+    raise Exception("LLM generation failed after all retries - no valid content returned")
 
 
 async def stream_generate(
@@ -237,7 +294,8 @@ async def safe_json_generate(
     system_type: str = "course_generator",
     param_type: str = "course",
     expected_keys: List[str] = None,
-    max_retries: int = 5,  # Increased from 3 to 5 for better reliability
+    max_retries: int = 3,  # Reduced from 5 to 3 for faster failure
+    custom_client = None,  # Allow custom client
 ) -> Dict:
     """
     Generate JSON response with validation and retry logic.
@@ -249,6 +307,7 @@ async def safe_json_generate(
         param_type: Generation params key
         expected_keys: Keys that must exist in response
         max_retries: Number of retry attempts
+        custom_client: Optional custom AsyncOpenAI client
 
     Returns:
         Parsed JSON dict or error dict
@@ -260,7 +319,14 @@ async def safe_json_generate(
 
     for attempt in range(max_retries):
         try:
-            raw = await generate(prompt, system_type, param_type)
+            raw = await generate(prompt, system_type, param_type, custom_client=custom_client)
+
+            # Handle None response from LLM
+            if raw is None:
+                logger.warning("LLM returned None response (attempt %d/%d)", attempt + 1, max_retries)
+                # Wait before retrying to avoid rate limiting
+                await asyncio.sleep(3 + attempt * 2)
+                continue
 
             # Clean up response
             cleaned = raw.strip()
@@ -339,7 +405,10 @@ async def safe_json_generate(
             logger.exception("Unexpected error in safe_json_generate: %s", e)
             if attempt == max_retries - 1:
                 return {"error": str(e), "raw": raw}
-            await asyncio.sleep(1.5)
+            # Exponential backoff: 3s, 6s, 12s, 24s, 48s
+            delay = min(3 * (2 ** attempt), 60)
+            logger.info("Retrying in %ds (attempt %d/%d)", delay, attempt + 2, max_retries)
+            await asyncio.sleep(delay)
 
     return {"error": "Max retries exceeded", "raw": raw}
 

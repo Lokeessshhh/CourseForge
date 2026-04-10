@@ -216,13 +216,13 @@ export default function WeeklyTestPage() {
                 </motion.button>
               </Link>
             )}
-            <Link href={passed ? `/dashboard/courses/${courseId}/week/${week + 1}/day/1` : `/dashboard/courses/${courseId}`}>
+            <Link href={passed ? `/dashboard/courses/${courseId}/week/${week}/coding-test/1` : `/dashboard/courses/${courseId}`}>
               <motion.button
                 className={styles.continueBtn}
                 whileHover={{ x: -2, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {passed ? 'CONTINUE TO WEEK ' + (week + 1) + ' →' : 'BACK TO COURSE →'}
+                {passed ? 'CONTINUE TO CODING TEST 1 →' : 'BACK TO COURSE →'}
               </motion.button>
             </Link>
           </div>

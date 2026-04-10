@@ -3,9 +3,66 @@ Django settings - Base configuration.
 All environment-specific settings inherit from this.
 """
 import os
+import sys
+import io
 from pathlib import Path
 from dotenv import load_dotenv
 import importlib.util
+
+# ──────────────────────────────────────────────
+# Fix Windows console encoding for ALL loggers
+# ──────────────────────────────────────────────
+if sys.platform == 'win32':
+    # Force UTF-8 encoding for all I/O
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # Ensure stdout/stderr use UTF-8 encoding with line buffering
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace', line_buffering=True)
+        except (AttributeError, ValueError, OSError):
+            pass
+    if hasattr(sys.stderr, 'reconfigure'):
+        try:
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace', line_buffering=True)
+        except (AttributeError, ValueError, OSError):
+            pass
+    
+    # Patch all StreamHandler instances to use UTF-8
+    import logging
+    
+    def _make_patched_emit(original_emit):
+        def _patched_emit(self, record):
+            try:
+                # Try to set UTF-8 encoding on the stream if it's a console
+                if hasattr(self.stream, 'reconfigure') and hasattr(self.stream, 'encoding'):
+                    if self.stream.encoding != 'utf-8':
+                        self.stream.reconfigure(encoding='utf-8', errors='replace')
+            except (AttributeError, ValueError, OSError):
+                pass
+            return original_emit(self, record)
+        return _patched_emit
+    
+    logging.StreamHandler.emit = _make_patched_emit(logging.StreamHandler.emit)
+    
+    # Patch linecache to use UTF-8 when reading source files
+    import linecache
+    _original_updatecache = linecache.updatecache
+    def _patched_updatecache(filename, module_globals=None):
+        try:
+            return _original_updatecache(filename, module_globals)
+        except UnicodeDecodeError:
+            try:
+                with open(filename, 'r', encoding='utf-8', errors='replace') as fp:
+                    lines = fp.readlines()
+                    if lines and not lines[-1].endswith('\n'):
+                        lines.append('\n')
+                    linecache.cache[filename] = (len(lines), None, lines, filename)
+                    return lines
+            except Exception:
+                return []
+    linecache.updatecache = _patched_updatecache
+    linecache.checkcache = _patched_updatecache
 
 load_dotenv()
 
@@ -255,15 +312,27 @@ CLERK_JWKS_URL = os.environ.get(
 CLERK_WEBHOOK_SECRET = os.environ.get("CLERK_WEBHOOK_SECRET", "")
 
 # ──────────────────────────────────────────────
-# vLLM Server Configuration
+# OpenRouter Configuration (LLM + Embeddings + Reranker)
 # ──────────────────────────────────────────────
-VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "http://localhost:8000")
-VLLM_MODEL = os.environ.get("VLLM_MODEL", "qwen-coder")
-VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "none")
-VLLM_MAX_TOKENS = int(os.environ.get("VLLM_MAX_TOKENS", "3000"))
-VLLM_STREAM_TIMEOUT = int(os.environ.get("VLLM_STREAM_TIMEOUT", "120"))
-VLLM_TIMEOUT_SECONDS = int(os.environ.get("VLLM_TIMEOUT_SECONDS", "120"))
-VLLM_SDK_MAX_RETRIES = int(os.environ.get("VLLM_SDK_MAX_RETRIES", "0"))
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+# LLM Model
+OPENROUTER_LLM_MODEL = os.environ.get("OPENROUTER_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "3000"))
+OPENROUTER_STREAM_TIMEOUT = int(os.environ.get("OPENROUTER_STREAM_TIMEOUT", "120"))
+OPENROUTER_TIMEOUT_SECONDS = int(os.environ.get("OPENROUTER_TIMEOUT_SECONDS", "120"))
+OPENROUTER_SDK_MAX_RETRIES = int(os.environ.get("OPENROUTER_SDK_MAX_RETRIES", "0"))
+
+# Embedding Model
+OPENROUTER_EMBEDDING_MODEL = os.environ.get("OPENROUTER_EMBEDDING_MODEL", "Qwen/Qwen3-Embedding-8B")
+EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "1536"))
+EMBEDDING_MODEL_FALLBACK = os.environ.get(
+    "EMBEDDING_MODEL_FALLBACK", "sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Reranker Model
+OPENROUTER_RERANKER_MODEL = os.environ.get("OPENROUTER_RERANKER_MODEL", "cohere/rerank-v3.5")
 
 # Generation parameters for different use cases
 GENERATION_PARAMS = {
@@ -277,20 +346,11 @@ GENERATION_PARAMS = {
 }
 
 # ──────────────────────────────────────────────
-# Embedding models
+# Legacy vLLM Configuration (deprecated, kept for backward compatibility)
 # ──────────────────────────────────────────────
-EMBEDDING_MODEL_PRIMARY = os.environ.get(
-    "EMBEDDING_MODEL_PRIMARY", "Qwen/Qwen3-Embedding"
-)
-EMBEDDING_MODEL_FALLBACK = os.environ.get(
-    "EMBEDDING_MODEL_FALLBACK", "sentence-transformers/all-MiniLM-L6-v2"
-)
-EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "1536"))
-EMBEDDING_API_URL = os.environ.get(
-    "EMBEDDING_API_URL", ""  # External embedding API URL (e.g. http://129.212.183.140:8000)
-)
-EMBEDDING_API_KEY = os.environ.get("EMBEDDING_API_KEY", "")
-EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "qwen3-embedding")
+VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "")
+VLLM_MODEL = os.environ.get("VLLM_MODEL", "")
+VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "")
 
 # ──────────────────────────────────────────────
 # External APIs

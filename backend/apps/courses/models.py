@@ -80,6 +80,12 @@ class WeekPlan(models.Model):
     # Weekly test fields
     test_generated = models.BooleanField(default=False)
     test_unlocked = models.BooleanField(default=False)  # Unlocks after all 5 days completed
+    # Coding test tracking
+    coding_tests_generated = models.BooleanField(default=False)
+    coding_test_1_unlocked = models.BooleanField(default=False)
+    coding_test_1_completed = models.BooleanField(default=False)
+    coding_test_2_unlocked = models.BooleanField(default=False)
+    coding_test_2_completed = models.BooleanField(default=False)
 
     class Meta:
         db_table = "week_plans"
@@ -152,7 +158,7 @@ class WeeklyTest(models.Model):
 
 
 class CodingTest(models.Model):
-    """Weekly coding test - 2 coding problems per week."""
+    """Weekly coding test - 2 separate tests per week."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey(
         Course,
@@ -161,16 +167,17 @@ class CodingTest(models.Model):
         db_column="course_id",
     )
     week_number = models.IntegerField()
-    problems = models.JSONField(default=list)  # List of 2 coding problems
+    test_number = models.IntegerField(default=1)  # 1 or 2
+    problems = models.JSONField(default=list)  # List of coding problems
     total_problems = models.IntegerField(default=2)
     generated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "coding_tests"
-        unique_together = [("course", "week_number")]
+        unique_together = [("course", "week_number", "test_number")]
 
     def __str__(self):
-        return f"Week {self.week_number} Coding Test - {self.course.course_name}"
+        return f"Week {self.week_number} Coding Test {self.test_number} - {self.course.course_name}"
 
 
 class CodingTestAttempt(models.Model):
