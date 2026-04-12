@@ -202,6 +202,24 @@ def execute_coding_challenge(request, course_id, week_number):
     # Check if correct
     is_correct = result.get("status") == "accepted"
 
+    # Save execution result to attempt's submissions
+    if not attempt.submissions:
+        attempt.submissions = {}
+    
+    # Store result for this challenge index
+    attempt.submissions[str(challenge_index)] = {
+        "problem_index": challenge_index,
+        "is_correct": is_correct,
+        "stdout": result.get("stdout", ""),
+        "stderr": result.get("stderr", ""),
+        "compile_output": result.get("compile_output", ""),
+        "status": result.get("status"),
+        "execution_time": result.get("time"),
+        "memory_used": result.get("memory"),
+    }
+    attempt.save(update_fields=["submissions"])
+    logger.info(f"Execute coding challenge: Saved result for challenge {challenge_index}, is_correct={is_correct}")
+
     return _ok({
         "execution_id": str(attempt.id),
         "status": result.get("status"),
@@ -248,6 +266,21 @@ def submit_coding_test(request, course_id, week_number, test_number=1):
         logger.error(f"Submit coding test: Attempt {attempt_id} not found for user {request.user.id}")
         return _err("Attempt not found.", status.HTTP_404_NOT_FOUND)
 
+    # If challenge_results is empty or incomplete, use the saved submissions from attempt
+    if not challenge_results and attempt.submissions:
+        # Convert dict back to list format
+        challenge_results = []
+        for key in sorted(attempt.submissions.keys(), key=lambda x: int(x)):
+            challenge_results.append(attempt.submissions[key])
+        logger.info(f"Submit coding test: Using saved submissions from attempt, count={len(challenge_results)}")
+    elif challenge_results and attempt.submissions:
+        # Validate: ensure we're using the backend-stored results (which are authoritative)
+        logger.info(f"Submit coding test: Received {len(challenge_results)} results from frontend, using backend-stored results")
+        # Use backend submissions as source of truth
+        challenge_results = []
+        for key in sorted(attempt.submissions.keys(), key=lambda x: int(x)):
+            challenge_results.append(attempt.submissions[key])
+
     # Check if attempt is already completed (has a score)
     if attempt.score is not None and attempt.score > 0:
         logger.warning(f"Submit coding test: Attempt {attempt_id} already completed")
@@ -275,29 +308,51 @@ def submit_coding_test(request, course_id, week_number, test_number=1):
         if test_number == 1:
             week.coding_test_1_completed = True
             week.save(update_fields=["coding_test_1_completed"])
-            
-            # Unlock coding test 2
-            next_coding_test_unlocked = True
-            logger.info(f"Coding test 1 completed, coding test 2 unlocked: course={course_id}, week={week_number}")
+
+            # Unlock next week's day 1 immediately after Coding Test 1 is passed
+            # (This treats Coding Test 1 as the primary gate for the weekly test)
+            try:
+                next_week = course.weeks.get(week_number=week_number + 1)
+                next_week_day1 = next_week.days.filter(day_number=1).first()
+                if next_week_day1 and next_week_day1.is_locked:
+                    next_week_day1.is_locked = False
+                    next_week_day1.save(update_fields=["is_locked"])
+                    logger.info(f"Coding test 1 passed, next week unlocked: course={course_id}, week={week_number}")
+            except WeekPlan.DoesNotExist:
+                pass  # Last week of course
+
+            # Also unlock coding test 2 if it exists, but don't block next week
+            if not week.coding_test_2_unlocked:
+                week.coding_test_2_unlocked = True
+                week.save(update_fields=["coding_test_2_unlocked"])
+                next_coding_test_unlocked = True
+
         elif test_number == 2:
             week.coding_test_2_completed = True
             week.save(update_fields=["coding_test_2_completed"])
-            
-            # Both coding tests completed, unlock next week
-            if week.coding_test_1_completed and week.coding_test_2_completed:
-                # Unlock next week's day 1
+            logger.info(f"Coding test 2 completed: course={course_id}, week={week_number}")
+
+        # After any coding test is passed, check if week should be marked complete
+        # A week is complete when: MCQ test passed OR coding test 1 passed (whichever is the primary gate)
+        if not week.is_completed:
+            week.is_completed = True
+            week.save(update_fields=["is_completed"])
+            logger.info(f"Week {week_number} marked as completed after coding test {test_number}: course={course_id}")
+
+            # Check if ALL weeks are done - trigger certificate if so
+            all_weeks_done = not course.weeks.filter(is_completed=False).exists()
+            if all_weeks_done:
+                from apps.courses.models import CourseProgress
                 try:
-                    next_week = course.weeks.get(week_number=week_number + 1)
-                    next_week_day1 = next_week.days.filter(day_number=1).first()
-                    if next_week_day1 and next_week_day1.is_locked:
-                        next_week_day1.is_locked = False
-                        next_week_day1.save(update_fields=["is_locked"])
-                        next_coding_test_unlocked = True
-                        logger.info(f"Both coding tests completed, next week unlocked: course={course_id}, week={week_number}")
-                except WeekPlan.DoesNotExist:
-                    pass  # Last week of course
-                
-                logger.info(f"Coding test 2 completed, both tests done: course={course_id}, week={week_number}")
+                    progress = CourseProgress.objects.get(user_id=request.user.id, course=course)
+                    progress.completed_at = timezone.now()
+                    progress.save(update_fields=["completed_at"])
+                    logger.info(f"Course completed! Triggering certificate generation: user={request.user.id}, course={course_id}")
+
+                    from apps.courses.tasks import generate_certificate_task
+                    generate_certificate_task.delay(str(request.user.id), str(course_id))
+                except CourseProgress.DoesNotExist:
+                    logger.warning(f"CourseProgress not found for user={request.user.id}, course={course_id}")
 
     return _ok({
         "score": correct_challenges,

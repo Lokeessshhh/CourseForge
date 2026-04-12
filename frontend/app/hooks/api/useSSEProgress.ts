@@ -90,7 +90,7 @@ export function useSSEProgress(
 
     // Connection opened
     eventSource.addEventListener('connected', (event) => {
-      console.log('[SSE] ✅ Connected:', event.data);
+      console.log('[SSE]  Connected:', event.data);
       setIsConnected(true);
       setError(null);
       reconnectAttemptsRef.current = 0;
@@ -100,7 +100,7 @@ export function useSSEProgress(
     eventSource.addEventListener('progress', (event) => {
       try {
         const progressData: SSEProgressData = JSON.parse(event.data);
-        console.log('[SSE] 📊 Progress update:', progressData);
+        console.log('[SSE]  Progress update:', progressData);
         setData(progressData);
         
         // Check if complete
@@ -117,7 +117,7 @@ export function useSSEProgress(
     eventSource.addEventListener('complete', (event) => {
       try {
         const progressData: SSEProgressData = JSON.parse(event.data);
-        console.log('[SSE] ✅✅✅ GENERATION COMPLETE EVENT RECEIVED:', progressData);
+        console.log('[SSE]  GENERATION COMPLETE EVENT RECEIVED:', progressData);
 
         // Set refs immediately (before state updates) to prevent race condition
         completeEventReceivedRef.current = true;
@@ -130,7 +130,7 @@ export function useSSEProgress(
         
         // DO NOT close connection here - let toast component handle dismissal after 3 seconds
         // The toast will call disconnect() when it's ready to dismiss
-        console.log('[SSE] ⏳ Keeping connection open for toast 3-second display...');
+        console.log('[SSE] Keeping connection open for toast 3-second display...');
 
       } catch (err) {
         console.error('[SSE] Failed to parse complete data:', err);
@@ -140,7 +140,7 @@ export function useSSEProgress(
     // Heartbeat
     eventSource.addEventListener('heartbeat', (event) => {
       const heartbeat = JSON.parse(event.data);
-      console.log('[SSE] 💓 Heartbeat:', heartbeat);
+      console.log('[SSE]  Heartbeat:', heartbeat);
     });
 
     // Error handling - BULLETPROOF VERSION WITH GRACE PERIOD
@@ -158,7 +158,7 @@ export function useSSEProgress(
 
       // If we just completed, this is a NORMAL connection close - ignore it
       if (justCompleted || stateIsComplete) {
-        console.log('[SSE] ✅ Generation complete - error event is normal connection close');
+        console.log('[SSE]  Generation complete - error event is normal connection close');
         setIsConnected(false);
         cleanup();
         return;
@@ -171,7 +171,7 @@ export function useSSEProgress(
           
           // Check if this error event actually contains complete data
           if (errorData.generation_status === 'ready') {
-            console.log('[SSE] ✅ Error event contains complete data, processing as complete');
+            console.log('[SSE]  Error event contains complete data, processing as complete');
             completeEventReceivedRef.current = true;
             pendingCompleteDataRef.current = errorData;
             setData(errorData);
@@ -189,8 +189,8 @@ export function useSSEProgress(
       } else {
         // No data in error event - this is usually a normal connection close
         // BUT we add a 500ms grace period to see if a complete event arrives
-        
-        console.log('[SSE] ⏳ Error event has no data, starting 500ms grace period...');
+
+        console.log('[SSE] Error event has no data, starting 500ms grace period...');
         
         // Clear any existing grace period timeout
         if (errorGracePeriodTimeoutRef.current) {
@@ -206,11 +206,11 @@ export function useSSEProgress(
                               data?.generation_status === 'ready';
           
           if (completedNow) {
-            console.log('[SSE] ✅ Grace period: Generation completed during wait, ignoring error');
+            console.log('[SSE]  Grace period: Generation completed during wait, ignoring error');
             setError(null);
           } else {
             // Still not complete after grace period - this is a real connection loss
-            console.log('[SSE] ❌ Grace period: Still not complete, setting connection lost error');
+            console.log('[SSE]  Grace period: Still not complete, setting connection lost error');
             setError('Connection lost');
           }
           
@@ -246,7 +246,7 @@ export function useSSEProgress(
 
     // Native open event
     eventSource.onopen = () => {
-      console.log('[SSE] 🔓 Connection opened');
+      console.log('[SSE]  Connection opened');
     };
 
     // Native error event (fallback) - BULLETPROOF VERSION
@@ -261,7 +261,7 @@ export function useSSEProgress(
                              data?.generation_status === 'failed';
 
       if (justCompleted || stateIsComplete) {
-        console.log('[SSE] ✅ Native error: Generation complete, ignoring');
+        console.log('[SSE]  Native error: Generation complete, ignoring');
         return;
       }
 
@@ -283,7 +283,7 @@ export function useSSEProgress(
 
   // Manual disconnect
   const disconnect = useCallback(() => {
-    console.log('[SSE] 🔌 Manual disconnect');
+    console.log('[SSE]  Manual disconnect');
     cleanup();
   }, [cleanup]);
 
@@ -295,7 +295,7 @@ export function useSSEProgress(
     
     // Cleanup on unmount
     return () => {
-      console.log('[SSE] 🧹 Cleanup');
+      console.log('[SSE]  Cleanup');
       cleanup();
     };
   }, [courseId, enabled, connect, cleanup]);

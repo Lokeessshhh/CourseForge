@@ -29,7 +29,8 @@
   font-weight: 600;
   letter-spacing: 1px;
   border-bottom: 2px solid var(--black);
-  background-color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
 }
 
 .labelIcon {
@@ -63,6 +64,7 @@
   border: 2px solid var(--black);
   background-color: var(--white);
   color: var(--black);
+  transition: var(--transition);
 }
 
 .input:disabled {
@@ -72,7 +74,7 @@
 
 .input:focus {
   outline: none;
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 4px 4px 0px var(--yellow);
 }
 
 .hint {
@@ -103,11 +105,14 @@
 
 .optionBtn:hover {
   box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .optionBtn.selected {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .saveBtn {
@@ -116,8 +121,8 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 14px 24px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
   box-shadow: 4px 4px 0px var(--black);
   cursor: pointer;
@@ -127,6 +132,7 @@
 
 .saveBtn:hover:not(:disabled) {
   box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .saveBtn:disabled {
@@ -140,30 +146,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid var(--black);
+  border-bottom: 2px solid var(--black);
 }
 
 .toggleRow:last-child {
   border-bottom: none;
   padding-bottom: 0;
-}
-
-.toggleInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.toggleLabel {
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.toggleDesc {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  opacity: 0.5;
 }
 
 .toggle {
@@ -177,7 +165,8 @@
 }
 
 .toggle.on {
-  background-color: var(--black);
+  background-color: var(--yellow);
+  border-color: var(--black);
 }
 
 .toggleSlider {
@@ -189,7 +178,7 @@
 }
 
 .toggle.on .toggleSlider {
-  background-color: var(--white);
+  background-color: var(--black);
   transform: translateX(24px);
 }
 
@@ -206,9 +195,10 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 14px 20px;
-  background-color: var(--white);
+  background-color: var(--yellow);
   color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
   text-align: left;
@@ -216,6 +206,7 @@
 
 .accountBtn:hover {
   box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 /* Danger Section */
@@ -257,14 +248,16 @@
 }
 
 .deleteBtn:hover {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .deleteConfirm {
   padding: 20px;
   border: 2px solid var(--black);
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
 }
 
 .confirmText {
@@ -288,7 +281,7 @@
 
 .confirmInput:focus {
   outline: none;
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 4px 4px 0px var(--yellow);
 }
 
 .confirmButtons {
@@ -311,7 +304,9 @@
 }
 
 .cancelBtn:hover {
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .confirmDeleteBtn {
@@ -321,11 +316,17 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 12px 16px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
+}
+
+.confirmDeleteBtn:hover:not(.disabled) {
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .confirmDeleteBtn.disabled {

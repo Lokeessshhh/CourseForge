@@ -36,7 +36,9 @@ interface Course {
   status: string;
   generation_status?: string;
   generation_progress?: number;
+  total_days?: number;
   created_at: string;
+  weekly_test_pending?: boolean;
 }
 
 interface UserProgress {
@@ -71,6 +73,8 @@ interface UserProfile {
 interface DailyActivity {
   date: string;
   minutes: number;
+  days_completed: number;
+  quizzes_taken: number;
 }
 
 interface ProgressOverTime {
@@ -362,10 +366,6 @@ export default function DashboardPage() {
   // Update charts when courses data changes
   useEffect(() => {
     if (courses.length > 0 && progress) {
-      // Generate daily activity
-      const activity = generateDailyActivity(courses, progress);
-      setDailyActivity(activity);
-
       // Generate progress over time
       const progressData = generateProgressOverTime(courses);
       setProgressOverTime(progressData);
@@ -414,9 +414,14 @@ export default function DashboardPage() {
           completeGeneration();
         }
 
-        // Generate daily activity from course progress
-        const activity = generateDailyActivity(coursesData || [], progressData);
-        setDailyActivity(activity);
+        // Fetch real daily activity from backend
+        const dailyActivityData = await api.get<DailyActivity[]>('/api/users/me/daily-activity/').catch(() => []);
+        // Format dates for chart display
+        const formattedActivity = (dailyActivityData || []).map(item => ({
+          ...item,
+          date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        }));
+        setDailyActivity(formattedActivity);
 
         // Fetch real quiz history from backend API
         const quizHistoryData = await api.get<QuizAttemptBackend[]>('/api/users/me/quiz-history/').catch(() => []);
@@ -437,6 +442,38 @@ export default function DashboardPage() {
 
     fetchAllData();
   }, [isLoaded, api]);
+
+  // Helper function to get the correct progress value
+  // During generation: shows generation_progress (AI creating content)
+  // After generation: shows progress (user learning progress)
+  const getDisplayProgress = (course: Course): number => {
+    // Safety check: if course is undefined or missing critical fields, return 0
+    if (!course) return 0;
+    
+    // If course is actively being generated, show generation progress
+    if (course.generation_status === 'generating') {
+      // Match the SSE progress calculation exactly
+      // SSE progression for 1-week course:
+      // - theme: 9%, titles: 18%, web: 27%, RAG: 36%
+      // - day 1: 45%, day 2: 55%, day 3: 64%, day 4: 73%, day 5: 82%
+      // - tests: 91-100%
+      // 
+      // Formula: 36% + (completedDays / totalDays) * 46%
+      // Where 36% is base (theme+titles+web+RAG) and 46% is for all days (82-36)
+      const weeks = course.duration_weeks || 1;
+      const totalDays = weeks * 5;
+      const completedDays = course.generation_progress ?? 0;
+      
+      if (completedDays > 0) {
+        const dayProgress = Math.round(36 + (completedDays / totalDays) * 46);
+        return Math.min(82, dayProgress); // Cap at 82% (before tests)
+      }
+      // Before days start, show base progress
+      return 36;
+    }
+    // After generation complete, show user learning progress
+    return course.progress ?? 0;
+  };
 
   // Refresh dashboard data (called when course generation completes)
   const refreshDashboard = useCallback(async () => {
@@ -474,6 +511,14 @@ export default function DashboardPage() {
       const quizHistoryData = await api.get<QuizAttemptBackend[]>('/api/users/me/quiz-history/').catch(() => []);
       const quizzes = transformQuizAttemptsToChartFormat(quizHistoryData || []);
       setQuizHistory(quizzes);
+
+      // Refresh daily activity
+      const dailyActivityData = await api.get<DailyActivity[]>('/api/users/me/daily-activity/').catch(() => []);
+      const formattedActivity = (dailyActivityData || []).map(item => ({
+        ...item,
+        date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      }));
+      setDailyActivity(formattedActivity);
     } catch (err) {
       console.error('[Dashboard] Refresh failed:', err);
     }
@@ -1002,21 +1047,27 @@ export default function DashboardPage() {
               >
                 <div className={styles.courseContinueHeader}>
                   <h3 className={styles.courseContinueName}>{course.course_name}</h3>
-                  <div className={styles.courseContinueBadge}>
-                    WEEK {course.current_week} · DAY {course.current_day}
-                  </div>
+                  {course.weekly_test_pending ? (
+                    <div className={`${styles.courseContinueBadge} ${styles.testBadge}`}>
+                      WEEK {course.current_week} · TEST
+                    </div>
+                  ) : (
+                    <div className={styles.courseContinueBadge}>
+                      WEEK {course.current_week} · DAY {course.current_day}
+                    </div>
+                  )}
                 </div>
                 <p className={styles.courseContinueTopic}>{course.topic}</p>
                 <div className={styles.courseContinueProgress}>
                   <div className={styles.progressLabel}>
-                    <span>PROGRESS</span>
-                    <span>{course.progress}%</span>
+                    <span>{course.generation_status === 'generating' ? 'GENERATING' : 'PROGRESS'}</span>
+                    <span>{getDisplayProgress(course)}%</span>
                   </div>
                   <div className={styles.progressBar}>
                     <motion.div
                       className={styles.progressFill}
                       initial={{ width: 0 }}
-                      animate={{ width: `${course.progress}%` }}
+                      animate={{ width: `${getDisplayProgress(course)}%` }}
                       transition={{ duration: 1, delay: 0.3 + index * 0.05 }}
                     />
                   </div>
@@ -1087,10 +1138,10 @@ export default function DashboardPage() {
                   <Line
                     type="monotone"
                     dataKey="score"
-                    stroke="#000"
+                    stroke="#FFD600"
                     strokeWidth={3}
-                    dot={{ fill: '#000', r: 4, strokeWidth: 2, stroke: '#fff' }}
-                    activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ fill: '#FFD600', r: 4, strokeWidth: 2, stroke: '#000' }}
+                    activeDot={{ r: 6, strokeWidth: 2, stroke: '#000' }}
                   />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -1167,10 +1218,15 @@ export default function DashboardPage() {
                     <div className={styles.tableProgressBar}>
                       <div
                         className={styles.tableProgressFill}
-                        style={{ width: `${course.progress}%` }}
+                        style={{ width: `${getDisplayProgress(course)}%` }}
                       />
                     </div>
-                    <span className={styles.tableProgressPercent}>{course.progress}%</span>
+                    <span className={styles.tableProgressPercent}>
+                      {getDisplayProgress(course)}%
+                      {course.generation_status === 'generating' && (
+                        <span className={styles.generatingBadge}> </span>
+                      )}
+                    </span>
                   </div>
                 </span>
                 <span className={styles.tableCell}>

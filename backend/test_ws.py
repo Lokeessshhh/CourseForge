@@ -11,18 +11,18 @@ async def test_websocket():
     
     try:
         async with websockets.connect(uri) as websocket:
-            print("✅ WebSocket connection successful!")
+            print(" WebSocket connection successful!")
             
             # Send a test message
             await websocket.send('{"message": "test"}')
-            print("📩 Sent test message")
+            print(" Sent test message")
             
             # Wait for response
             response = await websocket.recv()
-            print(f"📨 Received: {response}")
+            print(f" Received: {response}")
             
     except Exception as e:
-        print(f"❌ WebSocket connection failed: {e}")
+        print(f" WebSocket connection failed: {e}")
 
 if __name__ == "__main__":
     asyncio.run(test_websocket())

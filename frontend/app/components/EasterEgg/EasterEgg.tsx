@@ -37,12 +37,12 @@ export default function EasterEgg() {
             <pre className={styles.ascii}>
 {`
     ╭─────────────────╮
-    │  🤖 STUDYING... │
+    │   STUDYING... │
     ╰────┬────────────╯
          │
     ┌────▼────┐
     │  BOOKS  │
-    │ 325+ 📚 │
+    │ 325+  │
     └────┬────┘
          │
     ┌────▼────────────────┐

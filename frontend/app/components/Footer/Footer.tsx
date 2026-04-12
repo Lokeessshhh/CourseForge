@@ -65,7 +65,7 @@ export default function Footer({ isAuthenticated }: FooterProps) {
                 whileHover={{ x: -2, y: -2 }}
                 disabled={subscribed}
               >
-                {subscribed ? '✓' : '→'}
+                {subscribed ? '' : '→'}
               </motion.button>
             </div>
             {subscribed && <p className={styles.subscribedMsg}>Thanks for subscribing!</p>}

@@ -16,6 +16,7 @@ import DayContentCard from '@/app/components/chat/DayContentCard';
 import ChatGenerationProgress from '@/app/components/chat/ChatGenerationProgress';
 import WebSearchToggle from '@/app/components/chat/WebSearchToggle';
 import CrudToggle from '@/app/components/chat/CrudToggle';
+import RagToggle from '@/app/components/chat/RagToggle';
 import WebSearchStatus from '@/app/components/chat/WebSearchStatus';
 import SessionStatus from '@/app/components/chat/SessionStatus';
 import CourseUpdateModal, { UpdateType } from '@/app/components/CourseUpdateModal/CourseUpdateModal';
@@ -238,6 +239,8 @@ export default function ChatPage() {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   // CRUD course management state
   const [crudEnabled, setCrudEnabled] = useState(false);
+  // RAG / Knowledge Base state
+  const [ragEnabled, setRagEnabled] = useState(false);
   
   // Web search keywords (matches backend) - for auto-detection when toggle is OFF
   const WEB_SEARCH_KEYWORDS = [
@@ -418,9 +421,9 @@ export default function ChatPage() {
         updated_at: new Date().toISOString(),
       });
 
-      console.log('[SESSION SAVE] ✅ Session saved successfully');
+      console.log('[SESSION SAVE]  Session saved successfully');
     } catch (err) {
-      console.error('[SESSION SAVE] ❌ Failed to save session:', err);
+      console.error('[SESSION SAVE]  Failed to save session:', err);
     } finally {
       isSavingSessionRef.current = false;
     }
@@ -554,7 +557,7 @@ export default function ChatPage() {
                 messagesWithProgress.splice(insertIndex + 1, 0, {
                   id: `progress-${course.courseId}`,
                   role: 'assistant' as const,
-                  content: `🔄 ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
+                  content: ` ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
                   timestamp: new Date(course.startedAt),
                   isProgressPlaceholder: true,
                   courseId: course.courseId,
@@ -564,7 +567,7 @@ export default function ChatPage() {
                 messagesWithProgress.push({
                   id: `progress-${course.courseId}`,
                   role: 'assistant' as const,
-                  content: `🔄 ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
+                  content: ` ${course.generation_status === 'updating' ? 'Updating' : 'Generating'} course: **${course.courseName}**`,
                   timestamp: new Date(course.startedAt),
                   isProgressPlaceholder: true,
                   courseId: course.courseId,
@@ -688,13 +691,13 @@ export default function ChatPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[PERSIST] ✅ Conversation persisted:', data.data);
+        console.log('[PERSIST]  Conversation persisted:', data.data);
         
         // Refetch sessions to update sidebar
         refetchSessions();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[PERSIST] ❌ Failed to persist conversation:', response.status, errorData);
+        console.error('[PERSIST]  Failed to persist conversation:', response.status, errorData);
       }
     } catch (err) {
       console.error('[PERSIST] Error persisting conversation:', err);
@@ -935,7 +938,7 @@ export default function ChatPage() {
             }
 
             // Build AI response message for course creation
-            const aiResponseContent = `📚 **Generating Course**\n\n**${course_data.course_name}**\n• Duration: ${course_data.duration_weeks} weeks\n• Level: ${course_data.level}\n${course_data.description ? `• Description: ${course_data.description}` : ''}\n\n⏳ Starting content generation...`;
+            const aiResponseContent = ` **Generating Course**\n\n**${course_data.course_name}**\n• Duration: ${course_data.duration_weeks} weeks\n• Level: ${course_data.level}\n${course_data.description ? `• Description: ${course_data.description}` : ''}\n\nStarting content generation...`;
 
             const result = await createCourseFromChat({
               course_name: course_data.course_name,
@@ -965,7 +968,7 @@ export default function ChatPage() {
                 const progressPlaceholderMessage: ChatMessage = {
                   id: `progress-${newCourseId}`,
                   role: 'assistant',
-                  content: `🔄 Generating course: **${course_data.course_name}**`,
+                  content: ` Generating course: **${course_data.course_name}**`,
                   timestamp: new Date(),
                   isProgressPlaceholder: true,
                   courseId: newCourseId,
@@ -1230,7 +1233,7 @@ export default function ChatPage() {
                 const data = await res.json();
                 const content = data.data || data;
 
-                let summaryContent = `📚 **Summary for ${course_name}**\n\n`;
+                let summaryContent = ` **Summary for ${course_name}**\n\n`;
 
                 if (weekNum && dayNum) {
                   // Day summary
@@ -1289,7 +1292,7 @@ export default function ChatPage() {
               const errorMessage: ChatMessage = {
                 id: `ai-${Date.now()}`,
                 role: 'assistant',
-                content: "⚠️ Sorry, I couldn't fetch the summary. Please make sure the course, week, and day exist.",
+                content: " Sorry, I couldn't fetch the summary. Please make sure the course, week, and day exist.",
                 timestamp: new Date(),
               };
               setMessages([...messagesAfterUser, errorMessage]);
@@ -1324,7 +1327,7 @@ export default function ChatPage() {
         const errorMessage: ChatMessage = {
           id: `ai-${Date.now()}`,
           role: 'assistant',
-          content: '⚠️ Sorry, I encountered an error processing your request. Please try again.',
+          content: ' Sorry, I encountered an error processing your request. Please try again.',
           timestamp: new Date(),
         };
         setMessages([...messagesAfterUser, errorMessage]);
@@ -1358,8 +1361,8 @@ export default function ChatPage() {
       }
 
       if (sessionIdToUse && isConnected) {
-        // Send message with web_search flag (silent - no UI)
-        const success = send(messageToSend, sessionIdToUse, shouldUseWebSearch);
+        // Send message with web_search and rag flags
+        const success = send(messageToSend, sessionIdToUse, shouldUseWebSearch, ragEnabled);
         if (success) {
           setHasSentFirstMessage(true);
           if (isFirstMessage) {
@@ -1421,7 +1424,7 @@ export default function ChatPage() {
           const newCourseId = courseData?.data?.course_id || courseData?.course_id;
 
           // Build AI response content
-          const aiResponseContent = `📚 **Generating Course**\n\n**${course_data.course_name}**\n• Duration: ${course_data.duration_weeks} weeks\n• Level: ${course_data.level}\n${course_data.description ? `• Description: ${course_data.description}` : ''}\n\n⏳ Starting content generation...`;
+          const aiResponseContent = ` **Generating Course**\n\n**${course_data.course_name}**\n• Duration: ${course_data.duration_weeks} weeks\n• Level: ${course_data.level}\n${course_data.description ? `• Description: ${course_data.description}` : ''}\n\nStarting content generation...`;
 
           // Show course specs in a chat message container (not toast)
           const courseSpecsMessage: ChatMessage = {
@@ -1438,7 +1441,7 @@ export default function ChatPage() {
             const progressPlaceholderMessage: ChatMessage = {
               id: `progress-${newCourseId}`,
               role: 'assistant',
-              content: `🔄 Generating course: **${course_data.course_name}**`,
+              content: ` Generating course: **${course_data.course_name}**`,
               timestamp: new Date(),
               isProgressPlaceholder: true,
               courseId: newCourseId,
@@ -1500,7 +1503,7 @@ export default function ChatPage() {
 
       if (response) {
         const responseData = response.data || response;
-        const aiResponseContent = responseData.response || `✅ Course '${pendingAction.data.course_name}' has been deleted.`;
+        const aiResponseContent = responseData.response || ` Course '${pendingAction.data.course_name}' has been deleted.`;
         
         const confirmMessage: ChatMessage = {
           id: `ai-${Date.now()}`,
@@ -1761,7 +1764,7 @@ export default function ChatPage() {
               <div className={styles.searchResults}>
                 {sessionSearchResults.length === 0 ? (
                   <div className={styles.noResults}>
-                    <span className={styles.noResultsIcon}>🔍</span>
+                    <span className={styles.noResultsIcon}></span>
                     <span>No matches found</span>
                   </div>
                 ) : (
@@ -1980,7 +1983,7 @@ export default function ChatPage() {
                                   const cancelMessage: ChatMessage = {
                                     id: `ai-${Date.now()}`,
                                     role: 'assistant',
-                                    content: `⚠️ **Course Generation Cancelled**\n\nThe generation for '${progressCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
+                                    content: ` **Course Generation Cancelled**\n\nThe generation for '${progressCourse.courseName || 'this course'}' has been stopped. You can start a new course anytime!`,
                                     timestamp: new Date(),
                                   };
                                   setMessages([...messages, cancelMessage]);
@@ -2063,7 +2066,7 @@ export default function ChatPage() {
                                   onClick={() => handleCopyMessage(msg.content, msg.id)}
                                   title="Copy"
                                 >
-                                  {copiedMessageId === msg.id ? '✓ COPIED' : 'COPY'}
+                                  {copiedMessageId === msg.id ? ' COPIED' : 'COPY'}
                                 </button>
                                 {msg.role === 'user' && (
                                   <button
@@ -2196,7 +2199,7 @@ export default function ChatPage() {
                 const errorResponse: ChatMessage = {
                   id: `ai-${Date.now()}`,
                   role: 'assistant',
-                  content: `⚠️ **Update Failed**\n\n${errorMessage}`,
+                  content: ` **Update Failed**\n\n${errorMessage}`,
                   timestamp: new Date(),
                 };
                 setMessages([...messages, errorResponse]);
@@ -2207,7 +2210,7 @@ export default function ChatPage() {
                 const errorResponse: ChatMessage = {
                   id: `ai-${Date.now()}`,
                   role: 'assistant',
-                  content: `⚠️ **Update Failed**\n\n${errorMessage}`,
+                  content: ` **Update Failed**\n\n${errorMessage}`,
                   timestamp: new Date(),
                 };
                 setMessages([...messages, errorResponse]);
@@ -2229,7 +2232,7 @@ export default function ChatPage() {
                   const progressPlaceholderMessage: ChatMessage = {
                     id: `progress-update-${pendingUpdateData.course_id}-${Date.now()}`,
                     role: 'assistant',
-                    content: `🔄 Updating course: **${pendingUpdateData.course_name}**`,
+                    content: ` Updating course: **${pendingUpdateData.course_name}**`,
                     timestamp: new Date(),
                     isProgressPlaceholder: true,
                     courseId: pendingUpdateData.course_id,
@@ -2306,6 +2309,11 @@ export default function ChatPage() {
                   onToggle={() => setWebSearchEnabled(!webSearchEnabled)}
                   disabled={!isConnected}
                 />
+                <RagToggle
+                  enabled={ragEnabled}
+                  onToggle={() => setRagEnabled(!ragEnabled)}
+                  disabled={!isConnected}
+                />
                 <CrudToggle
                   enabled={crudEnabled}
                   onToggle={() => setCrudEnabled(!crudEnabled)}
@@ -2320,7 +2328,7 @@ export default function ChatPage() {
                 onClick={handleSend}
                 disabled={!inputValue.trim() || !isConnected}
               >
-                <span className={styles.sendIcon}>➤</span>
+                <span className={styles.sendIcon}></span>
               </button>
             </div>
           </div>

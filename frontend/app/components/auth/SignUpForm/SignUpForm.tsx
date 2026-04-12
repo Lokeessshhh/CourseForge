@@ -140,7 +140,7 @@ export default function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                   >
-                    {emailValid ? '✓' : ''}
+                    {emailValid ? '' : ''}
                   </motion.span>
                 )}
               </div>
@@ -199,7 +199,7 @@ export default function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                ✗ {error}
+                 {error}
               </motion.div>
             )}
           </AnimatePresence>

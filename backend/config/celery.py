@@ -13,7 +13,7 @@ from celery.schedules import crontab
 # Set default Django settings module
 os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
-    os.environ.get("DJANGO_SETTINGS_MODULE", "config.settings.production"),
+    os.environ.get("DJANGO_SETTINGS_MODULE", "config.settings.development"),
 )
 
 # Configure logging for Celery workers
@@ -106,7 +106,7 @@ def test_logging_task(self):
     """Test task to verify logging works in Celery worker"""
     import sys
     print("\n" + "="*80, flush=True)
-    print("🧪🧪🧪 TEST LOGGING TASK - IF YOU SEE THIS, LOGGING WORKS! 🧪🧪🧪", flush=True)
+    print(" TEST LOGGING TASK - IF YOU SEE THIS, LOGGING WORKS! ", flush=True)
     print("="*80 + "\n", flush=True)
     sys.stdout.flush()
     sys.stderr.flush()
@@ -114,7 +114,7 @@ def test_logging_task(self):
     import logging
     logger = logging.getLogger(__name__)
     logger.info("="*80)
-    logger.info("🧪 TEST LOGGING - Celery worker logging is working!")
+    logger.info(" TEST LOGGING - Celery worker logging is working!")
     logger.info("="*80)
     return "Logging test completed!"
 

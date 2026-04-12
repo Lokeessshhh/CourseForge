@@ -9,19 +9,19 @@ const skills = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
 const courseData: Record<string, string[]> = {
   'Python Programming': [
-    '✓ Week 1: Python Fundamentals',
+    ' Week 1: Python Fundamentals',
     '  Day 1: Variables & Data Types',
     '  Day 2: Control Flow',
     '  Day 3: Functions',
     '  Day 4: Lists & Dictionaries',
     '  Day 5: Week Review',
-    '✓ Week 2: Intermediate Python',
+    ' Week 2: Intermediate Python',
     '  Day 1: File Handling',
     '  Day 2: Error Handling',
     '  Day 3: OOP Basics',
     '  Day 4: Modules & Packages',
     '  Day 5: Mini Project',
-    '✓ Week 3: Advanced Concepts',
+    ' Week 3: Advanced Concepts',
     '  Day 1: Decorators',
     '  Day 2: Generators',
     '  Day 3: Context Managers',
@@ -29,13 +29,13 @@ const courseData: Record<string, string[]> = {
     '  Day 5: Final Project',
   ],
   'JavaScript Basics': [
-    '✓ Week 1: JS Fundamentals',
+    ' Week 1: JS Fundamentals',
     '  Day 1: Variables & Types',
     '  Day 2: Operators & Expressions',
     '  Day 3: Conditionals',
     '  Day 4: Loops',
     '  Day 5: Week Review',
-    '✓ Week 2: Functions & Objects',
+    ' Week 2: Functions & Objects',
     '  Day 1: Function Basics',
     '  Day 2: Arrow Functions',
     '  Day 3: Objects',
@@ -43,13 +43,13 @@ const courseData: Record<string, string[]> = {
     '  Day 5: DOM Basics',
   ],
   'default': [
-    '✓ Week 1: Foundations',
+    ' Week 1: Foundations',
     '  Day 1: Introduction',
     '  Day 2: Core Concepts',
     '  Day 3: Basic Syntax',
     '  Day 4: First Exercises',
     '  Day 5: Review & Practice',
-    '✓ Week 2: Building Skills',
+    ' Week 2: Building Skills',
     '  Day 1: Intermediate Topics',
     '  Day 2: Hands-on Practice',
     '  Day 3: Common Patterns',
@@ -178,7 +178,7 @@ export default function CoursePreview() {
               {outputLines.map((line, index) => (
                 <motion.div
                   key={index}
-                  className={`${styles.outputLine} ${line.startsWith('✓') ? styles.weekHeader : ''}`}
+                  className={`${styles.outputLine} ${line.startsWith('') ? styles.weekHeader : ''}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2 }}

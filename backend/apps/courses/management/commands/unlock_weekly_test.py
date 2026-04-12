@@ -37,7 +37,7 @@ class Command(BaseCommand):
             completed_days = week.days.filter(is_completed=True).count()
             total_days = week.days.count()
             
-            self.stdout.write(self.style.WARNING(f"\n📊 Current State:"))
+            self.stdout.write(self.style.WARNING(f"\n Current State:"))
             self.stdout.write(f"   Course: {course.course_name}")
             self.stdout.write(f"   Week: {week_number}")
             self.stdout.write(f"   Completed Days: {completed_days}/{total_days}")
@@ -47,7 +47,7 @@ class Command(BaseCommand):
             week.test_unlocked = True
             week.save(update_fields=["test_unlocked"])
             
-            self.stdout.write(self.style.SUCCESS(f"\n✅ Weekly test unlocked for week {week_number}!"))
+            self.stdout.write(self.style.SUCCESS(f"\n Weekly test unlocked for week {week_number}!"))
             
             # Generate weekly test if not exists
             test, created = WeeklyTest.objects.get_or_create(
@@ -60,15 +60,15 @@ class Command(BaseCommand):
             )
             
             if created:
-                self.stdout.write(self.style.SUCCESS(f"✅ Created weekly test for week {week_number}"))
+                self.stdout.write(self.style.SUCCESS(f" Created weekly test for week {week_number}"))
                 # Trigger test generation
                 from apps.courses.tasks import generate_weekly_test_task
                 generate_weekly_test_task.delay(str(course_id), week_number)
-                self.stdout.write(self.style.SUCCESS(f"✅ Triggered weekly test generation (running in background)"))
+                self.stdout.write(self.style.SUCCESS(f" Triggered weekly test generation (running in background)"))
             else:
-                self.stdout.write(self.style.SUCCESS(f"✅ Weekly test already exists for week {week_number}"))
+                self.stdout.write(self.style.SUCCESS(f" Weekly test already exists for week {week_number}"))
             
-            self.stdout.write(self.style.SUCCESS(f"\n🎉 You can now take the weekly test at:"))
+            self.stdout.write(self.style.SUCCESS(f"\n You can now take the weekly test at:"))
             self.stdout.write(f"   http://localhost:3000/dashboard/courses/{course_id}/week/{week_number}/test")
             
         except Course.DoesNotExist:

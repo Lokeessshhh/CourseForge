@@ -6,6 +6,11 @@
   --yellow: #FFD600;
   --yellow-light: #FFF176;
   --gray: #f5f5f5;
+  --accent: #FFD600;
+  --accent-dark: #E6C200;
+  --success: #4CAF50;
+  --warning: #FF9800;
+  --danger: #F44336;
   --border: 3px solid #000000;
   --border-thick: 4px solid #000000;
   --shadow: 5px 5px 0px #000000;
@@ -61,7 +66,7 @@ button {
   font-family: inherit;
   cursor: pointer;
   border: none;
-  background: none;
+  background: unset;
 }
 
 input, textarea {
@@ -149,5 +154,164 @@ img {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ===== PRINT STYLES — Certificate ===== */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide noise texture */
+  body::before {
+    display: none !important;
+  }
+
+  /* Hide nav, sidebar, etc */
+  nav, header, aside, footer:not(.verificationFooter) {
+    display: none !important;
+  }
+
+  /* Hide everything except certificate preview */
+  .page {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .layout {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide actions panel, stats, verification info panel */
+  .actionsPanel,
+  .statsBreakdown,
+  .verificationInfo {
+    display: none !important;
+  }
+
+  /* Certificate preview takes full page */
+  .certificatePreview {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 297mm !important;
+    height: 210mm !important;
+  }
+
+  #printable-certificate,
+  .certificate {
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    padding: 6mm !important;
+    box-shadow: none !important;
+    border: 3px solid #1a1a1a !important;
+    page-break-inside: avoid;
+    overflow: visible !important;
+  }
+
+  .certificate.bigDemo {
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    transform: none !important;
+  }
+
+  /* Tighten inner spacing */
+  .certificateInner {
+    padding: 6mm 8mm !important;
+    gap: 1mm !important;
+    justify-content: space-between !important;
+  }
+
+  .demoHeader { margin-bottom: 1.5mm !important; }
+  .demoLogo { font-size: 18px !important; letter-spacing: 4px !important; margin-bottom: 1.5mm !important; }
+  .demoAccreditation { font-size: 6px !important; letter-spacing: 3px !important; }
+  .demoTitleSection { margin-bottom: 2.5mm !important; }
+  .demoTitle { font-size: 12px !important; margin-bottom: 2.5mm !important; }
+  .decorativeDivider { height: 1.5px !important; margin-bottom: 2.5mm !important; width: 90px !important; }
+  .ornamentalLine { margin-top: 2.5mm !important; }
+  .lineLeft, .lineRight { height: 1.5px !important; }
+  .lineCenter { width: 4px !important; height: 4px !important; }
+
+  .demoBody { margin-bottom: 2.5mm !important; gap: 0.8mm !important; }
+  .demoCertifyText { font-size: 8px !important; margin-bottom: 1.5mm !important; }
+  .nameContainer { padding: 3mm 12mm !important; margin: 1.5mm 0 !important; }
+  .demoStudentName { font-size: 28px !important; }
+  .demoCompletedText { font-size: 8px !important; margin-bottom: 2.5mm !important; }
+  .demoCourseContainer { margin-bottom: 2.5mm !important; }
+  .demoCourseName { font-size: 16px !important; }
+  .demoCourseBorderLeft, .demoCourseBorderRight { width: 20px !important; height: 2px !important; }
+
+  .achievementBadge { padding: 2mm 6mm !important; margin-top: 1.5mm !important; }
+  .badgeIcon { font-size: 10px !important; }
+  .badgeText { font-size: 6px !important; }
+
+  .demoStatsSection { margin-bottom: 2.5mm !important; }
+  .statsGrid { gap: 3mm !important; }
+  .statBox { padding: 2mm !important; }
+  .demoStatLabel { font-size: 5px !important; }
+  .demoStatValue { font-size: 16px !important; }
+
+  .demoFooter { margin-top: auto !important; }
+  .footerDivider { height: 1.5px !important; margin-bottom: 2.5mm !important; }
+  .footerContent { margin-bottom: 2.5mm !important; gap: 3mm !important; }
+  .footerLeft, .footerCenter { gap: 1.5px !important; }
+  .footerLabel { font-size: 5px !important; }
+  .footerValue { font-size: 7px !important; }
+
+  .sealOuter { width: 36px !important; height: 36px !important; }
+  .sealInner { width: 28px !important; height: 28px !important; }
+  .sealText { font-size: 4px !important; }
+
+  .signatureSection { margin-bottom: 2mm !important; gap: 8mm !important; }
+  .signatureBox { gap: 1.5px !important; }
+  .signatureLine { width: 90px !important; height: 1.5px !important; }
+  .signatureName { font-size: 6.5px !important; }
+  .signatureLabel { font-size: 5px !important; }
+
+  .verificationFooter { margin-top: auto !important; padding: 1mm 2mm !important; border: 1px solid #1a1a1a !important; }
+  .verificationText { font-size: 4px !important; color: #000 !important; font-weight: 700 !important; }
+  .verificationLink { font-size: 4px !important; color: #000 !important; text-decoration: underline !important; font-weight: 700 !important; }
+
+  /* Corner decorations */
+  .cornerDecoration { width: 16px !important; height: 16px !important; }
+  .watermark { font-size: 50px !important; opacity: 0.02 !important; }
+
+  /* Hide lock overlays (for locked cert preview) */
+  .lockOverlayBig,
+  .lockOverlay,
+  .lockOverlayCentered {
+    display: none !important;
+  }
+
+  /* Hide framer-motion wrapper animations */
+  [style*="opacity"] {
+    opacity: 1 !important;
   }
 }

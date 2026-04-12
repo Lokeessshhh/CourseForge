@@ -19,7 +19,7 @@ class CertificateGenerator:
     Uses WeasyPrint for PDF generation.
     """
 
-    async def generate_certificate(
+    def generate_certificate(
         self,
         user_id: str,
         course_id: str,
@@ -41,20 +41,68 @@ class CertificateGenerator:
             course = Course.objects.get(id=course_id)
             progress = CourseProgress.objects.get(user_id=user_id, course=course)
 
-            # Calculate final stats
-            final_score = round(
-                (progress.avg_quiz_score + progress.avg_test_score) / 2, 1
-            ) if progress.avg_test_score > 0 else progress.avg_quiz_score
+            # Calculate scores from real data — fallback to actual attempts if progress is empty
+            avg_quiz = progress.avg_quiz_score
+            avg_test = progress.avg_test_score
 
+            if avg_quiz == 0:
+                # Calculate from actual day quiz scores
+                from apps.courses.models import DayPlan
+                completed_days = DayPlan.objects.filter(
+                    week_plan__course=course,
+                    is_completed=True,
+                    quiz_score__isnull=False,
+                )
+                if completed_days.exists():
+                    avg_quiz = round(
+                        sum(d.quiz_score for d in completed_days) / completed_days.count(), 1
+                    )
+
+            if avg_test == 0:
+                # Calculate from actual weekly test attempts
+                from apps.courses.models import WeeklyTestAttempt
+                test_attempts = WeeklyTestAttempt.objects.filter(
+                    user_id=user_id,
+                    course=course,
+                    passed=True,
+                )
+                if test_attempts.exists():
+                    avg_test = round(
+                        sum(a.percentage for a in test_attempts) / test_attempts.count(), 1
+                    )
+
+            # Calculate final score
+            final_score = round(
+                (avg_quiz + avg_test) / 2, 1
+            ) if avg_test > 0 else avg_quiz
+
+            # Calculate study hours — fallback from days * estimated hours
             total_hours = round(progress.total_study_time / 60, 1)
+            if total_hours == 0:
+                # Estimate: 2 hours per completed day
+                completed_day_count = DayPlan.objects.filter(
+                    week_plan__course=course,
+                    is_completed=True,
+                ).count()
+                total_hours = round(completed_day_count * 2, 1)
+
+            total_days = course.total_days
+            total_weeks = course.duration_weeks or 0
+            skill_level = course.level or "beginner"
+            issue_date = progress.completed_at or timezone.now()
 
             # Generate PDF
-            pdf_url = await self._generate_pdf(
+            pdf_url = self._generate_pdf(
                 user_name=course.user.name or course.user.email,
+                course_name=course.course_name,
                 course_topic=course.topic,
-                completion_date=progress.completed_at or timezone.now(),
+                completion_date=issue_date,
                 final_score=final_score,
                 total_hours=total_hours,
+                total_days=total_days,
+                total_weeks=total_weeks,
+                skill_level=skill_level,
+                certificate_id="",  # Will be generated inside _generate_pdf
                 user_id=user_id,
                 course_id=course_id,
             )
@@ -65,8 +113,8 @@ class CertificateGenerator:
                 course=course,
                 defaults={
                     "is_unlocked": True,
-                    "quiz_score_avg": progress.avg_quiz_score,
-                    "test_score_avg": progress.avg_test_score,
+                    "quiz_score_avg": avg_quiz,
+                    "test_score_avg": avg_test,
                     "total_study_hours": total_hours,
                     "issued_at": timezone.now(),
                     "pdf_url": pdf_url,
@@ -91,13 +139,18 @@ class CertificateGenerator:
             logger.exception("Error generating certificate: %s", exc)
             return {"success": False, "error": str(exc)}
 
-    async def _generate_pdf(
+    def _generate_pdf(
         self,
         user_name: str,
+        course_name: str,
         course_topic: str,
         completion_date: datetime,
         final_score: float,
         total_hours: float,
+        total_days: int,
+        total_weeks: int,
+        skill_level: str,
+        certificate_id: str,
         user_id: str,
         course_id: str,
     ) -> str:
@@ -107,38 +160,52 @@ class CertificateGenerator:
         Returns:
             URL path to the generated PDF
         """
+        import uuid
         from services.external.weasyprint_cert import CertificateService
 
         try:
+            # Create media directory
+            cert_dir = os.path.join(settings.MEDIA_ROOT, "certificates", user_id)
+            os.makedirs(cert_dir, exist_ok=True)
+
+            # Generate unique filename
+            unique_id = str(uuid.uuid4())[:8].upper()
+            filename = f"{course_id}.pdf"
+            filepath = os.path.join(cert_dir, filename)
+
             # Create certificate service
             cert_service = CertificateService()
 
-            # Generate certificate
-            result = cert_service.generate_certificate(
-                student_name=user_name,
-                course_name=course_topic,
-                completion_date=completion_date.strftime("%B %d, %Y"),
-                final_score=final_score,
-                total_hours=total_hours,
+            # Generate PDF with correct parameter names
+            pdf_bytes = cert_service.generate_certificate(
+                user_name=user_name,
+                course_name=f"{course_name}: {course_topic}",
+                certificate_id=f"LA-{str(course_id)[:8].upper()}-{unique_id}",
+                average_score=final_score,
+                duration=total_weeks,
+                skill_level=skill_level.capitalize(),
+                issue_date=completion_date,
+                study_weeks=total_weeks,
+                total_days=total_days,
             )
 
-            if result.get("success"):
-                return result.get("download_url", "")
+            # Save PDF to file
+            with open(filepath, "wb") as f:
+                f.write(pdf_bytes)
 
-            # Fallback: generate simple HTML-based PDF
-            return await self._generate_simple_pdf(
-                user_name, course_topic, completion_date, final_score, total_hours,
-                user_id, course_id
-            )
+            logger.info("Certificate PDF saved to %s", filepath)
+
+            # Return URL path
+            return f"/media/certificates/{user_id}/{filename}"
 
         except Exception as exc:
-            logger.warning("WeasyPrint failed, using fallback: %s", exc)
-            return await self._generate_simple_pdf(
+            logger.warning("WeasyPrint PDF generation failed, using fallback: %s", exc)
+            return self._generate_simple_pdf(
                 user_name, course_topic, completion_date, final_score, total_hours,
                 user_id, course_id
             )
 
-    async def _generate_simple_pdf(
+    def _generate_simple_pdf(
         self,
         user_name: str,
         course_topic: str,
@@ -249,7 +316,7 @@ class CertificateGenerator:
 </head>
 <body>
     <div class="certificate">
-        <div class="badge">✓</div>
+        <div class="badge"></div>
         <div class="title">Certificate of Completion</div>
         <div class="subtitle">This certifies that</div>
         <div class="student-name">{user_name}</div>

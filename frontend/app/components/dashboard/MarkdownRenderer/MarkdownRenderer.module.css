@@ -123,3 +123,20 @@
   font-size: 12px;
   flex-shrink: 0;
 }
+
+/* Mermaid Wrapper */
+.mermaidWrapper {
+  margin: 24px 0;
+  display: flex;
+  justify-content: center;
+  contain: layout style;
+}
+
+.mermaidWrapper :global(svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaidWrapper :global(svg) text {
+  font-family: var(--font-body);
+}

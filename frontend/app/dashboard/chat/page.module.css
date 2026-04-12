@@ -32,8 +32,8 @@
 .loadingDot {
   width: 10px;
   height: 10px;
-  background: var(--black);
-  border-radius: 50%;
+  background: var(--yellow);
+  border: 2px solid var(--black);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -244,7 +244,7 @@
   opacity: 0.6;
   background: var(--gray);
   padding: 2px 6px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   transition: var(--transition);
 }
 
@@ -321,7 +321,7 @@
   color: var(--white);
   background: var(--black);
   padding: 2px 5px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0;
@@ -443,7 +443,7 @@
   color: var(--black);
   background: var(--gray);
   padding: 3px 8px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -820,8 +820,8 @@
 .dot {
   width: 6px;
   height: 6px;
-  background: var(--black);
-  border-radius: 50%;
+  background: var(--yellow);
+  border: 1px solid var(--black);
 }
 
 /* ========================================
@@ -855,11 +855,11 @@
   gap: 6px;
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--black);
+  border-bottom: 2px solid var(--black);
 }
 
 .contextDot {
-  color: #22c55e;
+  color: var(--yellow);
   font-size: 10px;
 }
 
@@ -977,7 +977,7 @@
   font-size: 9px;
   background: var(--gray);
   padding: 2px 6px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   margin: 0 2px;
 }
 
@@ -1077,7 +1077,6 @@
   background: var(--white);
   border: 2px solid var(--black);
   box-shadow: 4px 4px 0 var(--black);
-  border-radius: 4px;
   padding: 6px;
   font-family: var(--font-mono);
   overflow: hidden;
@@ -1116,7 +1115,6 @@
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 2px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
@@ -1134,7 +1132,8 @@
 }
 
 .contextMenuItem.deleteItem:hover {
-  background: #c0392b;
+  background: var(--yellow);
+  color: var(--black);
 }
 
 .contextMenuIcon {
@@ -1147,11 +1146,11 @@
   height: 18px;
   background: var(--black);
   color: var(--white);
-  border-radius: 2px;
 }
 
 .contextMenuItem.deleteItem:hover .contextMenuIcon {
-  background: #c0392b;
+  background: var(--yellow);
+  color: var(--black);
 }
 
 /* ========================================
@@ -1176,7 +1175,6 @@
   background: var(--white);
   border: 2px solid var(--black);
   box-shadow: 6px 6px 0 var(--black);
-  border-radius: 4px;
   padding: 24px;
   min-width: 360px;
   max-width: 90vw;
@@ -1226,7 +1224,6 @@
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
-  border-radius: 2px;
 }
 
 .modalBtnSecondary {
@@ -1235,20 +1232,21 @@
 }
 
 .modalBtnSecondary:hover {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow-light);
+  box-shadow: 2px 2px 0 var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .modalBtnPrimary {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0 var(--black);
 }
 
 .modalBtnPrimary:hover:not(:disabled) {
-  background: var(--white);
-  color: var(--black);
+  background: var(--yellow-light);
   transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0 var(--black);
+  box-shadow: 4px 4px 0 var(--black);
 }
 
 .modalBtnPrimary:disabled {
@@ -1280,8 +1278,8 @@
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  background: #fafafa;
-  border-bottom: 2px solid #eee;
+  background: var(--white);
+  border-bottom: 2px solid var(--black);
   gap: 12px;
 }
 
@@ -1296,20 +1294,20 @@
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
-  border-radius: 4px;
 }
 
 .closeDayContentBtn:hover {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  box-shadow: 2px 2px 0 var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .confirmationWrapper {
   display: flex;
   justify-content: center;
   padding: 20px;
-  background: #fff9e6;
-  border-bottom: 2px solid #f39c12;
+  background: var(--yellow-light);
+  border-bottom: 2px solid var(--black);
 }
 
 .confirmationDialog {
@@ -1344,7 +1342,7 @@
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
-  color: #333;
+  color: var(--black);
   margin: 0;
 }
 
@@ -1360,7 +1358,7 @@
   gap: 12px;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 2px solid var(--black);
 }
 
 .confirmationCancelBtn {
@@ -1368,17 +1366,17 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  background: transparent;
+  background: var(--white);
   color: var(--black);
   border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
-  border-radius: 4px;
 }
 
 .confirmationCancelBtn:hover {
-  background: #f5f5f5;
+  background: var(--yellow-light);
   box-shadow: 2px 2px 0 var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .confirmationConfirmBtn {
@@ -1386,17 +1384,17 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  background: #e74c3c;
-  color: var(--white);
-  border: 2px solid #e74c3c;
+  background: var(--yellow);
+  color: var(--black);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
   cursor: pointer;
   transition: var(--transition);
-  border-radius: 4px;
 }
 
 .confirmationConfirmBtn:hover {
-  background: #c0392b;
-  box-shadow: 2px 2px 0 var(--black);
+  background: var(--yellow-light);
+  box-shadow: 4px 4px 0 var(--black);
   transform: translate(-1px, -1px);
 }
 

@@ -151,7 +151,7 @@ export default function CourseCreationForm({
       transition={{ duration: 0.2 }}
     >
       <div className={styles.formHeader}>
-        <span className={styles.formIcon}>📚</span>
+        <span className={styles.formIcon}></span>
         <span className={styles.formTitle}>Complete Course Details</span>
       </div>
 

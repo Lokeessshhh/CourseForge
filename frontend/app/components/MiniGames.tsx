@@ -183,7 +183,7 @@ export function MathGame({ compact = false }: { compact?: boolean }) {
           />
         </div>
         <button type="submit" className={styles.submitBtn} disabled={!userAnswer}>
-          {feedback === 'correct' ? '✓' : feedback === 'wrong' ? '✗' : '→'}
+          {feedback === 'correct' ? '' : feedback === 'wrong' ? '' : '→'}
         </button>
       </form>
       {feedback && (

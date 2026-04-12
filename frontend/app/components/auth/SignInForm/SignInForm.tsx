@@ -132,7 +132,7 @@ export default function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            ✗ {error}
+             {error}
           </motion.div>
         )}
       </AnimatePresence>

@@ -10,10 +10,10 @@ const terminalLines = [
   { text: '> topic: "Python for beginners"', delay: 600 },
   { text: '> duration: "4 weeks"', delay: 1200 },
   { text: '> skill: "beginner"', delay: 1800 },
-  { text: '✓ Course generated in 3.2s', delay: 2400, success: true },
-  { text: '✓ 20 lessons created', delay: 3000, success: true },
-  { text: '✓ 60 quiz questions ready', delay: 3600, success: true },
-  { text: '✓ Certificate unlocked', delay: 4200, success: true },
+  { text: ' Course generated in 3.2s', delay: 2400, success: true },
+  { text: ' 20 lessons created', delay: 3000, success: true },
+  { text: ' 60 quiz questions ready', delay: 3600, success: true },
+  { text: ' Certificate unlocked', delay: 4200, success: true },
 ];
 
 const stickers = [

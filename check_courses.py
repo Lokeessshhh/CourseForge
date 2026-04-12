@@ -57,19 +57,19 @@ for course in courses:
             if not (theory_ok and code_ok and quiz_ok):
                 all_days_complete = False
                 
-            status = "✅" if (theory_ok and code_ok and quiz_ok) else "❌"
-            print(f"      {status} Day {day.day_number}: {day.title[:50] if day.title else 'N/A'} "
-                  f"[T: {'✅' if theory_ok else '❌'} C: {'✅' if code_ok else '❌'} Q: {'✅' if quiz_ok else '❌'}]")
-    
+            status = "OK" if (theory_ok and code_ok and quiz_ok) else "FAIL"
+            print(f"      [{status}] Day {day.day_number}: {day.title[:50] if day.title else 'N/A'} "
+                  f"[T: {'OK' if theory_ok else 'FAIL'} C: {'OK' if code_ok else 'FAIL'} Q: {'OK' if quiz_ok else 'FAIL'}]")
+
     # Check weekly tests
     weekly_tests = course.weekly_tests.all().order_by('week_number')
-    print(f"\n   📝 Weekly Tests (MCQ): {weekly_tests.count()}/{course.duration_weeks}")
+    print(f"\n   Weekly Tests (MCQ): {weekly_tests.count()}/{course.duration_weeks}")
     for test in weekly_tests:
         print(f"      Week {test.week_number}: {test.total_questions} questions")
-    
+
     # Check coding tests
     coding_tests = CodingTest.objects.filter(course=course).order_by('week_number')
-    print(f"\n   💻 Coding Tests: {coding_tests.count()}/{course.duration_weeks}")
+    print(f"\n   Coding Tests: {coding_tests.count()}/{course.duration_weeks}")
     for ct in coding_tests:
         print(f"      Week {ct.week_number}: {ct.total_problems} problems")
     
@@ -88,10 +88,10 @@ for course in courses:
     print(f"   Coding Tests: {coding_tests.count()}/{course.duration_weeks}")
     
     if course.generation_status == 'ready' and all_days_complete and weekly_tests.count() == course.duration_weeks and coding_tests.count() == course.duration_weeks:
-        print("   ✅ FULLY COMPLETE")
+        print("   FULLY COMPLETE")
     elif all_days_complete:
-        print("   ⚠️  Days complete, missing tests")
+        print("   WARNING: Days complete, missing tests")
     else:
-        print(f"   ❌ INCOMPLETE")
+        print(f"   INCOMPLETE")
     print("=" * 80)
     print()

@@ -435,7 +435,7 @@ export function useChat(courseId?: string, sessionId?: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - connection managed internally
 
-  const send = useCallback((content: string, outgoingSessionId?: string, webSearch?: boolean) => {
+  const send = useCallback((content: string, outgoingSessionId?: string, webSearch?: boolean, ragEnabled?: boolean) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       // Queue the send to be flushed on next open. This prevents losing the first
@@ -462,11 +462,12 @@ export function useChat(courseId?: string, sessionId?: string) {
       message: content,
       message_id: crypto.randomUUID(),
       include_sources: true,
-      session_id: outgoingSessionId,  // Include session_id in payload
-      web_search: webSearch || false,  // Include web search flag
+      session_id: outgoingSessionId,
+      web_search: webSearch || false,
+      rag_enabled: ragEnabled || false,
     }));
 
-    wsLog('send:sent', { sessionId: outgoingSessionId, webSearch, preview: content.slice(0, 80) });
+    wsLog('send:sent', { sessionId: outgoingSessionId, webSearch, ragEnabled, preview: content.slice(0, 80) });
 
     return true;
   }, [connect]);

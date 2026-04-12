@@ -31,7 +31,7 @@ class Command(BaseCommand):
                 'test_unlocked'
             ])
 
-            self.stdout.write(self.style.SUCCESS('✓ WeekPlan updated successfully'))
+            self.stdout.write(self.style.SUCCESS(' WeekPlan updated successfully'))
 
             # Create Coding Test 1
             coding_test_1, created = CodingTest.objects.get_or_create(
@@ -69,9 +69,9 @@ class Command(BaseCommand):
             )
 
             if not created:
-                self.stdout.write(self.style.WARNING('⚠ Coding Test 1 already exists, skipping'))
+                self.stdout.write(self.style.WARNING(' Coding Test 1 already exists, skipping'))
             else:
-                self.stdout.write(self.style.SUCCESS('✓ Coding Test 1 created'))
+                self.stdout.write(self.style.SUCCESS(' Coding Test 1 created'))
 
             # Create Coding Test 2
             coding_test_2, created = CodingTest.objects.get_or_create(
@@ -110,19 +110,19 @@ class Command(BaseCommand):
             )
 
             if not created:
-                self.stdout.write(self.style.WARNING('⚠ Coding Test 2 already exists, skipping'))
+                self.stdout.write(self.style.WARNING(' Coding Test 2 already exists, skipping'))
             else:
-                self.stdout.write(self.style.SUCCESS('✓ Coding Test 2 created'))
+                self.stdout.write(self.style.SUCCESS(' Coding Test 2 created'))
 
-            self.stdout.write(self.style.SUCCESS('\n✅ All done! You can now access the coding tests.'))
+            self.stdout.write(self.style.SUCCESS('\n All done! You can now access the coding tests.'))
             self.stdout.write(self.style.SUCCESS(f'   Test 1: http://localhost:3000/dashboard/courses/{course_id}/week/{week_number}/coding-test/1'))
             self.stdout.write(self.style.SUCCESS(f'   Test 2: http://localhost:3000/dashboard/courses/{course_id}/week/{week_number}/coding-test/2'))
 
         except Course.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f'✗ Course {course_id} not found'))
+            self.stdout.write(self.style.ERROR(f' Course {course_id} not found'))
         except WeekPlan.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f'✗ Week {week_number} not found in course'))
+            self.stdout.write(self.style.ERROR(f' Week {week_number} not found in course'))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'✗ Error: {str(e)}'))
+            self.stdout.write(self.style.ERROR(f' Error: {str(e)}'))
             import traceback
             traceback.print_exc()

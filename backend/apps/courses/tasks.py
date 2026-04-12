@@ -11,7 +11,6 @@ Courses app — Celery tasks.
 """
 import asyncio
 import logging
-import re
 import sys
 import time
 
@@ -22,54 +21,25 @@ from asgiref.sync import sync_to_async, async_to_sync
 logger = logging.getLogger('apps.courses.tasks')
 
 
-def _safe_log_msg(msg):
-    """Remove emojis from log messages to prevent Windows cp1252 encoding errors."""
-    if sys.platform != 'win32':
-        return msg
-    # Emoji to ASCII replacement map
-    replacements = {
-        '\U0001f393': '[COURSE]',  # 🎓
-        '\U0001f4e6': '[TASK]',     # 📦
-        '\u2705': '[OK]',           # ✅
-        '\u274c': '[ERROR]',        # ❌
-        '\u26a0\ufe0f': '[WARN]',   # ⚠️
-        '\u26a0': '[WARN]',         # ⚠
-        '\U0001f4dd': '[NOTE]',     # 📝
-        '\U0001f4c5': '[DAY]',      # 📅
-        '\U0001f4da': '[BLOCK]',    # 📚
-        '\U0001f504': '[RETRY]',    # 🔄
-        '\U0001f50d': '[CHECK]',    # 🔍
-        '\U0001f680': '[START]',    # 🚀
-        '\U0001f4be': '[SAVE]',     # 💾
-        '\U0001f4ca': '[STATS]',    # 📊
-        '\U0001f4d6': '[THEORY]',   # 📖
-        '\U0001f4bb': '[CODE]',     # 💻
-        '\U0001f4c4': '[DOC]',      # 📄
-        '\U0001f9e0': '[AI]',       # 🧠
-        '\U0001f916': '[LLM]',      # 🤖
-        '\u2795': '[PLUS]',         # ➕
-        '\u2713': '[OK]',           # ✓
-        '\xd7': '[X]',              # ×
-        '\u2014': '-',              # —
-        '\u2192': '->',             # →
-        '\u2500': '-',              # ─
-    }
-    safe_msg = msg
-    for emoji, ascii_text in replacements.items():
-        safe_msg = safe_msg.replace(emoji, ascii_text)
-    return safe_msg
-
-
 class WindowsSafeLogFilter(logging.Filter):
     """Filter that ensures log messages are safe for Windows console encoding."""
     def filter(self, record):
+        # Remove any non-ASCII characters that might cause encoding issues
         if hasattr(record, 'msg') and isinstance(record.msg, str):
-            record.msg = _safe_log_msg(record.msg)
+            try:
+                record.msg.encode('ascii')
+            except UnicodeEncodeError:
+                record.msg = record.msg.encode('ascii', 'ignore').decode('ascii')
         if record.args:
-            record.args = tuple(
-                _safe_log_msg(arg) if isinstance(arg, str) else arg
-                for arg in record.args
-            )
+            new_args = []
+            for arg in record.args:
+                if isinstance(arg, str):
+                    try:
+                        arg.encode('ascii')
+                    except UnicodeEncodeError:
+                        arg = arg.encode('ascii', 'ignore').decode('ascii')
+                new_args.append(arg)
+            record.args = tuple(new_args)
         return True
 
 
@@ -116,7 +86,7 @@ def generate_course_content_task(
         raise
 
     logger.info("=" * 80)
-    logger.info("🎓 CELERY TASK: GENERATE COURSE CONTENT")
+    logger.info(" CELERY TASK: GENERATE COURSE CONTENT")
     logger.info(f"   Task ID: {self.request.id}")
     logger.info(f"   Course ID: {course_id}")
     logger.info(f"   Course Name: {course_name}")
@@ -133,19 +103,25 @@ def generate_course_content_task(
     try:
         course = Course.objects.get(id=course_id)
     except Course.DoesNotExist:
-        logger.error("❌ Course %s not found", course_id)
+        logger.error(" Course %s not found", course_id)
         return
 
     try:
         course.generation_status = "generating"
         course.save(update_fields=["generation_status"])
 
+        # Reset completion counter for this course
+        from apps.courses.sse import get_redis_client
+        redis_client = get_redis_client()
+        completion_key = f"course_completion:{course_id}"
+        redis_client.delete(completion_key)
+
         logger.info("=" * 80)
-        logger.info("✅ Course status set to 'generating'")
+        logger.info(" Course status set to 'generating'")
         logger.info("=" * 80)
 
         print(f"\n{'='*80}")
-        print(f"📦 [TASK] RECEIVED: generate_course_content_task")
+        print(f" [TASK] RECEIVED: generate_course_content_task")
         print(f"   Task ID: {self.request.id}")
         print(f"   Course ID: {course_id}")
         print(f"   Course Name: {course_name}")
@@ -164,12 +140,12 @@ def generate_course_content_task(
         if len(topic) > 200:
             topic = topic[:200]
         
-        print(f"📝 [TASK] Topic: {topic}")
+        print(f" [TASK] Topic: {topic}")
 
         # Update course topic
         course.topic = topic
         course.save(update_fields=["topic"])
-        print(f"✅ [TASK] Topic saved to database\n")
+        print(f" [TASK] Topic saved to database\n")
 
         # Create generator
         generator = CourseGenerator()
@@ -177,7 +153,7 @@ def generate_course_content_task(
         # Build skeleton for reference
         total_days = duration_weeks * 5
 
-        print(f"📦 [TASK] Starting async generation for course {course_id}")
+        print(f" [TASK] Starting async generation for course {course_id}")
         print(f"   Total days to generate: {total_days}")
         print(f"   Weeks to generate: {duration_weeks}\n")
 
@@ -195,12 +171,39 @@ def generate_course_content_task(
             )
         )
 
-        print(f"\n✅ [TASK] Async generation completed for course {course_id}\n")
+        print(f"\n [TASK] Async generation completed for course {course_id}\n")
 
         # Mark course days as complete (weekly tests will run next)
         course.refresh_from_db()
         course.generation_progress = total_days
         course.save(update_fields=["generation_progress"])
+
+        # CRITICAL: Reset CourseProgress to Day 1 so users ALWAYS start from the beginning.
+        # During generation, days are created with is_completed=False and is_locked=True (except Day 1).
+        # We must ensure current_day=1 so the banner shows "Day 1" not the last generated day.
+        from apps.courses.models import CourseProgress
+        try:
+            # Use get_or_create instead of select_for_update (which requires active transaction)
+            cp, created = CourseProgress.objects.get_or_create(
+                course=course,
+                user=course.user,
+                defaults={
+                    "total_days": total_days,
+                    "total_weeks": duration_weeks,
+                    "current_week": 1,
+                    "current_day": 1,
+                    "completed_days": 0,
+                    "overall_percentage": 0.0,
+                }
+            )
+            if not created and (cp.current_week != 1 or cp.current_day != 1):
+                cp.current_week = 1
+                cp.current_day = 1
+                cp.save(update_fields=["current_week", "current_day"])
+                logger.info(" Reset CourseProgress to Week 1, Day 1 for course %s", course_id)
+        except Exception as progress_exc:
+            logger.error(" Failed to update CourseProgress for course %s: %s", course_id, progress_exc)
+
         # NOTE: Don't set generation_status to 'ready' yet!
         # Weekly tests are still generating. Status will be set to 'ready'
         # by the LAST weekly test task when all are complete.
@@ -213,9 +216,9 @@ def generate_course_content_task(
         from apps.courses.tasks import generate_weekly_tests_for_course
         try:
             generate_weekly_tests_for_course.delay(course_id)
-            logger.info("📝 Weekly test generation queued (async)")
+            logger.info(" Weekly test generation queued (async)")
         except Exception as test_exc:
-            logger.error("❌ Weekly test generation failed: %s", test_exc)
+            logger.error(" Weekly test generation failed: %s", test_exc)
 
         # Refresh course to get final status
         course.refresh_from_db()
@@ -225,7 +228,7 @@ def generate_course_content_task(
         total_tasks = total_days + total_weekly_tests
 
         logger.info("=" * 80)
-        logger.info("✅ COURSE GENERATION COMPLETE")
+        logger.info(" COURSE GENERATION COMPLETE")
         logger.info(f"   Course ID: {course_id}")
         logger.info(f"   Status: {course.generation_status}")
         logger.info(f"   Progress: {course.generation_progress}/{total_tasks} tasks")
@@ -291,7 +294,7 @@ async def _generate_in_blocks_with_web_search(
             "generation_status": "generating",
             "current_stage": stage,
         })
-        logger.info("📊 Progress: %d/%d sub-steps (%d%%) - %s", completed, total_sub_steps, progress_percent, stage)
+        logger.info(" Progress: %d/%d sub-steps (%d%%) - %s", completed, total_sub_steps, progress_percent, stage)
 
     step_counter = 0
     
@@ -305,11 +308,11 @@ async def _generate_in_blocks_with_web_search(
         block_num += 1
 
         print(f"\n{'='*80}")
-        print(f"📚 [BLOCK {block_num}] Processing weeks {block_start}-{block_end} ({block_weeks} weeks)")
+        print(f" [BLOCK {block_num}] Processing weeks {block_start}-{block_end} ({block_weeks} weeks)")
         print(f"{'='*80}")
 
         # ========== STEP 1: Generate week themes and day titles for this block ==========
-        print(f"\n📝 [BLOCK {block_num}] Step 1: Generating week themes and day titles...")
+        print(f"\n [BLOCK {block_num}] Step 1: Generating week themes and day titles...")
         logger.info("[BLOCK %d] Generating themes and titles for weeks %d-%d", 
                    block_num, block_start, block_end)
         
@@ -317,7 +320,7 @@ async def _generate_in_blocks_with_web_search(
         block_week_themes = {}  # week -> theme
         
         for week_num in range(block_start, block_end + 1):
-            print(f"\n  📅 [BLOCK {block_num}] Generating Week {week_num} theme and titles...")
+            print(f"\n   [BLOCK {block_num}] Generating Week {week_num} theme and titles...")
             logger.info("[BLOCK %d] Week %d: Generating theme and day titles", block_num, week_num)
             
             # Get week plan
@@ -341,7 +344,7 @@ async def _generate_in_blocks_with_web_search(
             broadcast_sub_step(step_counter, f"Generated Week {week_num} theme: {theme[:60]}")
 
             block_week_themes[week_num] = theme
-            print(f"  ✅ [BLOCK {block_num}] Week {week_num} theme: {theme}")
+            print(f"   [BLOCK {block_num}] Week {week_num} theme: {theme}")
             logger.info("[BLOCK %d] Week %d theme saved: %s", block_num, week_num, theme)
 
             # Generate ALL day titles for this week in ONE LLM call
@@ -368,7 +371,7 @@ async def _generate_in_blocks_with_web_search(
                 day.title = title
                 day.tasks = tasks
                 block_day_titles[(week_num, day_num)] = title
-                print(f"     📄 [BLOCK {block_num}] Week {week_num} Day {day_num}: {title}")
+                print(f"      [BLOCK {block_num}] Week {week_num} Day {day_num}: {title}")
                 logger.info("[BLOCK %d] Week %d Day %d title: %s", block_num, week_num, day_num, title)
 
             # Save all day titles for this week
@@ -379,7 +382,7 @@ async def _generate_in_blocks_with_web_search(
             broadcast_sub_step(step_counter, f"Generated Week {week_num} day titles")
         
         # ========== STEP 2: Run web search for this block ==========
-        print(f"\n🔍 [BLOCK {block_num}] Step 2: Running web search for research data...")
+        print(f"\n [BLOCK {block_num}] Step 2: Running web search for research data...")
         logger.info("[BLOCK %d] Running web search for weeks %d-%d", block_num, block_start, block_end)
 
         web_search_data = None
@@ -396,19 +399,19 @@ async def _generate_in_blocks_with_web_search(
                 learning_goals=goals or [],
             )
 
-            print(f"[BLOCK {block_num}] ✅ Web search complete: {web_search_data.total_results} results, success={web_search_data.success}")
+            print(f"[BLOCK {block_num}]  Web search complete: {web_search_data.total_results} results, success={web_search_data.success}")
 
             if web_search_data.success:
                 print(f"[BLOCK {block_num}] Results distributed to {len(web_search_data.day_results)} days")
         except Exception as search_exc:
-            print(f"[BLOCK {block_num}] ❌ Web search failed: {search_exc}")
+            print(f"[BLOCK {block_num}]  Web search failed: {search_exc}")
             web_search_data = None
         finally:
             step_counter += 1
             broadcast_sub_step(step_counter, "Web search complete")
 
         # ========== STEP 2b: RAG retrieval from knowledge base ==========
-        print(f"\n🧠 [BLOCK {block_num}] Step 2b: Retrieving from RAG knowledge base...")
+        print(f"\n [BLOCK {block_num}] Step 2b: Retrieving from RAG knowledge base...")
         logger.info("[BLOCK %d] Running RAG retrieval", block_num)
         rag_context = None
         try:
@@ -441,7 +444,7 @@ async def _generate_in_blocks_with_web_search(
 
         # ========== STEP 3: Generate content for all days in this block ==========
         total_days_in_block = (block_end - block_start + 1) * 5
-        print(f"\n📝 [BLOCK {block_num}] Step 3: Generating content for {total_days_in_block} days...")
+        print(f"\n [BLOCK {block_num}] Step 3: Generating content for {total_days_in_block} days...")
         print(f"   (Running {total_days_in_block} days in parallel with 1s staggering)")
         logger.info("[BLOCK %d] Generating content for %d days in parallel with staggering",
                    block_num, total_days_in_block)
@@ -496,7 +499,10 @@ async def _generate_in_blocks_with_web_search(
         for i, result in enumerate(results):
             if result is True:
                 successful += 1
-                # Find which week/day this corresponds to
+                # Note: Per-day progress broadcasts are now handled in _generate_single_day_with_progress
+                # immediately after each day saves to DB. This prevents the race condition where
+                # all day broadcasts fire at once after parallel completion.
+                # We still increment step_counter for internal tracking.
                 day_idx = i
                 week_offset = 0
                 for wn in range(block_start, block_end + 1):
@@ -504,13 +510,13 @@ async def _generate_in_blocks_with_web_search(
                     if day_idx < week_offset + days_in_week:
                         actual_day = day_idx - week_offset + 1
                         step_counter += 1
-                        broadcast_sub_step(step_counter, f"Week {wn} Day {actual_day} content complete")
+                        # REMOVED: broadcast_sub_step for day completion - now handled per-day
                         break
                     week_offset += days_in_week
             elif isinstance(result, Exception):
                 failed += 1
                 logger.error("[BLOCK %d] Day task %d failed: %s", block_num, i + 1, result)
-                print(f"[BLOCK {block_num}] ❌ Day task {i+1} failed: {result}")
+                print(f"[BLOCK {block_num}]  Day task {i+1} failed: {result}")
             else:
                 failed += 1
                 logger.warning("[BLOCK %d] Day task %d returned unexpected result: %s", block_num, i + 1, result)
@@ -553,9 +559,9 @@ async def _generate_single_day_with_titles(
     # Get title from day object first
     title = day.title or f"Week {week_number} Day {day_num}"
     
-    print(f"\n  📖 [Course {course.id}] Generating Week {week_number} Day {day_num}: {title}")
+    print(f"\n   [Course {course.id}] Generating Week {week_number} Day {day_num}: {title}")
     logger.info("=" * 60)
-    logger.info("📖 GENERATING: Course %s | Week %d | Day %d | %s",
+    logger.info(" GENERATING: Course %s | Week %d | Day %d | %s",
                course.id, week_number, day_num, title)
     logger.info("=" * 60)
 
@@ -619,7 +625,7 @@ async def _generate_single_day_with_titles(
         
         # LOG raw theory output (FULL, untruncated)
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Week %d Day %d THEORY", week_number, day_num)
+        logger.info(" RAW AI OUTPUT: Week %d Day %d THEORY", week_number, day_num)
         logger.info("="*70)
         logger.info("THEORY (%d chars):\n%s", len(theory) if theory else 0, theory if theory else "EMPTY")
         logger.info("="*70)
@@ -635,7 +641,7 @@ async def _generate_single_day_with_titles(
         
         # LOG raw code output (FULL, untruncated)
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Week %d Day %d CODE", week_number, day_num)
+        logger.info(" RAW AI OUTPUT: Week %d Day %d CODE", week_number, day_num)
         logger.info("="*70)
         logger.info("CODE (%d chars):\n%s", len(code) if code else 0, code if code else "EMPTY")
         logger.info("="*70)
@@ -661,7 +667,7 @@ async def _generate_single_day_with_titles(
                 
                 # LOG raw quiz output (FULL, untruncated)
                 logger.info("="*70)
-                logger.info("🤖 RAW AI OUTPUT: Week %d Day %d QUIZ (attempt %d)", week_number, day_num, quiz_attempt+1)
+                logger.info(" RAW AI OUTPUT: Week %d Day %d QUIZ (attempt %d)", week_number, day_num, quiz_attempt+1)
                 logger.info("="*70)
                 logger.info("QUIZ (%d questions):\n%s", len(quizzes) if quizzes else 0, json.dumps(quizzes, indent=2) if quizzes else "EMPTY")
                 logger.info("="*70)
@@ -688,7 +694,22 @@ async def _generate_single_day_with_titles(
 
         # Save to DB
         day.theory_content = theory
-        day.code_content = code
+        
+        # Parse code content into structured format before saving
+        structured_code = {}
+        try:
+            from services.course.code_parser import parse_code_content
+            structured_code = parse_code_content(code)
+            # Store structured JSON in code_content field
+            day.code_content = json.dumps(structured_code, indent=2)
+            logger.info("[CODE_PARSER] Week %d Day %d: Parsed %d examples",
+                       week_number, day_num, len(structured_code.get("examples", [])))
+        except Exception as parse_err:
+            # Fallback: store raw content if parsing fails
+            logger.warning("[CODE_PARSER] Week %d Day %d: Parsing failed, storing raw: %s",
+                          week_number, day_num, parse_err)
+            day.code_content = code
+        
         day.theory_generated = True
         day.code_generated = True
         day.quiz_generated = quiz_generated
@@ -700,7 +721,17 @@ async def _generate_single_day_with_titles(
         await sync_to_async(day.save)(update_fields=[
             "title", "tasks", "theory_content", "code_content", "quiz_raw",
             "theory_generated", "code_generated", "quiz_generated",
+            "is_completed", "is_locked",
         ])
+
+        # DO NOT unlock the day here. Days should only be unlocked when:
+        # 1. Week 1 Day 1 is unlocked by default during skeleton creation
+        # 2. Subsequent days are unlocked ONLY when the user completes the previous day's quiz
+        # This ensures proper course progression - users must complete quizzes to unlock next days.
+
+        # REMOVED: broadcast_day_complete - was causing frontend to show 0% progress
+        # Progress is now broadcast only via broadcast_progress_update with correct percentage
+        # The day_unlock logic in quiz completion handles frontend unlocking
 
         # Save quiz questions to quiz_questions table
         if quizzes and quiz_generated:
@@ -726,18 +757,32 @@ async def _generate_single_day_with_titles(
             course.generation_progress += 1
             await sync_to_async(course.save)(update_fields=["generation_progress"])
 
-            # NOTE: Progress broadcasts are handled by the parent function
-            # (_generate_in_blocks_with_web_search or _fill_week_with_progress)
-            # to avoid conflicting total_days values.
+            # CRITICAL FIX: Broadcast progress update immediately after incrementing generation_progress
+            # This prevents race condition where polling fetches stale data before SSE updates
+            try:
+                from apps.courses.sse import broadcast_progress_update
+                # Calculate total days and match SSE progress formula exactly
+                total_days_count = (course.duration_weeks or 1) * 5
+                # Formula: 36% base + (completed_days / total_days) * 46%
+                progress_pct = round(36 + (course.generation_progress / total_days_count) * 46) if total_days_count > 0 else 36
+                broadcast_progress_update(str(course.id), {
+                    "progress": min(82, progress_pct),  # Cap at 82% (tests complete remaining)
+                    "completed_days": course.generation_progress,
+                    "total_days": total_days_count,
+                    "generation_status": "generating",
+                    "current_stage": f"Week {week_number} Day {day_num} complete",
+                })
+            except Exception as progress_broadcast_err:
+                logger.warning(" Failed to broadcast progress update (non-critical): %s", progress_broadcast_err)
 
-        print(f"\n  ✅ [COMPLETE] Week {week_number} Day {day_num} saved to DB")
-        logger.info("✅ [DAY COMPLETE] Course %s | Week %d Day %d saved to database",
+        print(f"\n   [COMPLETE] Week {week_number} Day {day_num} saved to DB")
+        logger.info(" [DAY COMPLETE] Course %s | Week %d Day %d saved to database",
                    course.id, week_number, day_num)
         return True
 
     except Exception as e:
-        print(f"\n  ❌ [ERROR] Week {week_number} Day {day_num}: {e}")
-        logger.exception("❌ [DAY ERROR] Course %s | Week %d Day %d: %s", course.id, week_number, day_num, e)
+        print(f"\n   [ERROR] Week {week_number} Day {day_num}: {e}")
+        logger.exception(" [DAY ERROR] Course %s | Week %d Day %d: %s", course.id, week_number, day_num, e)
         return False
 
 
@@ -877,7 +922,7 @@ def generate_day_content_task(
 
         # LOG raw theory output
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Day %s THEORY", day_id)
+        logger.info(" RAW AI OUTPUT: Day %s THEORY", day_id)
         logger.info("="*70)
         logger.info("THEORY (%d chars):\n%s", len(theory) if theory else 0, theory if theory else "EMPTY")
         logger.info("="*70)
@@ -896,7 +941,7 @@ def generate_day_content_task(
 
         # LOG raw code output
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Day %s CODE", day_id)
+        logger.info(" RAW AI OUTPUT: Day %s CODE", day_id)
         logger.info("="*70)
         logger.info("CODE (%d chars):\n%s", len(code) if code else 0, code if code else "EMPTY")
         logger.info("="*70)
@@ -906,7 +951,7 @@ def generate_day_content_task(
 
         day.save(update_fields=["theory_content", "theory_generated", "code_content", "code_generated"])
 
-        logger.info("✅ [DAY COMPLETE] Day %s: theory=%d chars, code=%d chars", day_id, len(theory) if theory else 0, len(code) if code else 0)
+        logger.info(" [DAY COMPLETE] Day %s: theory=%d chars, code=%d chars", day_id, len(theory) if theory else 0, len(code) if code else 0)
 
     except Exception as exc:
         logger.exception("Error generating content for day %s: %s", day_id, exc)
@@ -1003,7 +1048,7 @@ def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_
     import asyncio
 
     logger.info("=" * 60)
-    logger.info("📝 CELERY TASK: GENERATE WEEKLY TEST")
+    logger.info(" CELERY TASK: GENERATE WEEKLY TEST")
     logger.info(f"   Task ID: {self.request.id}")
     logger.info(f"   Course ID: {course_id}")
     logger.info(f"   Week: {week_number}")
@@ -1015,9 +1060,9 @@ def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_
         from apps.courses.models import Course as CourseModel
         try:
             course_check = CourseModel.objects.get(id=course_id)
-            logger.info("✅ Course validated: %s", course_check.course_name)
+            logger.info(" Course validated: %s", course_check.course_name)
         except CourseModel.DoesNotExist:
-            logger.error("❌ Course %s does not exist - aborting task", course_id)
+            logger.error(" Course %s does not exist - aborting task", course_id)
             return {"error": "Course not found", "success": False}
         
         generator = CourseGenerator()
@@ -1025,11 +1070,11 @@ def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_
 
         if result.get("success"):
             total_q = result.get("total_questions", 0)
-            logger.info("✅ Weekly test generated successfully")
+            logger.info(" Weekly test generated successfully")
             logger.info(f"   Test ID: {result.get('test_id')}")
             logger.info(f"   Questions: {total_q}")
             if total_q < 10:
-                logger.warning("⚠️ Only %d/10 questions generated - partial test saved", total_q)
+                logger.warning(" Only %d/10 questions generated - partial test saved", total_q)
 
             # MCQ tests run AFTER coding tests
             # Coding steps: total_weeks*7 + num_blocks*2 + (1 to total_weeks)
@@ -1045,22 +1090,33 @@ def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_
             # MCQ step = all days + web + rag + theme + titles + all coding tests + this week's MCQ
             mcq_step = total_weeks * 8 + num_blocks * 2 + week_number
             progress_percent = round((mcq_step / total_sub_steps) * 100)
-            logger.info("📊 Weekly MCQ test complete: step %d/%d (%d%%)", mcq_step, total_sub_steps, progress_percent)
+            logger.info(" Weekly MCQ test complete: step %d/%d (%d%%)", mcq_step, total_sub_steps, progress_percent)
 
-            # MCQ is ALWAYS the last step → always fire complete
-            course.generation_status = "ready"
-            course.status = "active"
-            course.save(update_fields=["generation_status", "status"])
-            logger.info("✅✅✅ LAST TASK (Week %d MCQ) - Course %s marked as READY!", week_number, course_id)
-            broadcast_generation_complete(course_id, {
-                "progress": 100,
-                "completed_days": total_sub_steps,
-                "total_days": total_sub_steps,
-                "generation_status": "ready",
-                "current_stage": "Course generation complete!",
-            })
+            # Atomic completion tracking: only fire COMPLETE when ALL weeks are done
+            from apps.courses.sse import get_redis_client
+            redis_client = get_redis_client()
+            completion_key = f"course_completion:{course_id}"
+            completed_count = redis_client.incr(completion_key)
+            redis_client.expire(completion_key, 3600)  # Expire after 1 hour
+            logger.info(" Completion counter: %d/%d weeks for course %s", completed_count, total_weeks, course_id)
+
+            # Only mark as READY and broadcast when ALL weeks are complete
+            if completed_count >= total_weeks:
+                course.generation_status = "ready"
+                course.status = "active"
+                course.save(update_fields=["generation_status", "status"])
+                logger.info(" ALL %d WEEKS COMPLETE - Course %s marked as READY!", total_weeks, course_id)
+                broadcast_generation_complete(course_id, {
+                    "progress": 100,
+                    "completed_days": total_sub_steps,
+                    "total_days": total_sub_steps,
+                    "generation_status": "ready",
+                    "current_stage": "Course generation complete!",
+                })
+            else:
+                logger.info("Waiting for remaining weeks to complete: %d/%d", completed_count, total_weeks)
         else:
-            logger.warning("❌ Weekly test generation failed: %s", result.get("error"))
+            logger.warning(" Weekly test generation failed: %s", result.get("error"))
             raise Exception(result.get("error"))
 
     except Exception as exc:
@@ -1078,7 +1134,7 @@ def generate_certificate_task(self, user_id: str, course_id: str):
 
     try:
         generator = CertificateGenerator()
-        result = asyncio.run(generator.generate_certificate(user_id, course_id))
+        result = generator.generate_certificate(user_id, course_id)
 
         if result.get("success"):
             logger.info("Generated certificate for user %s course %s", user_id, course_id)
@@ -1173,7 +1229,7 @@ def generate_coding_test_task(self, course_id: str, week_number: int, test_numbe
     import asyncio
 
     logger.info("=" * 60)
-    logger.info("💻 CELERY TASK: GENERATE CODING TEST %d", test_number)
+    logger.info(" CELERY TASK: GENERATE CODING TEST %d", test_number)
     logger.info(f"   Task ID: {self.request.id}")
     logger.info(f"   Course ID: {course_id}")
     logger.info(f"   Week: {week_number}")
@@ -1186,16 +1242,16 @@ def generate_coding_test_task(self, course_id: str, week_number: int, test_numbe
         from apps.courses.models import Course as CourseModel
         try:
             course_check = CourseModel.objects.get(id=course_id)
-            logger.info("✅ Course validated: %s", course_check.course_name)
+            logger.info(" Course validated: %s", course_check.course_name)
         except CourseModel.DoesNotExist:
-            logger.error("❌ Course %s does not exist - aborting task", course_id)
+            logger.error(" Course %s does not exist - aborting task", course_id)
             return {"error": "Course not found", "success": False}
         
         generator = CourseGenerator()
         result = asyncio.run(generator.generate_coding_test(course_id, week_number))
 
         if result.get("success"):
-            logger.info("✅ Coding test %d generated successfully", test_number)
+            logger.info(" Coding test %d generated successfully", test_number)
             logger.info(f"   Problems: {result.get('total_problems')}")
 
             # Coding tests run FIRST (before MCQ)
@@ -1210,7 +1266,7 @@ def generate_coding_test_task(self, course_id: str, week_number: int, test_numbe
             # Coding step = all days + web + rag + theme + titles + this week's coding
             coding_step = total_weeks * 7 + num_blocks * 2 + week_number
             progress_percent = round((coding_step / total_sub_steps) * 100)
-            logger.info("📊 Weekly coding test complete: step %d/%d (%d%%)", coding_step, total_sub_steps, progress_percent)
+            logger.info(" Weekly coding test complete: step %d/%d (%d%%)", coding_step, total_sub_steps, progress_percent)
 
             # Just broadcast progress (MCQ will fire complete)
             broadcast_progress_update(course_id, {
@@ -1222,7 +1278,7 @@ def generate_coding_test_task(self, course_id: str, week_number: int, test_numbe
                 "coding_test_status": f"Week {week_number} coding test {test_number} complete",
             })
         else:
-            logger.warning("❌ Coding test %d generation failed: %s", test_number, result.get("error"))
+            logger.warning(" Coding test %d generation failed: %s", test_number, result.get("error"))
             raise Exception(result.get("error"))
 
     except Exception as exc:
@@ -1237,8 +1293,8 @@ def generate_weekly_tests_for_course(self, course_id: str):
     Generate both MCQ test and coding test for all weeks in a course.
     Called after all days are generated.
 
-    Queues async weekly test tasks. Each test task increments progress.
-    The LAST test to complete fires broadcast_generation_complete().
+    Queues async weekly test tasks. Each test task increments a Redis completion counter.
+    The LAST test to complete (atomic via Redis INCR) fires broadcast_generation_complete().
     """
     from apps.courses.models import Course
     from django.db import transaction
@@ -1250,6 +1306,12 @@ def generate_weekly_tests_for_course(self, course_id: str):
 
         logger.info("Starting sequential weekly test generation for %d weeks in course %s",
                    total_weeks, course_id)
+
+        # Reset completion counter for this course
+        from apps.courses.sse import get_redis_client
+        redis_client = get_redis_client()
+        completion_key = f"course_completion:{course_id}"
+        redis_client.delete(completion_key)
 
         # Broadcast that weekly test generation is starting
         from apps.courses.sse import broadcast_progress_update
@@ -1325,7 +1387,7 @@ def update_course_content_task(
     import asyncio
 
     logger.info("=" * 80)
-    logger.info("🔄 CELERY TASK: UPDATE COURSE CONTENT")
+    logger.info(" CELERY TASK: UPDATE COURSE CONTENT")
     logger.info(f"   Task ID: {self.request.id}")
     logger.info(f"   Course ID: {course_id}")
     logger.info(f"   Course Name: {course_name}")
@@ -1340,14 +1402,14 @@ def update_course_content_task(
     try:
         course = Course.objects.get(id=course_id)
     except Course.DoesNotExist:
-        logger.error("❌ Course %s not found", course_id)
+        logger.error(" Course %s not found", course_id)
         return
 
     try:
         course.generation_status = "updating"
         course.save(update_fields=["generation_status"])
 
-        logger.info("✅ Course status set to 'updating'")
+        logger.info(" Course status set to 'updating'")
 
         # Create generator
         generator = CourseGenerator()
@@ -1373,7 +1435,7 @@ def update_course_content_task(
 EXISTING COURSE CONTEXT:
 {existing_context}
 
-⚠️⚠️⚠️ CRITICAL USER UPDATE REQUEST (PRIORITIZE THIS): ⚠️⚠️⚠️
+ CRITICAL USER UPDATE REQUEST (PRIORITIZE THIS): 
 {user_query}
 
 IMPORTANT GENERATION RULES:
@@ -1399,16 +1461,16 @@ EXAMPLE OF WHAT TO GENERATE:
 
         # Log update type with clear message
         if update_type == "compact":
-            logger.info("📦 COMPACT UPDATE: Compressing course from %d to %d weeks",
+            logger.info(" COMPACT UPDATE: Compressing course from %d to %d weeks",
                        course.duration_weeks, new_duration_weeks or target_weeks)
             # For compact, skip web search and use special prompting
             web_search_enabled = False
         elif update_type == "extend":
             extend_weeks_count = len(weeks_to_update)
-            logger.info("➕ EXTEND UPDATE: Adding %d new weeks (weeks %s)",
+            logger.info(" EXTEND UPDATE: Adding %d new weeks (weeks %s)",
                        extend_weeks_count, weeks_to_update)
         elif update_type == "percentage":
-            logger.info("🔄 PERCENTAGE UPDATE: Replacing last %d%% of course (%d weeks)",
+            logger.info(" PERCENTAGE UPDATE: Replacing last %d%% of course (%d weeks)",
                        percentage, len(weeks_to_update))
 
         # Run async generation using async_to_sync for better event loop management
@@ -1480,7 +1542,7 @@ EXAMPLE OF WHAT TO GENERATE:
             
             # Verify the calculation
             expected_days = len(weeks_to_update) * 5
-            logger.info("📊 [TEST PHASE] Starting test generation:")
+            logger.info(" [TEST PHASE] Starting test generation:")
             logger.info("   - Weeks to update: %s", weeks_to_update)
             logger.info("   - Expected days completed: %d", expected_days)
             logger.info("   - Actual days_completed from DB: %d", days_completed)
@@ -1493,7 +1555,7 @@ EXAMPLE OF WHAT TO GENERATE:
             # Final progress should reach 100% after all tests complete
 
             for week_num in weeks_to_update:
-                logger.info("📝 [TEST] Regenerating weekly test for week %d", week_num)
+                logger.info(" [TEST] Regenerating weekly test for week %d", week_num)
                 generate_weekly_test_task.apply(args=[course_id, week_num, True])  # skip_broadcast=True
                 test_count += 1
 
@@ -1502,7 +1564,7 @@ EXAMPLE OF WHAT TO GENERATE:
                 tasks_done = days_completed + test_count
                 progress_percent = round((tasks_done / total_tasks) * 100)
                 
-                logger.info("📊 [TEST PROGRESS] MCQ Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
+                logger.info(" [TEST PROGRESS] MCQ Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
                            week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
                 
                 broadcast_progress_update(course_id, {
@@ -1513,7 +1575,7 @@ EXAMPLE OF WHAT TO GENERATE:
                     "current_stage": f"Generating tests for Week {week_num}...",
                 })
 
-                logger.info("📝 [TEST] Regenerating coding test for week %d", week_num)
+                logger.info(" [TEST] Regenerating coding test for week %d", week_num)
                 generate_coding_test_task.apply(args=[course_id, week_num, True])  # skip_broadcast=True
                 test_count += 1
 
@@ -1521,7 +1583,7 @@ EXAMPLE OF WHAT TO GENERATE:
                 tasks_done = days_completed + test_count
                 progress_percent = round((tasks_done / total_tasks) * 100)
                 
-                logger.info("📊 [TEST PROGRESS] Coding Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
+                logger.info(" [TEST PROGRESS] Coding Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
                            week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
                 
                 broadcast_progress_update(course_id, {
@@ -1533,7 +1595,7 @@ EXAMPLE OF WHAT TO GENERATE:
                 })
 
         logger.info("=" * 80)
-        logger.info("✅ COURSE UPDATE COMPLETE")
+        logger.info(" COURSE UPDATE COMPLETE")
         logger.info(f"   Course ID: {course_id}")
         logger.info(f"   Status: {course.generation_status}")
         logger.info(f"   Weeks Updated: {weeks_to_update}")
@@ -1682,7 +1744,7 @@ async def _update_course_async(
         )
         for week_to_delete in weeks_to_delete:
             await sync_to_async(week_to_delete.delete)()
-        logger.info("📦 Deleted %d weeks for compact update (now %d weeks total)", 
+        logger.info(" Deleted %d weeks for compact update (now %d weeks total)", 
                    len(weeks_to_delete), new_duration_weeks)
 
     logger.info("Async update complete for %d weeks", len(weeks_to_update))
@@ -1714,7 +1776,7 @@ async def _update_single_week(
     from apps.quizzes.models import QuizQuestion
     import json
 
-    logger.info("📝 STARTING WEEK %d UPDATE", week_number)
+    logger.info(" STARTING WEEK %d UPDATE", week_number)
     logger.info("   Course: %s", course.course_name)
     logger.info("   Topic: %s", topic)
     logger.info("   User Query: %s", user_query)
@@ -1727,7 +1789,7 @@ async def _update_single_week(
             defaults={"theme": None, "objectives": []}
         )
 
-        logger.info("📝 Generating week theme for Week %d...", week_number)
+        logger.info(" Generating week theme for Week %d...", week_number)
 
         # Generate week theme with update context
         # For compact type, use special prompt for course compression
@@ -1820,12 +1882,12 @@ async def _update_single_week(
                 logger.warning("Web search failed for week %d: %s", week_number, search_exc)
 
         # Generate content for ALL 5 days IN PARALLEL
-        logger.info("🚀 [PARALLEL DAY GENERATION] Starting parallel generation for all 5 days in Week %d...", week_number)
+        logger.info(" [PARALLEL DAY GENERATION] Starting parallel generation for all 5 days in Week %d...", week_number)
         
         async def generate_day_content(day, web_search_data, search_service):
             """Generate content for a single day."""
             day_num = day.day_number
-            logger.info("📝 [DAY GENERATION] Week %d Day %d: %s", week_number, day_num, day.title)
+            logger.info(" [DAY GENERATION] Week %d Day %d: %s", week_number, day_num, day.title)
 
             # Get web results for this day if available
             web_results_formatted = ""
@@ -1844,12 +1906,12 @@ async def _update_single_week(
                         web_results_formatted = search_service.format_results_for_day(
                             day_results, day_topic
                         )
-                        logger.info("📊 [WEB SEARCH] Using %d results for Day %d", len(day_results), day_num)
+                        logger.info(" [WEB SEARCH] Using %d results for Day %d", len(day_results), day_num)
                     except Exception as web_exc:
                         logger.warning("Failed to format web results: %s", web_exc)
 
             # Generate theory and code in parallel
-            logger.info("🤖 [LLM CALL] Generating theory content for Day %d...", day_num)
+            logger.info(" [LLM CALL] Generating theory content for Day %d...", day_num)
             theory_task = generator._generate_theory_content(
                 day_title=day.title,
                 week_theme=theme,
@@ -1858,7 +1920,7 @@ async def _update_single_week(
                 description=description,
                 web_search_results=web_results_formatted,
             )
-            logger.info("🤖 [LLM CALL] Generating code content for Day %d...", day_num)
+            logger.info(" [LLM CALL] Generating code content for Day %d...", day_num)
             code_task = generator._generate_code_content(
                 day_title=day.title,
                 week_theme=theme,
@@ -1869,20 +1931,20 @@ async def _update_single_week(
 
             # LOG raw theory output (FULL, untruncated)
             logger.info("="*70)
-            logger.info("🤖 RAW AI OUTPUT: Week %d Day %d THEORY", week_number, day_num)
+            logger.info(" RAW AI OUTPUT: Week %d Day %d THEORY", week_number, day_num)
             logger.info("="*70)
             logger.info("THEORY (%d chars):\n%s", len(theory) if theory else 0, theory if theory else "EMPTY")
             logger.info("="*70)
 
             # LOG raw code output (FULL, untruncated)
             logger.info("="*70)
-            logger.info("🤖 RAW AI OUTPUT: Week %d Day %d CODE", week_number, day_num)
+            logger.info(" RAW AI OUTPUT: Week %d Day %d CODE", week_number, day_num)
             logger.info("="*70)
             logger.info("CODE (%d chars):\n%s", len(code) if code else 0, code if code else "EMPTY")
             logger.info("="*70)
 
             # Generate quiz
-            logger.info("🤖 [LLM CALL] Generating quiz questions for Day %d...", day_num)
+            logger.info(" [LLM CALL] Generating quiz questions for Day %d...", day_num)
             quiz_result = await generator._generate_quiz_questions(
                 day_title=day.title,
                 topic=topic,
@@ -1893,12 +1955,12 @@ async def _update_single_week(
 
             # LOG raw quiz output (FULL, untruncated)
             logger.info("="*70)
-            logger.info("🤖 RAW AI OUTPUT: Week %d Day %d QUIZ", week_number, day_num)
+            logger.info(" RAW AI OUTPUT: Week %d Day %d QUIZ", week_number, day_num)
             logger.info("="*70)
             logger.info("QUIZ (%d questions):\n%s", len(quizzes) if quizzes else 0, json.dumps(quizzes, indent=2) if quizzes else "EMPTY")
             logger.info("="*70)
 
-            logger.info("✅ [DAY COMPLETE] Day %d: theory=%d chars, code=%d chars, quiz=%d questions",
+            logger.info(" [DAY COMPLETE] Day %d: theory=%d chars, code=%d chars, quiz=%d questions",
                        day_num, len(theory) if theory else 0, len(code) if code else 0, len(quizzes))
 
             return day, theory, code, quizzes, quiz_generated
@@ -1910,13 +1972,13 @@ async def _update_single_week(
         ]
 
         # Run ALL 5 days in parallel!
-        logger.info("🚀 [PARALLEL] Launching %d parallel day generation tasks...", len(day_generation_tasks))
+        logger.info(" [PARALLEL] Launching %d parallel day generation tasks...", len(day_generation_tasks))
         day_results = await asyncio.gather(*day_generation_tasks, return_exceptions=True)
 
         # Process results and save to database
         for result in day_results:
             if isinstance(result, Exception):
-                logger.error("❌ Day generation failed: %s", result)
+                logger.error(" Day generation failed: %s", result)
                 continue
             
             day, theory, code, quizzes, quiz_generated = result
@@ -1954,9 +2016,9 @@ async def _update_single_week(
                 "title", "tasks", "theory_content", "code_content", "quiz_raw",
                 "theory_generated", "code_generated", "quiz_generated",
             ])
-            logger.info("💾 [DB SAVED] Week %d Day %d saved to database", week_number, day.day_number)
+            logger.info(" [DB SAVED] Week %d Day %d saved to database", week_number, day.day_number)
 
-        logger.info("✅ [WEEK COMPLETE] All %d days in Week %d generated and saved!", len(days), week_number)
+        logger.info(" [WEEK COMPLETE] All %d days in Week %d generated and saved!", len(days), week_number)
 
         # Update course progress and broadcast after ALL days in week are complete
         async with progress_lock:
@@ -1982,7 +2044,7 @@ async def _update_single_week(
             # Cap at 70% (tests will complete the remaining 30%)
             progress_percent = min(progress_percent, 70)
             
-            logger.info("📊 [PROGRESS] Week %d complete: %d days total, progress %d%% (capped at 70%%)",
+            logger.info(" [PROGRESS] Week %d complete: %d days total, progress %d%% (capped at 70%%)",
                        week_number, course.generation_progress, progress_percent)
 
             broadcast_progress_update(course.id, {
@@ -1993,7 +2055,7 @@ async def _update_single_week(
                 "current_stage": f"Updating Week {week_number}...",
             })
 
-        logger.info("✓ Week %d updated successfully", week_number)
+        logger.info(" Week %d updated successfully", week_number)
         return True
 
     except Exception as e:
@@ -2034,13 +2096,22 @@ def _build_existing_context(course, weeks_to_update: list) -> str:
 def _reset_user_progress_for_updated_weeks(course, weeks_to_update: list):
     """
     Reset user progress for updated weeks.
-    Marks updated weeks as locked and incomplete.
+    Preserves completed weeks' test status to avoid forcing users to retake tests.
     """
     from apps.courses.models import WeekPlan, DayPlan, CourseProgress
     from django.db import transaction
 
     @transaction.atomic
     def _reset():
+        # Identify which weeks were already completed (test passed)
+        completed_weeks = set(
+            WeekPlan.objects.filter(
+                course=course,
+                week_number__in=weeks_to_update,
+                is_completed=True
+            ).values_list('week_number', flat=True)
+        )
+
         # Reset days in updated weeks
         DayPlan.objects.filter(
             week_plan__course=course,
@@ -2051,13 +2122,31 @@ def _reset_user_progress_for_updated_weeks(course, weeks_to_update: list):
             completed_at=None,
         )
 
-        # Reset weeks
-        WeekPlan.objects.filter(
-            course=course,
-            week_number__in=weeks_to_update
-        ).update(
-            is_completed=False,
-        )
+        # Reset weeks, but preserve completed status and test unlocks for already-completed weeks
+        for week_num in weeks_to_update:
+            week = WeekPlan.objects.filter(course=course, week_number=week_num).first()
+            if not week:
+                continue
+
+            if week_num in completed_weeks:
+                # Preserve completed week status and test unlocks
+                # Only reset day completion, keep test status intact
+                week.is_completed = True
+                # Keep test_unlocked, coding_test_1_unlocked, etc. as they were
+                week.save(update_fields=['is_completed'])
+            else:
+                # Fully reset incomplete weeks
+                week.is_completed = False
+                week.test_unlocked = False
+                week.coding_test_1_unlocked = False
+                week.coding_test_1_completed = False
+                week.coding_test_2_unlocked = False
+                week.coding_test_2_completed = False
+                week.save(update_fields=[
+                    'is_completed', 'test_unlocked',
+                    'coding_test_1_unlocked', 'coding_test_1_completed',
+                    'coding_test_2_unlocked', 'coding_test_2_completed'
+                ])
 
         # Update CourseProgress
         try:
@@ -2072,9 +2161,27 @@ def _reset_user_progress_for_updated_weeks(course, weeks_to_update: list):
 
             # Set current position to first updated week
             if weeks_to_update:
-                first_updated_week = min(weeks_to_update)
-                cp.current_week = first_updated_week
-                cp.current_day = 1
+                # Find the first non-completed week to set as current
+                first_incomplete_week = None
+                for week_num in sorted(weeks_to_update):
+                    if week_num not in completed_weeks:
+                        first_incomplete_week = week_num
+                        break
+
+                if first_incomplete_week is not None:
+                    cp.current_week = first_incomplete_week
+                    cp.current_day = 1
+                elif completed_weeks:
+                    # All updated weeks were completed, set to the week after the last completed one
+                    last_completed = max(completed_weeks)
+                    next_week = last_completed + 1
+                    if next_week <= course.duration_weeks:
+                        cp.current_week = next_week
+                        cp.current_day = 1
+                    else:
+                        # Course is fully complete
+                        cp.current_week = course.duration_weeks
+                        cp.current_day = 5
 
             cp.save()
             logger.info("Reset user progress for course %s: %d days completed", course.id, completed)

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useWeeklyTest, useLessonActions } from '@/app/hooks/api';
+import { Check, X } from 'lucide-react';
+import { useWeeklyTest, useLessonActions, useWeekPlans } from '@/app/hooks/api';
 import styles from './page.module.css';
 
 function LoadingSkeleton() {
@@ -20,7 +21,7 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
   return (
     <div className={styles.page}>
       <div className={styles.errorBox}>
-        <span className={styles.errorText}>✗ FAILED TO LOAD · {message}</span>
+        <span className={styles.errorText}> FAILED TO LOAD · {message}</span>
         <motion.button
           className={styles.retryBtn}
           onClick={onRetry}
@@ -35,11 +36,23 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
 
 export default function WeeklyTestPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.id as string;
   const week = parseInt(params.w as string);
 
   const { data: testData, isLoading, error, refetch } = useWeeklyTest(courseId, week);
+  const { data: weekPlans } = useWeekPlans(courseId);
   const { submitWeeklyTest, isSubmitting } = useLessonActions();
+
+  // Check if week is already completed - show message instead of showing test
+  useEffect(() => {
+    if (weekPlans) {
+      const currentWeekPlan = weekPlans.find((w: any) => w.week_number === week);
+      if (currentWeekPlan?.is_completed) {
+        setAlreadyCompleted(true);
+      }
+    }
+  }, [weekPlans, week, courseId]);
 
   // Debug logging
   useEffect(() => {
@@ -53,6 +66,21 @@ export default function WeeklyTestPage() {
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [testResult, setTestResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+
+  // Auto-redirect to coding test after MCQ pass
+  useEffect(() => {
+    if (isSubmitted && testResult?.passed && !redirecting) {
+      console.log('[WeeklyTest] Test passed! Redirecting to coding test in 3 seconds...');
+      setRedirecting(true);
+      const timeout = setTimeout(() => {
+        console.log('[WeeklyTest] Redirecting now...');
+        router.push(`/dashboard/courses/${courseId}/week/${week}/coding-test/1`);
+      }, 3000); // 3 second delay to show results
+      return () => clearTimeout(timeout);
+    }
+  }, [isSubmitted, testResult, courseId, week, redirecting, router]);
 
   // Initialize answers when test loads
   useEffect(() => {
@@ -122,13 +150,58 @@ export default function WeeklyTestPage() {
     return (
       <div className={styles.page}>
         <div className={styles.errorBox}>
-          <span className={styles.errorText}>✗ TEST NOT FOUND</span>
+          <span className={styles.errorText}> TEST NOT FOUND</span>
           <Link href={`/dashboard/courses/${courseId}`}>
             <motion.button className={styles.retryBtn} whileHover={{ x: -2, y: -2 }}>
               BACK TO COURSE →
             </motion.button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  // Show loading while checking week completion status
+  if (!weekPlans) return <LoadingSkeleton />;
+
+  // Show message if week test is already completed
+  if (alreadyCompleted) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.resultsHeader}>
+          <h1 className={styles.resultsTitle}>WEEK {week} TEST · ALREADY COMPLETED</h1>
+        </div>
+        <motion.div
+          className={styles.resultsCard}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className={styles.weekBadge}>WEEK {week} TEST COMPLETED</div>
+          <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--gray)' }}>
+            You have already passed this weekly test. Continue to the coding test.
+          </p>
+          <div className={styles.actionButtons}>
+            <Link href={`/dashboard/courses/${courseId}/week/${week}/coding-test/1`}>
+              <motion.button
+                className={styles.continueBtn}
+                whileHover={{ x: -2, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                CONTINUE TO CODING TEST 1 →
+              </motion.button>
+            </Link>
+            <Link href={`/dashboard/courses/${courseId}`}>
+              <motion.button
+                className={styles.reviewBtn}
+                whileHover={{ x: -2, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                BACK TO COURSE →
+              </motion.button>
+            </Link>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -158,12 +231,18 @@ export default function WeeklyTestPage() {
           </div>
 
           <span className={`${styles.passBadge} ${passed ? styles.passed : styles.failed}`}>
-            {passed ? '✓ PASSED · WEEK ' + (week + 1) + ' UNLOCKED' : '✗ FAILED · RETRY REQUIRED'}
+            {passed ? ' PASSED · WEEK ' + (week + 1) + ' UNLOCKED' : ' FAILED · RETRY REQUIRED'}
           </span>
 
           {passed && (
             <div className={styles.weekBadge}>
               WEEK {week} COMPLETE
+            </div>
+          )}
+
+          {passed && redirecting && (
+            <div className={styles.redirectNotice}>
+              <span className={styles.redirectText}> Auto-redirecting to Coding Test in 3 seconds...</span>
             </div>
           )}
 
@@ -180,7 +259,11 @@ export default function WeeklyTestPage() {
                 <span>{answers[index] !== null ? String.fromCharCode(65 + answers[index]!) : '-'}</span>
                 <span>{String.fromCharCode(65 + q.correct)}</span>
                 <span className={answers[index] === q.correct ? styles.correct : styles.incorrect}>
-                  {answers[index] === q.correct ? '✓' : '✗'}
+                  {answers[index] === q.correct ? (
+                    <Check size={18} strokeWidth={3} />
+                  ) : (
+                    <X size={18} strokeWidth={3} />
+                  )}
                 </span>
               </div>
             ))}
@@ -222,7 +305,7 @@ export default function WeeklyTestPage() {
                 whileHover={{ x: -2, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {passed ? 'CONTINUE TO CODING TEST 1 →' : 'BACK TO COURSE →'}
+                {passed ? (redirecting ? ' REDIRECTING TO CODING TEST...' : 'CONTINUE TO CODING TEST 1 →') : 'BACK TO COURSE →'}
               </motion.button>
             </Link>
           </div>

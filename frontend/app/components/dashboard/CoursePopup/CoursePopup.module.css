@@ -126,11 +126,11 @@
   color: var(--black);
   outline: none;
   transition: border-color 0.2s;
-  border-radius: 4px;
 }
 
 .durationInput:focus {
-  border-color: #666;
+  border-color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .durationInput:disabled {
@@ -155,7 +155,6 @@
   color: var(--black);
   outline: none;
   cursor: pointer;
-  border-radius: 4px;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -165,11 +164,12 @@
 }
 
 .durationSelect:hover:not(:disabled) {
-  background-color: #f5f5f5;
+  background-color: var(--yellow-light);
 }
 
 .durationSelect:focus {
-  border-color: #666;
+  border-color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .durationSelect:disabled {
@@ -213,12 +213,14 @@
 }
 
 .optionBtn:hover {
-  box-shadow: 2px 2px 0px var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .optionBtn.selected {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  border-color: var(--black);
 }
 
 .createBtn {
@@ -228,8 +230,8 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 1px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
   box-shadow: 4px 4px 0px var(--black);
   cursor: pointer;
@@ -239,6 +241,8 @@
 
 .createBtn:hover:not(:disabled) {
   box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--yellow-light);
+  transform: translate(-2px, -2px);
 }
 
 .createBtn:disabled {

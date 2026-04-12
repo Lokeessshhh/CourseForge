@@ -31,7 +31,7 @@ function LoadingSkeleton() {
 function ErrorBox({ message }: { message: string }) {
   return (
     <div className={styles.errorBox}>
-      <span className={styles.errorText}>✗ GENERATION FAILED · {message}</span>
+      <span className={styles.errorText}> GENERATION FAILED · {message}</span>
     </div>
   );
 }
@@ -222,7 +222,7 @@ function GenerateContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <h2 className={styles.errorTitle}>✗ GENERATION FAILED</h2>
+                <h2 className={styles.errorTitle}> GENERATION FAILED</h2>
                 <p className={styles.errorText}>{generateError || statusError || 'An error occurred'}</p>
                 <motion.button
                   className={styles.retryBtn}
@@ -241,7 +241,7 @@ function GenerateContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               >
-                <h2 className={styles.successTitle}>✓ COURSE READY</h2>
+                <h2 className={styles.successTitle}> COURSE READY</h2>
                 <p className={styles.successText}>Your course has been generated successfully!</p>
                 <motion.button
                   className={styles.startBtn}

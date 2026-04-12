@@ -39,8 +39,8 @@
   gap: 8px;
   padding: 12px 24px;
   border: 2px solid var(--black);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -52,6 +52,7 @@
 .startBtn:hover {
   transform: translate(-2px, -2px);
   box-shadow: 6px 6px 0px var(--black);
+  background-color: var(--yellow-light);
 }
 
 .startBtn:active {
@@ -129,8 +130,8 @@
 }
 
 .problemTab.active {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
 }
 
 .problemIcon {
@@ -157,8 +158,8 @@
 .submitBtn {
   padding: 16px;
   border: 2px solid var(--black);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
@@ -266,8 +267,8 @@
   font-family: var(--font-mono);
   font-size: 13px;
   padding: 8px;
-  border: 1px solid var(--black);
-  background-color: var(--white);
+  border: 2px solid var(--black);
+  background-color: var(--yellow-light);
 }
 
 .codePanel {
@@ -304,8 +305,8 @@
   gap: 8px;
   padding: 10px 20px;
   border: 2px solid var(--black);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -344,8 +345,8 @@
   flex: 1;
   padding: 16px;
   border: none;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.6;
@@ -543,8 +544,8 @@
   flex: 1;
   padding: 16px;
   border: 2px solid var(--black);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
@@ -587,8 +588,8 @@
 .retryBtn {
   padding: 12px 24px;
   border: 2px solid var(--black);
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;

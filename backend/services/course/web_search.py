@@ -275,7 +275,7 @@ Return ONLY the search query, no explanations."""
         days_with_results = sum(1 for results in day_results.values() if len(results) > 0)
         total_assigned = sum(len(results) for results in day_results.values())
         
-        logger.info(f"[WEB_SEARCH] ✅ Distribution complete:")
+        logger.info(f"[WEB_SEARCH]  Distribution complete:")
         logger.info(f"[WEB_SEARCH]   - Total results: {total_results}")
         logger.info(f"[WEB_SEARCH]   - Days covered: {days_with_results}/{total_days}")
         logger.info(f"[WEB_SEARCH]   - Total assignments: {total_assigned}")
@@ -302,7 +302,7 @@ Return ONLY the search query, no explanations."""
             return ""
 
         formatted = [
-            f"\n\n📚 RESEARCH RESOURCES for {day_topic.title}:",
+            f"\n\n RESEARCH RESOURCES for {day_topic.title}:",
             "=" * 60,
         ]
 

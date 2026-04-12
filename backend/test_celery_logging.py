@@ -16,7 +16,7 @@ from apps.courses.tasks import generate_course_content_task
 def test_celery_task():
     """Send a simple test task to Celery worker"""
     print("\n" + "="*80)
-    print("🧪 SENDING TEST CELERY TASK")
+    print(" SENDING TEST CELERY TASK")
     print("="*80)
     
     # Send a minimal test task
@@ -29,8 +29,8 @@ def test_celery_task():
         description="Test course for verification"
     )
     
-    print(f"✅ Task sent with ID: {task.id}")
-    print("📝 Check your Celery worker terminal for logs")
+    print(f" Task sent with ID: {task.id}")
+    print(" Check your Celery worker terminal for logs")
     print("="*80 + "\n")
 
 if __name__ == "__main__":

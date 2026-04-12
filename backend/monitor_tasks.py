@@ -17,7 +17,7 @@ from apps.courses.models import Course
 def monitor_tasks():
     """Monitor recent Celery tasks"""
     print("\n" + "="*80)
-    print("📊 CELERY TASK MONITOR")
+    print(" CELERY TASK MONITOR")
     print("="*80)
     
     # Get recent task results
@@ -33,24 +33,24 @@ def monitor_tasks():
         print(f"   Created: {task.date_created}")
         
         if task.status == 'FAILURE':
-            print(f"   ❌ ERROR: {task.result[:200] if task.result else 'Unknown'}")
+            print(f"    ERROR: {task.result[:200] if task.result else 'Unknown'}")
             if task.traceback:
                 print(f"   Traceback: {task.traceback[:300]}")
         elif task.status == 'SUCCESS':
-            print(f"   ✅ Completed successfully")
+            print(f"    Completed successfully")
         elif task.status == 'STARTED':
-            print(f"   🔄 Still running...")
+            print(f"    Still running...")
         elif task.status == 'PENDING':
-            print(f"   ⏳ Waiting to be processed")
+            print(f"   Waiting to be processed")
     
     # Check recent courses
     print("\n" + "="*80)
-    print("🎓 RECENT COURSES")
+    print(" RECENT COURSES")
     print("="*80)
     
     courses = Course.objects.all().order_by('-created_at')[:5]
     for course in courses:
-        print(f"\n📚 {course.course_name}")
+        print(f"\n {course.course_name}")
         print(f"   ID: {course.id}")
         print(f"   Status: {course.status}")
         print(f"   Generation Status: {course.generation_status}")

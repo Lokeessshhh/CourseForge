@@ -533,9 +533,9 @@ def day_detail(request, course_id, week_number, day_number):
     except (Course.DoesNotExist, WeekPlan.DoesNotExist, DayPlan.DoesNotExist):
         return _err("Not found.", status.HTTP_404_NOT_FOUND)
 
-    # Bypass locking completely for all days
-    # We set it to False in the object but we don't even check it in this view
-    # to guarantee access even if DB saving is slow
+    if day.is_locked:
+        return _err("Day is locked.", status.HTTP_403_FORBIDDEN)
+
     return _ok(DayPlanSerializer(day).data)
 
 
@@ -612,39 +612,46 @@ def course_progress(request, course_id):
     completed = all_days.filter(is_completed=True).count()
     percentage = round((completed / total * 100) if total > 0 else 0, 1)
 
-    # Find current position (first incomplete day)
-    current_week = 1
-    current_day = 1
-    found_current = False
-    
-    # Sort weeks and days to ensure we find the correct sequence
-    for week in course.weeks.all().order_by("week_number"):
-        days = week.days.all().order_by("day_number")
-        for day in days:
-            if not day.is_completed:
-                current_week = week.week_number
-                current_day = day.day_number
-                found_current = True
-                break
-        if found_current:
-            break
-            
-    # If all days completed, set to last day or some completion state
-    if not found_current and total > 0:
-        last_week = course.weeks.order_by("-week_number").first()
-        if last_week:
-            current_week = last_week.week_number
-            last_day = last_week.days.order_by("-day_number").first()
-            if last_day:
-                current_day = last_day.day_number
+    # Get or create CourseProgress record - this is the source of truth for current position
+    from apps.courses.models import CourseProgress
+    progress, created = CourseProgress.objects.get_or_create(
+        user=request.user,
+        course=course,
+        defaults={
+            "total_days": total,
+            "total_weeks": course.duration_weeks,
+            "current_week": 1,  # Always start at Week 1
+            "current_day": 1,   # Always start at Day 1
+            "completed_days": completed,
+            "overall_percentage": percentage,
+        }
+    )
+
+    # Use CourseProgress values for current position
+    # For newly created records, defaults to Week 1, Day 1
+    # For existing records, uses the tracked position
+    current_week = progress.current_week
+    current_day = progress.current_day
 
     # Week progress
     weeks_progress = []
     for week in course.weeks.all():
+        # Get latest MCQ test attempt for this week
+        from apps.courses.models import WeeklyTestAttempt
+        latest_attempt = WeeklyTestAttempt.objects.filter(
+            user=request.user,
+            course=course,
+            week_number=week.week_number,
+        ).order_by("-attempted_at").first()
+
         weeks_progress.append({
             "week_number": week.week_number,
             "is_completed": week.is_completed,
+            "test_completed": week.is_completed,  # Week is_completed means MCQ test was passed
+            "test_score": latest_attempt.percentage if latest_attempt else None,
+            "test_passed": latest_attempt.passed if latest_attempt else False,
             "days_completed": week.days.filter(is_completed=True).count(),
+            "total_days": week.days.count(),
         })
 
     # Average quiz score
@@ -657,9 +664,12 @@ def course_progress(request, course_id):
     total_attempts = attempts.count()
     avg_score = round((correct / total_attempts * 100) if total_attempts > 0 else 0, 1)
 
+    # Update progress object with latest stats
+    progress.completed_days = completed
+    progress.overall_percentage = percentage
+    progress.save(update_fields=["completed_days", "overall_percentage"])
+
     # Certificate eligibility
-    from .models import CourseProgress
-    cp, _ = CourseProgress.objects.get_or_create(user=request.user, course=course)
     cert_earned = (percentage == 100 and avg_score >= 50)
 
     if cert_earned:
@@ -670,8 +680,8 @@ def course_progress(request, course_id):
             defaults={
                 "is_unlocked": True,
                 "quiz_score_avg": avg_score,
-                "test_score_avg": cp.avg_test_score,
-                "total_study_hours": round(cp.total_study_time / 60, 1),
+                "test_score_avg": progress.avg_test_score,
+                "total_study_hours": round(progress.total_study_time / 60, 1),
                 "issued_at": timezone.now()
             }
         )
@@ -723,6 +733,8 @@ def day_quiz(request, course_id, week_number, day_number):
             "id": str(q.id),
             "question_text": q.question_text,
             "options": q.options,
+            "correct_answer": q.correct_answer,
+            "explanation": q.explanation,
         }
         for q in questions
     ]
@@ -856,20 +868,14 @@ def day_quiz_submit(request, course_id, week_number, day_number):
                 f"Unlocked next day: course={course.id}, "
                 f"week={week_number}, day={day_number + 1}"
             )
-    elif day_number == 5:  # Last day of week, unlock next week's day 1
-        try:
-            next_week = course.weeks.get(week_number=week_number + 1)
-            next_day = next_week.days.filter(day_number=1).first()
-            if next_day and next_day.is_locked:
-                next_day.is_locked = False
-                next_day.save(update_fields=["is_locked"])
-                next_day_unlocked = True
-                logger.info(
-                    f"Unlocked next week day 1: course={course.id}, "
-                    f"week={week_number + 1}, day=1"
-                )
-        except WeekPlan.DoesNotExist:
-            pass  # Course complete
+    elif day_number == 5:
+        # Day 5 completed - Weekly test is now unlocked (if generated).
+        # Do NOT unlock next week's Day 1 yet.
+        # Next week's Day 1 will be unlocked after the Weekly Test (MCQ + Coding) is completed.
+        logger.info(
+            f"Week {week_number} completed, waiting for weekly test to unlock next week: "
+            f"course={course.id}"
+        )
 
     # Update course progress
     from apps.courses.models import CourseProgress
@@ -891,19 +897,19 @@ def day_quiz_submit(request, course_id, week_number, day_number):
         (progress.completed_days / progress.total_days) * 100, 1
     ) if progress.total_days > 0 else 0
     progress.last_activity = now
-    
+
     # Update current position
+    # IMPORTANT: For Day 5, do NOT advance to next week yet - user must complete weekly test first
     if day_number < 5:
         progress.current_day = day_number + 1
         progress.current_week = week_number
     else:
-        progress.current_day = 1
-        if week_number < course.duration_weeks:
-            progress.current_week = week_number + 1
-        else:
-            progress.current_week = week_number
-    
-    progress.save()
+        # Day 5 completed - stay on Day 5 until weekly test is completed
+        # The weekly test completion handler will advance to next week
+        progress.current_day = day_number
+        progress.current_week = week_number
+
+    progress.save(update_fields=["completed_days", "overall_percentage", "last_activity", "current_day", "current_week"])
 
     # Check if all 5 days of week are done to unlock weekly test
     week_test_unlocked = False
@@ -1054,7 +1060,8 @@ def week_test_submit(request, course_id, week_number):
 
     logger.info(f"Weekly test submit: Processing {len(questions)} questions")
 
-    # Process answers
+    # Process answers - use array index (1-based) to match frontend, NOT question_number
+    # (question_number from LLM can be missing or wrong)
     results = []
     correct_count = 0
     total = len(questions)
@@ -1062,13 +1069,16 @@ def week_test_submit(request, course_id, week_number):
     # Track performance by day
     day_performance = {}
 
-    for question in questions:
-        q_num = str(question.get("question_number"))
-        user_answer = answers.get(q_num, "").lower()
+    for i, question in enumerate(questions):
+        q_key = str(i + 1)  # 1-based index matching frontend's answer keys
+
+        # Get user answer using the index-based key
+        user_answer = answers.get(q_key, "").lower()
+
         correct_answer = question.get("correct_answer", "a").lower()
         is_correct = user_answer == correct_answer
 
-        logger.info(f"Question {q_num}: user_answer={user_answer}, correct_answer={correct_answer}, is_correct={is_correct}")
+        logger.info(f"Question {q_key}: user_answer={user_answer}, correct_answer={correct_answer}, is_correct={is_correct}")
 
         if is_correct:
             correct_count += 1
@@ -1082,7 +1092,7 @@ def week_test_submit(request, course_id, week_number):
             day_performance[day_ref]["correct"] += 1
 
         results.append({
-            "question_number": question.get("question_number"),
+            "question_number": i + 1,
             "your_answer": user_answer,
             "correct_answer": correct_answer,
             "is_correct": is_correct,
@@ -1128,7 +1138,7 @@ def week_test_submit(request, course_id, week_number):
     elif passed:
         recommendation = "Great job! Ready for next week"
 
-    # Complete week if passed (unlock coding test 1)
+    # Complete week if passed (unlock coding test 1 AND mark week complete)
     coding_test_1_unlocked = False
     if passed:
         # Mark coding test 1 as unlocked
@@ -1136,7 +1146,28 @@ def week_test_submit(request, course_id, week_number):
         week.save(update_fields=["coding_test_1_unlocked"])
         coding_test_1_unlocked = True
         logger.info(f"Weekly MCQ test passed, coding test 1 unlocked: course={course_id}, week={week_number}")
-        
+
+        # Mark week as completed (this is the missing piece!)
+        if not week.is_completed:
+            week.is_completed = True
+            week.save(update_fields=["is_completed"])
+            logger.info(f"Week {week_number} marked as completed after MCQ test: course={course_id}")
+
+            # Check if ALL weeks are done - trigger certificate if so
+            all_weeks_done = not course.weeks.filter(is_completed=False).exists()
+            if all_weeks_done:
+                from apps.courses.models import CourseProgress
+                try:
+                    progress = CourseProgress.objects.get(user_id=request.user.id, course=course)
+                    progress.completed_at = timezone.now()
+                    progress.save(update_fields=["completed_at"])
+                    logger.info(f"Course completed! Triggering certificate generation: user={request.user.id}, course={course_id}")
+
+                    from apps.courses.tasks import generate_certificate_task
+                    generate_certificate_task.delay(str(request.user.id), str(course_id))
+                except CourseProgress.DoesNotExist:
+                    logger.warning(f"CourseProgress not found for user={request.user.id}, course={course_id}")
+
         # Generate coding tests if not already generated
         if not week.coding_tests_generated:
             from apps.courses.tasks import generate_coding_test_task

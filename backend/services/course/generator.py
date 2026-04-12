@@ -156,7 +156,7 @@ class CourseGenerator:
             self._llm = type('LLMClient', (), {
                 'generate': generate,
                 'safe_json_generate': safe_json_generate,
-                '_generate_json': _generate_json_async,
+                '_generate_json': staticmethod(_generate_json_async),
             })()
         return self._llm
 
@@ -251,7 +251,7 @@ Return ONLY valid JSON:
 
         # LOG RAW AI OUTPUT for debugging
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Week %d Theme Generation", week_number)
+        logger.info(" RAW AI OUTPUT: Week %d Theme Generation", week_number)
         logger.info("="*70)
         logger.info("RAW RESULT: %s", result)
         logger.info("="*70)
@@ -369,7 +369,7 @@ Return ONLY valid JSON with this exact structure:
 
         # LOG RAW AI OUTPUT for debugging
         logger.info("="*70)
-        logger.info("🤖 RAW AI OUTPUT: Week %d Day Titles Generation", week_number)
+        logger.info(" RAW AI OUTPUT: Week %d Day Titles Generation", week_number)
         logger.info("="*70)
         logger.info("RAW RESULT: %s", result)
         logger.info("="*70)
@@ -510,21 +510,80 @@ Requirements:
 2. Explain concepts thoroughly with multiple analogies and real-world examples
 3. Use simple language appropriate for {skill_level} learners
 4. Break down complex topics into digestible sections
-5. Include:
-   - Introduction to the topic (what it is, why it matters)
-   - Core concepts explained in detail
-   - How it works (step-by-step breakdown)
-   - Real-world applications and use cases
-   - Common misconceptions and how to avoid them
-   - Best practices and tips
-   - Summary of key points
+5. Include VISUAL DIAGRAMS to help students understand complex concepts
 6. Use markdown formatting (headers, subheaders, lists, bold for key terms)
 7. DO NOT include any code examples or code blocks
 8. Focus on deep conceptual understanding
 
+VISUAL DIAGRAM REQUIREMENTS:
+You MUST include 3-4 Mermaid.js diagrams throughout the lesson (NOT at the end). Place them where they naturally fit in the content flow. Use the following format for diagrams:
+
+```mermaid
+graph TD
+    A[Concept 1] --> B[Concept 2]
+    B --> C[Concept 3]
+```
+
+Types of diagrams to use (choose 3-4 that best fit the topic):
+- flowchart: For showing processes, workflows, or decision trees
+- graph TD/LR: For showing relationships between concepts
+- sequenceDiagram: For showing interactions or step-by-step operations
+- classDiagram: For showing class hierarchies and relationships (for OOP topics)
+- stateDiagram-v2: For showing state changes or lifecycle
+- mindmap: For showing concept hierarchies and brainstorming
+
+CRITICAL: Place diagrams IMMEDIATELY AFTER the section they illustrate:
+- First diagram: After "Introduction" or "What is [Topic]?" section
+- Second diagram: After "How It Works" or "Core Concepts" section  
+- Third diagram: After "Real-World Applications" section
+- Fourth diagram (optional): In "Key Concepts" or "Summary" section
+
+Each diagram should:
+- Be 5-12 nodes maximum (keep it readable)
+- Use meaningful labels
+- Follow proper mermaid syntax
+- Be placed in context with the surrounding text
+
+CRITICAL RULES FOR COMPLETE DIAGRAMS:
+1. NEVER leave a diagram half-done or incomplete
+2. Every diagram MUST have proper closing syntax (all nodes defined, all arrows complete)
+3. Every opening ```mermaid tag MUST have a matching closing ``` tag
+4. All node references in arrows (A, B, C, etc.) MUST be defined as nodes first
+5. Test your diagram mentally before writing - if any node is missing, add it
+6. If you're unsure about a complex diagram, make it simpler but COMPLETE
+7. NEVER use placeholder text like "[Concept 1]" - always use real meaningful labels
+8. Diagram must be syntactically valid and renderable
+9. NEVER cut off mid-diagram - always finish the entire diagram before the closing ```
+10. A half-done diagram is WORSE than no diagram at all. Always generate COMPLETE, VALID diagrams.
+
+INCOMPLETE DIAGRAM EXAMPLE (DO NOT DO THIS - THIS IS BROKEN):
+```mermaid
+graph TD
+    A[API Gateway] --> B
+    B --> C[Backend
+```
+This is BROKEN - missing node definitions, unclosed brackets, incomplete arrows.
+
+COMPLETE DIAGRAM EXAMPLE (DO THIS):
+```mermaid
+graph TD
+    A[Client Request] --> B[API Gateway]
+    B --> C[Authentication Service]
+    B --> D[User Service]
+    B --> E[Order Service]
+    C --> F[Response]
+    D --> F
+    E --> F
+```
+All nodes defined, all arrows complete, proper syntax, meaningful labels.
+
 Structure your response like this:
 ## Introduction
 [Comprehensive introduction - 300+ words]
+
+```mermaid
+[First diagram illustrating the core concept]
+```
 
 ## What is [Topic]?
 [Detailed explanation - 400+ words]
@@ -532,11 +591,23 @@ Structure your response like this:
 ## How It Works
 [Step-by-step breakdown - 500+ words]
 
+```mermaid
+[Second diagram showing the workflow/process]
+```
+
 ## Key Concepts
 [Multiple sub-sections with detailed explanations - 600+ words]
 
+```mermaid
+[Third diagram showing relationships or class structure]
+```
+
 ## Real-World Applications
 [Practical examples and use cases - 300+ words]
+
+```mermaid
+[Fourth diagram showing real-world application flow - optional]
+```
 
 ## Common Misconceptions
 [Address common misunderstandings - 200+ words]
@@ -1066,7 +1137,7 @@ JSON format:
 
                 # LOG RAW AI OUTPUT
                 logger.info("="*70)
-                logger.info("🤖 RAW AI OUTPUT: Weekly Test Week %d Batch %d", week_number, batch_idx + 1)
+                logger.info(" RAW AI OUTPUT: Weekly Test Week %d Batch %d", week_number, batch_idx + 1)
                 logger.info("="*70)
                 logger.info("RAW RESULT: %s", result)
                 logger.info("="*70)
@@ -1092,7 +1163,7 @@ JSON format:
 
                 # LOG: Print batch questions
                 logger.info("="*60)
-                logger.info("🤖 BATCH %d: Generated %d unique questions for Week %d",
+                logger.info(" BATCH %d: Generated %d unique questions for Week %d",
                            batch_idx + 1, len(batch_questions), week_number)
                 logger.info("="*60)
                 for i, q in enumerate(batch_questions, 1):
@@ -1167,7 +1238,7 @@ JSON format:
             },
         ]
 
-        logger.info("🚀 Starting PARALLEL batch generation for Week %d (%d batches)", 
+        logger.info(" Starting PARALLEL batch generation for Week %d (%d batches)", 
                    week_number, len(batch_configs))
 
         # Execute all batches CONCURRENTLY using asyncio.gather
@@ -1197,12 +1268,12 @@ JSON format:
 
         for batch_idx, result in enumerate(batch_results):
             if isinstance(result, Exception):
-                logger.warning("⚠️ Batch %d raised exception: %s", batch_idx + 1, result)
+                logger.warning(" Batch %d raised exception: %s", batch_idx + 1, result)
                 failed_batches += 1
                 continue
             
             if result.get("error"):
-                logger.warning("⚠️ Batch %d failed: %s", batch_idx + 1, result.get("error"))
+                logger.warning(" Batch %d failed: %s", batch_idx + 1, result.get("error"))
                 failed_batches += 1
                 continue
             
@@ -1210,11 +1281,11 @@ JSON format:
             if batch_questions:
                 all_questions.extend(batch_questions)
                 successful_batches += 1
-                logger.info("✅ Batch %d complete: %d questions", batch_idx + 1, len(batch_questions))
+                logger.info(" Batch %d complete: %d questions", batch_idx + 1, len(batch_questions))
             else:
                 failed_batches += 1
 
-        logger.info("📊 Parallel generation complete: %d/%d batches successful, %d total questions",
+        logger.info(" Parallel generation complete: %d/%d batches successful, %d total questions",
                    successful_batches, len(batch_configs), len(all_questions))
 
         # Assign question numbers sequentially
@@ -1245,7 +1316,7 @@ JSON format:
         test = await save_test()
 
         logger.info("="*60)
-        logger.info("✅ WEEKLY TEST COMPLETE: Week %d - %d unique MCQ questions",
+        logger.info(" WEEKLY TEST COMPLETE: Week %d - %d unique MCQ questions",
                    week_number, len(all_questions))
         logger.info("="*60)
 
@@ -1307,7 +1378,7 @@ IMPORTANT: Return ONLY valid JSON. No markdown. No extra text. Keep descriptions
 JSON format:
 {{"coding_problems": [{{"problem_number": 1, "title": "Title", "description": "Brief description", "difficulty": "{difficulties[0]}", "starter_code": "def solve():", "test_cases": [{{"input": "input", "expected_output": "output", "is_hidden": false}}], "hints": ["Hint 1"], "solution": "def solve(): pass", "time_limit_seconds": 30, "memory_limit_mb": 256}}]}}"""
 
-                result = await self.llm._generate_json(prompt, max_tokens=5000)
+                result = await self.llm._generate_json(prompt, max_tokens=5000, use_fresh_client=True)
 
                 if "error" in result or "coding_problems" not in result:
                     logger.warning("Coding test generation failed (attempt %d/%d): %s", 

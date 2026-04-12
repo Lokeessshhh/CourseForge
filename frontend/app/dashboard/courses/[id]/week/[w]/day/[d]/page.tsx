@@ -23,7 +23,7 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
   return (
     <div className={styles.page}>
       <div className={styles.errorBox}>
-        <span className={styles.errorText}>✗ FAILED TO LOAD · {message}</span>
+        <span className={styles.errorText}> FAILED TO LOAD · {message}</span>
         <motion.button
           className={styles.retryBtn}
           onClick={onRetry}
@@ -60,8 +60,13 @@ export default function DayLessonPage() {
   const [showResults, setShowResults] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
 
+  // Define loading state EARLY to prevent ReferenceError if normalization fails
+  const isLoading = lessonLoading || quizLoading;
+  const isFatalError = lessonError && !lessonData;
+
   // Normalize quiz data to handle both "quizzes" and "questions" keys, and map options
-  const questions = (quizData as any)?.quizzes || (quizData as any)?.questions || [];
+  const questionsRaw = (quizData as any)?.quizzes || (quizData as any)?.questions || [];
+  const questions = Array.isArray(questionsRaw) ? questionsRaw : [];
   const normalizedQuestions = questions.map((q: any) => {
     // If options is a dict {a: "...", b: "..."}, convert to array
     let optionsArray = [];
@@ -85,9 +90,6 @@ export default function DayLessonPage() {
     };
   });
 
-  const isLoading = lessonLoading || quizLoading;
-  const hasError = lessonError || quizError;
-
   // Start day on mount
   useEffect(() => {
     if (courseId && week && day) {
@@ -98,9 +100,39 @@ export default function DayLessonPage() {
   // Set code from lesson data
   useEffect(() => {
     if (lessonData?.code_content) {
-      setCode(lessonData.code_content);
+      // Try to parse as structured JSON
+      try {
+        const parsed = JSON.parse(lessonData.code_content);
+        if (parsed.examples && Array.isArray(parsed.examples)) {
+          // Structured format - use first example's code as default
+          if (parsed.examples.length > 0 && parsed.examples[0].code) {
+            setCode(parsed.examples[0].code);
+          }
+        } else {
+          // Raw markdown or other format
+          setCode(lessonData.code_content);
+        }
+      } catch {
+        // Not valid JSON - treat as raw code
+        setCode(lessonData.code_content);
+      }
     }
   }, [lessonData]);
+
+  // Helper to get structured code content
+  const getStructuredCode = (): any | null => {
+    if (!lessonData?.code_content) return null;
+    
+    try {
+      const parsed = JSON.parse(lessonData.code_content);
+      if (parsed.examples && Array.isArray(parsed.examples)) {
+        return parsed;
+      }
+    } catch {
+      // Not structured
+    }
+    return null;
+  };
 
   // Initialize answers array when quiz loads
   useEffect(() => {
@@ -189,14 +221,14 @@ export default function DayLessonPage() {
   const canGoToNextDay = showResults && quizResult?.passed;
 
   if (isLoading) return <LoadingSkeleton />;
-  if (hasError) {
+  if (isFatalError) {
     return (
       <ErrorBox 
-        message={lessonError || quizError || 'Unknown error'} 
+        message={lessonError || 'Unknown error'} 
         onRetry={() => {
           refetchLesson();
           refetchQuiz();
-        }} 
+        }}
       />
     );
   }
@@ -205,7 +237,7 @@ export default function DayLessonPage() {
     return (
       <div className={styles.page}>
         <div className={styles.errorBox}>
-          <span className={styles.errorText}>✗ LESSON NOT FOUND</span>
+          <span className={styles.errorText}> LESSON NOT FOUND</span>
           <Link href={`/dashboard/courses/${courseId}`}>
             <motion.button className={styles.retryBtn} whileHover={{ x: -2, y: -2 }}>
               BACK TO COURSE →
@@ -283,51 +315,175 @@ export default function DayLessonPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            <div className={styles.editorSection}>
-              <div className={styles.editorHeader}>
-                <span className={styles.editorLabel}>CODE EDITOR</span>
-                <motion.button
-                  className={styles.runBtn}
-                  onClick={handleRunCode}
-                  disabled={isRunning}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isRunning ? 'RUNNING...' : 'RUN CODE ▶'}
-                </motion.button>
-              </div>
+            {/* Render structured examples if available */}
+            {(() => {
+              const structured = getStructuredCode();
+              if (structured && structured.examples.length > 0) {
+                return (
+                  <div className={styles.structuredCodeSection}>
+                    {structured.examples.map((example: any, idx: number) => (
+                      <div key={idx} className={styles.exampleCard}>
+                        <h3 className={styles.exampleTitle}>{example.title}</h3>
+                        
+                        {example.description && (
+                          <p className={styles.exampleDescription}>{example.description}</p>
+                        )}
+                        
+                        {example.code && (
+                          <div className={styles.editorSection}>
+                            <div className={styles.editorHeader}>
+                              <span className={styles.editorLabel}>
+                                {example.language?.toUpperCase() || 'PYTHON'} EXAMPLE
+                              </span>
+                              <motion.button
+                                className={styles.runBtn}
+                                onClick={() => {
+                                  setCode(example.code);
+                                  handleRunCode();
+                                }}
+                                disabled={isRunning}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                {isRunning ? 'RUNNING...' : 'RUN ▶'}
+                              </motion.button>
+                            </div>
+                            
+                            <div className={styles.editorContainer}>
+                              <textarea
+                                className={styles.editor}
+                                value={code === lessonData?.code_content ? example.code : code}
+                                onChange={(e) => setCode(e.target.value)}
+                                spellCheck={false}
+                              />
+                            </div>
+                            
+                            <div className={styles.outputSection}>
+                              <span className={styles.outputLabel}>OUTPUT</span>
+                              <div className={styles.outputBox}>
+                                <pre>{output || example.output || 'Run code to see output...'}</pre>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {example.explanation && example.explanation.length > 0 && (
+                          <div className={styles.explanationSection}>
+                            <h4 className={styles.explanationTitle}>Explanation:</h4>
+                            <ul className={styles.explanationList}>
+                              {example.explanation.map((point: string, pIdx: number) => (
+                                <li key={pIdx} className={styles.explanationPoint}>• {point}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {example.common_mistakes && example.common_mistakes.length > 0 && (
+                          <div className={styles.mistakesSection}>
+                            <h4 className={styles.mistakesTitle}>Common Mistakes:</h4>
+                            <ul className={styles.mistakesList}>
+                              {example.common_mistakes.map((mistake: string, mIdx: number) => (
+                                <li key={mIdx} className={styles.mistakePoint}> {mistake}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Practice Exercise */}
+                    {structured.practice_exercise && (
+                      <div className={styles.practiceSection}>
+                        <div className={styles.practiceLabel}>
+                          <span className={styles.labelIcon}>►</span>
+                          PRACTICE EXERCISE
+                        </div>
+                        <div className={styles.practiceCard}>
+                          <p className={styles.practicePrompt}>
+                            {structured.practice_exercise.description || 'Practice what you learned today using the code editor above.'}
+                          </p>
+                          
+                          {structured.practice_exercise.expected_output && (
+                            <div className={styles.expectedOutput}>
+                              <strong>Expected Output:</strong>
+                              <pre>{structured.practice_exercise.expected_output}</pre>
+                            </div>
+                          )}
+                          
+                          {structured.practice_exercise.hints && structured.practice_exercise.hints.length > 0 && (
+                            <div className={styles.hints}>
+                              <strong>Hints:</strong>
+                              <ul>
+                                {structured.practice_exercise.hints.map((hint: string, hIdx: number) => (
+                                  <li key={hIdx}> {hint}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          <textarea
+                            className={styles.practiceEditor}
+                            placeholder="Write your solution here..."
+                            spellCheck={false}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               
-              <div className={styles.editorContainer}>
-                <textarea
-                  className={styles.editor}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  spellCheck={false}
-                />
-              </div>
-              
-              <div className={styles.outputSection}>
-                <span className={styles.outputLabel}>OUTPUT</span>
-                <div className={styles.outputBox}>
-                  <pre>{output || 'Run code to see output...'}</pre>
-                </div>
-              </div>
-            </div>
+              // Fallback to raw content if not structured
+              return (
+                <>
+                  <div className={styles.editorSection}>
+                    <div className={styles.editorHeader}>
+                      <span className={styles.editorLabel}>CODE EDITOR</span>
+                      <motion.button
+                        className={styles.runBtn}
+                        onClick={handleRunCode}
+                        disabled={isRunning}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {isRunning ? 'RUNNING...' : 'RUN CODE ▶'}
+                      </motion.button>
+                    </div>
 
-            <div className={styles.practiceSection}>
-              <div className={styles.practiceLabel}>
-                <span className={styles.labelIcon}>►</span>
-                PRACTICE EXERCISE
-              </div>
-              <div className={styles.practiceCard}>
-                <p className={styles.practicePrompt}>Practice what you learned today using the code editor above.</p>
-                <textarea
-                  className={styles.practiceEditor}
-                  placeholder="Write your solution here..."
-                  spellCheck={false}
-                />
-              </div>
-            </div>
+                    <div className={styles.editorContainer}>
+                      <textarea
+                        className={styles.editor}
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        spellCheck={false}
+                      />
+                    </div>
+
+                    <div className={styles.outputSection}>
+                      <span className={styles.outputLabel}>OUTPUT</span>
+                      <div className={styles.outputBox}>
+                        <pre>{output || 'Run code to see output...'}</pre>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.practiceSection}>
+                    <div className={styles.practiceLabel}>
+                      <span className={styles.labelIcon}>►</span>
+                      PRACTICE EXERCISE
+                    </div>
+                    <div className={styles.practiceCard}>
+                      <p className={styles.practicePrompt}>Practice what you learned today using the code editor above.</p>
+                      <textarea
+                        className={styles.practiceEditor}
+                        placeholder="Write your solution here..."
+                        spellCheck={false}
+                      />
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             <div className={styles.navButtons}>
               <motion.button
@@ -342,7 +498,7 @@ export default function DayLessonPage() {
           </motion.div>
         )}
 
-        {activeTab === 'quiz' && quizData && (
+        {activeTab === 'quiz' && (
           <motion.div
             key="quiz"
             className={styles.tabContent}
@@ -400,7 +556,7 @@ export default function DayLessonPage() {
                         animate={{ opacity: 1, y: 0 }}
                       >
                         <span className={styles.resultTag}>
-                          {selectedAnswer === normalizedQuestions[currentQuestion].correct ? '✓ CORRECT' : '✗ INCORRECT'}
+                          {selectedAnswer === normalizedQuestions[currentQuestion].correct ? ' CORRECT' : ' INCORRECT'}
                         </span>
                         <p>{normalizedQuestions[currentQuestion].explanation}</p>
                       </motion.div>
@@ -442,7 +598,7 @@ export default function DayLessonPage() {
                   </h2>
                   
                   <span className={`${styles.passTag} ${styles.passed}`}>
-                    ✓ LESSON COMPLETED — NEXT DAY UNLOCKED
+                     LESSON COMPLETED — NEXT DAY UNLOCKED
                   </span>
 
                   <div className={styles.breakdown}>
@@ -451,7 +607,7 @@ export default function DayLessonPage() {
                         <span>Q{index + 1}</span>
                         <span>{String.fromCharCode(65 + (answers[index] ?? 0))}</span>
                         <span>{String.fromCharCode(65 + (q.correct ?? 0))}</span>
-                        <span>{answers[index] === q.correct ? '✓' : '✗'}</span>
+                        <span>{answers[index] === q.correct ? '' : ''}</span>
                       </div>
                     ))}
                   </div>
@@ -492,8 +648,12 @@ export default function DayLessonPage() {
                 </motion.div>
               )
             ) : (
-              <div className={styles.errorBox}>
-                <span className={styles.errorText}>NO QUIZ QUESTIONS AVAILABLE FOR THIS LESSON</span>
+              <div className={styles.generatingCard}>
+                <span className={styles.generatingIcon}></span>
+                <span className={styles.generatingTitle}>Generating Quiz...</span>
+                <p className={styles.generatingText}>
+                  The quiz is being created for this lesson. Please check back in a moment!
+                </p>
               </div>
             )}
           </motion.div>

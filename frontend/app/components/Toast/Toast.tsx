@@ -60,7 +60,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     return () => clearTimeout(timer);
   }, [toast.id, onRemove]);
 
-  const icon = toast.type === 'success' ? '✓' : toast.type === 'error' ? '✗' : '►';
+  const icon = toast.type === 'success' ? '' : toast.type === 'error' ? '' : '►';
 
   return (
     <motion.div

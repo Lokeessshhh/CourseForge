@@ -48,13 +48,13 @@
 .progressBar {
   flex: 1;
   height: 8px;
-  border: 1px solid var(--black);
-  background-color: var(--white);
+  border: 2px solid var(--black);
+  background-color: var(--gray);
 }
 
 .progressFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 /* Questions List */
@@ -112,12 +112,15 @@
 }
 
 .optionBtn:hover {
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .optionBtn.selected {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .radioBox {
@@ -145,8 +148,8 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 16px 48px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
   box-shadow: 6px 6px 0px var(--black);
   cursor: pointer;
@@ -155,6 +158,7 @@
 
 .submitBtn:hover:not(.disabled) {
   box-shadow: 8px 8px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .submitBtn.disabled {
@@ -253,13 +257,19 @@
 }
 
 .correct {
-  color: var(--black);
+  color: var(--black, #000);
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .incorrect {
-  color: var(--black);
+  color: var(--black, #000);
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .weakSection {
@@ -342,6 +352,25 @@
 
 .continueBtn:hover {
   box-shadow: 6px 6px 0px var(--black);
+}
+
+/* Redirect Notice */
+.redirectNotice {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.redirectText {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* Mobile */

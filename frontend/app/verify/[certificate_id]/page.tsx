@@ -71,7 +71,7 @@ export default function VerifyCertificatePage() {
     return (
       <div className={styles.page}>
         <div className={styles.errorBox}>
-          <span className={styles.errorIcon}>✗</span>
+          <span className={styles.errorIcon}></span>
           <h2 className={styles.errorTitle}>INVALID CERTIFICATE</h2>
           <p className={styles.errorMessage}>{error || 'Certificate not found'}</p>
           <button 
@@ -89,7 +89,7 @@ export default function VerifyCertificatePage() {
     return (
       <div className={styles.page}>
         <div className={styles.errorBox}>
-          <span className={styles.errorIcon}>✗</span>
+          <span className={styles.errorIcon}></span>
           <h2 className={styles.errorTitle}>CERTIFICATE NOT FOUND</h2>
           <p className={styles.errorMessage}>{result.message}</p>
           <button 
@@ -108,7 +108,7 @@ export default function VerifyCertificatePage() {
       <div className={styles.verificationContainer}>
         {/* Verification Badge */}
         <div className={styles.verificationBadge}>
-          <span className={styles.checkmark}>✓</span>
+          <span className={styles.checkmark}></span>
           <h1 className={styles.verifiedTitle}>CERTIFICATE VERIFIED</h1>
           <p className={styles.verifiedSubtitle}>This is a valid CourseForge certificate</p>
         </div>
@@ -155,7 +155,7 @@ export default function VerifyCertificatePage() {
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>STATUS</span>
             <span className={`${styles.detailValue} ${styles.statusBadge} ${result.is_unlocked ? styles.unlocked : styles.locked}`}>
-              {result.is_unlocked ? '✓ UNLOCKED' : 'LOCKED'}
+              {result.is_unlocked ? ' UNLOCKED' : 'LOCKED'}
             </span>
           </div>
         </div>

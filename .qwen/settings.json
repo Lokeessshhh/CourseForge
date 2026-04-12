@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(netstat *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "WebFetch(www.reddit.com)"
     ]
   },
   "$version": 3

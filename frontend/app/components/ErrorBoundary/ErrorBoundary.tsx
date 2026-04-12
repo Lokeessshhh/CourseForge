@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className={styles.container}>
           <div className={styles.box}>
-            <span className={styles.icon}>✗</span>
+            <span className={styles.icon}></span>
             <h2 className={styles.title}>ERROR</h2>
             <p className={styles.message}>
               {this.state.error?.message || 'Something went wrong'}

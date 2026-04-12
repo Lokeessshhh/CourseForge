@@ -71,6 +71,18 @@ class ProgressTracker:
             progress.last_activity = timezone.now()
             progress.save(update_fields=["last_activity", "streak_days"])
 
+            # Record daily activity (just visiting counts as 1 minute)
+            from apps.courses.models import DailyActivity
+            today = progress.last_activity.date()
+            DailyActivity.add_activity(
+                user=progress.user,
+                course=course,
+                date=today,
+                minutes=0,  # Will be updated when day is completed
+                day_completed=False,
+                quiz_taken=False
+            )
+
             return {
                 "success": True,
                 "started_at": day.started_at.isoformat(),
@@ -159,6 +171,18 @@ class ProgressTracker:
 
             progress.total_study_time += time_spent
             progress.last_activity = now
+
+            # Record daily activity
+            from apps.courses.models import DailyActivity
+            today = now.date()
+            DailyActivity.add_activity(
+                user=progress.user,
+                course=course,
+                date=today,
+                minutes=time_spent,
+                day_completed=True,
+                quiz_taken=quiz_score > 0
+            )
 
             # Update current position
             if day_number < 5:

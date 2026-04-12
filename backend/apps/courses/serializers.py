@@ -151,15 +151,16 @@ class CourseListSerializer(serializers.ModelSerializer):
     progress = serializers.SerializerMethodField()
     current_week = serializers.SerializerMethodField()
     current_day = serializers.SerializerMethodField()
+    weekly_test_pending = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = [
             "id", "course_name", "topic", "level", "duration_weeks", "hours_per_day",
             "goals", "status", "generation_status", "generation_progress", "total_days", "created_at",
-            "progress", "current_week", "current_day",
+            "progress", "current_week", "current_day", "weekly_test_pending",
         ]
-        read_only_fields = ["id", "topic", "created_at", "progress", "current_week", "current_day"]
+        read_only_fields = ["id", "topic", "created_at", "progress", "current_week", "current_day", "weekly_test_pending"]
 
     def get_progress(self, obj):
         """Calculate progress percentage from CourseProgress."""
@@ -213,6 +214,27 @@ class CourseListSerializer(serializers.ModelSerializer):
         except Exception:
             pass
         return 1
+
+    def get_weekly_test_pending(self, obj):
+        """Check if current week has a pending weekly test (all days done but test not passed)."""
+        try:
+            from .models import CourseProgress, WeekPlan
+            request = self.context.get('request')
+            if request and request.user:
+                cp = CourseProgress.objects.filter(course=obj, user=request.user).first()
+                if cp:
+                    current_week_plan = WeekPlan.objects.filter(
+                        course=obj,
+                        week_number=cp.current_week
+                    ).first()
+                    if current_week_plan:
+                        # Check if all days are completed
+                        all_days_completed = not current_week_plan.days.filter(is_completed=False).exists()
+                        # Check if test is unlocked but not completed
+                        return all_days_completed and current_week_plan.test_unlocked and not current_week_plan.is_completed
+        except Exception:
+            pass
+        return False
 
 
 class CourseGenerateSerializer(serializers.Serializer):

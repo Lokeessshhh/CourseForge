@@ -42,7 +42,7 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
   return (
     <div className={styles.page}>
       <div className={styles.errorBox}>
-        <span className={styles.errorText}>✗ FAILED TO LOAD · {message}</span>
+        <span className={styles.errorText}> FAILED TO LOAD · {message}</span>
         <motion.button
           className={styles.retryBtn}
           onClick={onRetry}

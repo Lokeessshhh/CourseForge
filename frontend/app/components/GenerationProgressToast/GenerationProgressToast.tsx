@@ -44,6 +44,14 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
     }
   }, [isConnected]);
 
+  // CRITICAL FIX: Detect SSE disconnection when NOT already completed
+  useEffect(() => {
+    if (!isConnected && sseDidConnectRef.current && !hasCompleted && !hasCompletedRef.current) {
+      console.log('[GenerationProgressToast] SSE disconnected before completion');
+      setIsDisconnected(true);
+    }
+  }, [isConnected, hasCompleted]);
+
   // HYBRID APPROACH: Start polling if SSE disconnects before completion
   useEffect(() => {
     // Don't poll if already completed
@@ -52,9 +60,9 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
     }
 
     // Check if we should switch to polling
-    const shouldSwitchToPolling = 
-      !isConnected && 
-      sseDidConnectRef.current && 
+    const shouldSwitchToPolling =
+      !isConnected &&
+      sseDidConnectRef.current &&
       (isDisconnected || error) &&
       data?.generation_status !== 'ready' &&
       data?.generation_status !== 'failed';
@@ -64,6 +72,24 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
       setIsPolling(true);
     }
   }, [isConnected, isDisconnected, error, data?.generation_status, isPolling, hasCompleted]);
+
+  // SAFETY TIMEOUT: Auto-dismiss after 30 seconds regardless of state
+  useEffect(() => {
+    if (hasCompleted || hasCompletedRef.current) return;
+
+    const safetyTimeout = setTimeout(() => {
+      console.log('[GenerationProgressToast] 30s safety timeout - auto-dismissing');
+      handleCompletion({
+        progress: 100,
+        completed_days: 0,
+        total_days: 0,
+        generation_status: 'ready',
+        current_stage: 'Completed (safety timeout)',
+      });
+    }, 30000);
+
+    return () => clearTimeout(safetyTimeout);
+  }, [hasCompleted]);
 
   // Polling logic - fallback when SSE disconnects early
   useEffect(() => {
@@ -149,19 +175,31 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
     }, 3000);
   };
 
-  // Handle completion from SSE
+  // Handle completion from SSE or polling
   useEffect(() => {
-    if ((data?.generation_status === 'ready' || data?.progress === 100) && !hasCompleted && !hasCompletedRef.current) {
-      handleCompletion(data);
+    const activeStatus = isPolling && pollingData
+      ? pollingData.generation_status
+      : data?.generation_status;
+
+    const activeProgress = isPolling && pollingData
+      ? pollingData.progress
+      : data?.progress;
+
+    if ((activeStatus === 'ready' || activeProgress === 100) && !hasCompleted && !hasCompletedRef.current) {
+      handleCompletion(isPolling && pollingData ? pollingData : data!);
     }
-  }, [data?.generation_status, data?.progress, hasCompleted]);
+  }, [data?.generation_status, data?.progress, pollingData?.generation_status, pollingData?.progress, hasCompleted, isPolling, pollingData]);
 
   // Handle failed generation
   useEffect(() => {
-    if (data?.generation_status === 'failed' && !hasCompleted && !hasCompletedRef.current) {
-      handleCompletion(data);
+    const activeStatus = isPolling && pollingData
+      ? pollingData.generation_status
+      : data?.generation_status;
+
+    if (activeStatus === 'failed' && !hasCompleted && !hasCompletedRef.current) {
+      handleCompletion(isPolling && pollingData ? pollingData : data!);
     }
-  }, [data?.generation_status, hasCompleted]);
+  }, [data?.generation_status, pollingData?.generation_status, hasCompleted, isPolling, pollingData]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -194,7 +232,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={`${styles.liveDot} ${isAt100Percent ? styles.completeDot : ''}`}>
-            {isAt100Percent || hasCompleted ? '✓' : isConnecting ? '○' : '●'}
+            {isAt100Percent || hasCompleted ? '' : isConnecting ? '○' : '●'}
           </span>
           <span className={styles.title}>
             {isConnecting ? 'STARTING GENERATION...' : isAt100Percent || hasCompleted ? 'COURSE READY' : isFailed ? 'GENERATION FAILED' : isPolling ? 'COURSE GENERATING (POLLING)' : 'COURSE GENERATING'}
@@ -233,7 +271,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
               />
             </div>
             <div style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#666' }}>
-              {isConnected ? '✓ Connected to stream' : connectionAttempts > 0 ? `Connecting... (attempt ${connectionAttempts})` : 'Establishing connection...'}
+              {isConnected ? ' Connected to stream' : connectionAttempts > 0 ? `Connecting... (attempt ${connectionAttempts})` : 'Establishing connection...'}
             </div>
           </>
         ) : (
@@ -272,7 +310,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
                       );
                     })()}
                     <span className={`${styles.status} ${isAt100Percent ? styles.statusComplete : ''}`}>
-                      {isAt100Percent || hasCompleted ? '✓ READY' : activeData.generation_status || 'generating'}
+                      {isAt100Percent || hasCompleted ? ' READY' : activeData.generation_status || 'generating'}
                     </span>
                   </div>
                 </div>
@@ -294,7 +332,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
                 {/* Show completion message instead of connection status */}
                 {hasCompleted && (
                   <div style={{ marginTop: '8px', fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#00aa00' }}>
-                    ✓ Course generation complete! Dismissing shortly...
+                     Course generation complete! Dismissing shortly...
                   </div>
                 )}
               </>
@@ -302,7 +340,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
 
             {error && (
               <div className={styles.errorBox}>
-                <span className={styles.errorIcon}>⚠</span>
+                <span className={styles.errorIcon}></span>
                 <span className={styles.errorMessage}>{error}</span>
               </div>
             )}

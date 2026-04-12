@@ -115,7 +115,7 @@ class CodeExecutor:
 
             logger.info(f"Created temporary {language} file: {source_file}")
             logger.info("=" * 60)
-            logger.info(f"📝 EXECUTING {language.upper()} CODE:")
+            logger.info(f" EXECUTING {language.upper()} CODE:")
             logger.info("=" * 60)
             for i, line in enumerate(source_code.split('\n'), 1):
                 logger.info(f"  {i:3d} | {line}")
@@ -123,13 +123,13 @@ class CodeExecutor:
 
             # Compile if needed (Java, C++)
             if config.get("compile"):
-                logger.info(f"🔨 Compiling {language_lower} code...")
+                logger.info(f" Compiling {language_lower} code...")
                 compile_result = self._compile_code(source_file, config, temp_dir, language_lower)
                 if not compile_result["success"]:
-                    logger.error(f"❌ Compilation failed: {compile_result.get('compile_output', '')}")
+                    logger.error(f" Compilation failed: {compile_result.get('compile_output', '')}")
                     return compile_result
                 else:
-                    logger.info(f"✅ Compilation successful")
+                    logger.info(f" Compilation successful")
 
             # Execute the code
             if language_lower in ["python", "python3", "javascript"]:
@@ -163,9 +163,9 @@ class CodeExecutor:
             # Run the code with timeout
             start_time = self._get_time_ms()
 
-            logger.info(f"🚀 Running command: {' '.join(cmd)}")
+            logger.info(f" Running command: {' '.join(cmd)}")
             if stdin:
-                logger.info(f"📥 Standard input: {stdin}")
+                logger.info(f" Standard input: {stdin}")
 
             try:
                 result = subprocess.run(
@@ -187,20 +187,20 @@ class CodeExecutor:
                 # Determine status
                 if result.returncode == 0:
                     status = "accepted"
-                    logger.info(f"✅ Execution completed successfully in {execution_time:.3f}s")
+                    logger.info(f" Execution completed successfully in {execution_time:.3f}s")
                 elif result.returncode == -9 or result.returncode == 137:
                     status = "time_limit_exceeded"
-                    logger.error(f"⏱️  Time limit exceeded after {timeout}s")
+                    logger.error(f"⏱  Time limit exceeded after {timeout}s")
                 elif result.returncode == 1 or result.returncode == 255:
                     status = "runtime_error"
-                    logger.error(f"❌ Runtime error (exit code {result.returncode})")
+                    logger.error(f" Runtime error (exit code {result.returncode})")
                 else:
                     status = "runtime_error"
-                    logger.error(f"❌ Runtime error (exit code {result.returncode})")
+                    logger.error(f" Runtime error (exit code {result.returncode})")
 
                 # Log outputs
                 logger.info("-" * 60)
-                logger.info(f"📤 STDOUT:")
+                logger.info(f" STDOUT:")
                 if stdout:
                     for i, line in enumerate(stdout.split('\n'), 1):
                         logger.info(f"  {i:3d} | {line}")
@@ -209,13 +209,13 @@ class CodeExecutor:
                 logger.info("-" * 60)
 
                 if stderr:
-                    logger.error(f"⚠️  STDERR:")
+                    logger.error(f"  STDERR:")
                     for i, line in enumerate(stderr.split('\n'), 1):
                         logger.error(f"  {i:3d} | {line}")
                     logger.error("-" * 60)
 
                 if compile_output:
-                    logger.info(f"🔧 COMPILE OUTPUT:")
+                    logger.info(f" COMPILE OUTPUT:")
                     for i, line in enumerate(compile_output.split('\n'), 1):
                         logger.info(f"  {i:3d} | {line}")
                     logger.info("-" * 60)
@@ -223,9 +223,9 @@ class CodeExecutor:
                 # Validate output if expected
                 if expected_output:
                     is_correct = self.validate_code_output(stdout, expected_output)
-                    logger.info(f"{'✅' if is_correct else '❌'} Output validation: {'PASSED' if is_correct else 'FAILED'}")
+                    logger.info(f"{'' if is_correct else ''} Output validation: {'PASSED' if is_correct else 'FAILED'}")
                     if expected_output != stdout:
-                        logger.info(f"📋 Expected output:")
+                        logger.info(f" Expected output:")
                         for i, line in enumerate(expected_output.split('\n'), 1):
                             logger.info(f"  {i:3d} | {line}")
 
@@ -244,7 +244,7 @@ class CodeExecutor:
                 }
 
             except subprocess.TimeoutExpired:
-                logger.warning(f"⏱️  Code execution timed out after {timeout}s")
+                logger.warning(f"⏱  Code execution timed out after {timeout}s")
                 return {
                     "success": False,
                     "error": f"Execution timed out after {timeout} seconds",
@@ -260,7 +260,7 @@ class CodeExecutor:
         except FileNotFoundError as e:
             error_msg = str(e)
             language_cmd = LANGUAGE_CONFIG.get(language_lower, {}).get("command", [language_lower])[0]
-            logger.error(f"❌ {language_cmd} not found: {error_msg}")
+            logger.error(f" {language_cmd} not found: {error_msg}")
             return {
                 "success": False,
                 "error": f"{language_cmd} is not installed on this system. Please install it to run {language} code.",
@@ -274,7 +274,7 @@ class CodeExecutor:
             }
 
         except Exception as e:
-            logger.exception(f"❌ Error executing {language} code")
+            logger.exception(f" Error executing {language} code")
             return {
                 "success": False,
                 "error": str(e),
@@ -292,7 +292,7 @@ class CodeExecutor:
             if temp_dir and os.path.exists(temp_dir):
                 try:
                     shutil.rmtree(temp_dir, ignore_errors=True)
-                    logger.info(f"🧹 Cleaned up temporary directory: {temp_dir}")
+                    logger.info(f" Cleaned up temporary directory: {temp_dir}")
                 except Exception as e:
                     logger.warning(f"Failed to cleanup temporary directory: {e}")
 

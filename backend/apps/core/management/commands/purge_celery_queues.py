@@ -31,7 +31,7 @@ class Command(BaseCommand):
         total_purged = 0
         
         self.stdout.write(self.style.SUCCESS("\n" + "="*60))
-        self.stdout.write(self.style.SUCCESS("🧹 CELERY QUEUE PURGE"))
+        self.stdout.write(self.style.SUCCESS(" CELERY QUEUE PURGE"))
         self.stdout.write(self.style.SUCCESS("="*60 + "\n"))
         
         for queue_name in queues:
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                     queue.close()
                     
                     if options["dry_run"]:
-                        self.stdout.write(f"📊 Queue '{queue_name}': {depth} task(s)")
+                        self.stdout.write(f" Queue '{queue_name}': {depth} task(s)")
                         continue
                     
                     if depth > 0:
@@ -51,23 +51,23 @@ class Command(BaseCommand):
                         total_purged += count
                         self.stdout.write(
                             self.style.WARNING(
-                                f"🗑️  Purged {count} task(s) from queue: {queue_name}"
+                                f"  Purged {count} task(s) from queue: {queue_name}"
                             )
                         )
                     else:
-                        self.stdout.write(f"✅ Queue '{queue_name}': empty")
+                        self.stdout.write(f" Queue '{queue_name}': empty")
                         
             except Exception as e:
                 if "NOT_FOUND" in str(e) or "no queue" in str(e).lower():
-                    self.stdout.write(f"⚠️  Queue '{queue_name}': does not exist (Celery worker not running)")
+                    self.stdout.write(f"  Queue '{queue_name}': does not exist (Celery worker not running)")
                 else:
                     self.stderr.write(
-                        self.style.ERROR(f"❌ Error purging queue '{queue_name}': {e}")
+                        self.style.ERROR(f" Error purging queue '{queue_name}': {e}")
                     )
         
         self.stdout.write("\n" + "="*60)
         if options["dry_run"]:
-            self.stdout.write(self.style.SUCCESS(f"📊 Total tasks in queues: {total_purged}"))
+            self.stdout.write(self.style.SUCCESS(f" Total tasks in queues: {total_purged}"))
         else:
-            self.stdout.write(self.style.SUCCESS(f"✅ Purged {total_purged} stale task(s)"))
+            self.stdout.write(self.style.SUCCESS(f" Purged {total_purged} stale task(s)"))
         self.stdout.write(self.style.SUCCESS("="*60 + "\n"))

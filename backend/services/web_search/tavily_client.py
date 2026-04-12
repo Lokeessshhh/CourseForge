@@ -186,7 +186,7 @@ class TavilyClient:
 
                 # Check if we met minimum threshold
                 if result_count >= self.min_results:
-                    logger.info(f"[TAVILY] ✅ SUCCESS: {result_count} results (min: {self.min_results}, max: {self.max_results})")
+                    logger.info(f"[TAVILY]  SUCCESS: {result_count} results (min: {self.min_results}, max: {self.max_results})")
                     logger.info(f"[TAVILY] Results breakdown:")
                     
                     # Log top 5 results for verification
@@ -204,11 +204,11 @@ class TavilyClient:
                     results_data['retries'] = attempt
                     return results_data
                 else:
-                    logger.warning(f"[TAVILY] ⚠️ Below threshold: {result_count} results, need {self.min_results}. Retry {attempt}/{self.max_retries}")
+                    logger.warning(f"[TAVILY]  Below threshold: {result_count} results, need {self.min_results}. Retry {attempt}/{self.max_retries}")
 
             except Exception as e:
                 last_error = e
-                logger.error(f"[TAVILY] ❌ Attempt {attempt + 1} failed: {str(e)}")
+                logger.error(f"[TAVILY]  Attempt {attempt + 1} failed: {str(e)}")
                 if attempt >= self.max_retries:
                     break
 
@@ -219,11 +219,11 @@ class TavilyClient:
             results_data['success'] = False
             results_data['retries'] = self.max_retries
             results_data['error'] = f"Only got {result_count} results, needed {self.min_results}"
-            logger.warning(f"[TAVILY] ⚠️ COMPLETED WITH WARNING: {result_count} results (needed {self.min_results})")
+            logger.warning(f"[TAVILY]  COMPLETED WITH WARNING: {result_count} results (needed {self.min_results})")
             return results_data
         else:
             # Complete failure
-            logger.error(f"[TAVILY] ❌ COMPLETE FAILURE: No results after {self.max_retries + 1} attempts")
+            logger.error(f"[TAVILY]  COMPLETE FAILURE: No results after {self.max_retries + 1} attempts")
             raise TavilySearchError(
                 f"Course search failed after {self.max_retries + 1} attempts: {str(last_error)}"
             )

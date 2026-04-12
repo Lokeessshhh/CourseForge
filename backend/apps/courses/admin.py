@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 import json
-from .models import Course, WeekPlan, DayPlan, WeeklyTest, CodingTest
+from .models import Course, WeekPlan, DayPlan, WeeklyTest, CodingTest, DailyActivity
 
 
 class WeekPlanInline(admin.TabularInline):
@@ -88,3 +88,11 @@ class CodingTestAdmin(admin.ModelAdmin):
             return mark_safe(f"<pre style='white-space: pre-wrap; max-height: 400px; overflow: auto;'>{formatted}</pre>")
         return "-"
     problems_formatted.short_description = "Problems (JSON)"
+
+
+@admin.register(DailyActivity)
+class DailyActivityAdmin(admin.ModelAdmin):
+    list_display = ["user", "course", "date", "study_minutes", "days_completed", "quizzes_taken"]
+    list_filter = ["date"]
+    search_fields = ["user__email", "course__course_name"]
+    readonly_fields = ["id"]

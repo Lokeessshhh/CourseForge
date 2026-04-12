@@ -53,7 +53,7 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
   return (
     <div className={styles.page}>
       <div className={styles.errorBox}>
-        <span className={styles.errorText}>✗ FAILED TO LOAD · {message}</span>
+        <span className={styles.errorText}> FAILED TO LOAD · {message}</span>
         <motion.button
           className={styles.retryBtn}
           onClick={onRetry}
@@ -95,6 +95,14 @@ export default function CodingTestPage() {
   useEffect(() => {
     loadCodingTest();
   }, [courseId, week, testNumber]);
+
+  // FIX 2: Update code when selected problem changes
+  useEffect(() => {
+    if (testData?.problems && testData.problems[selectedProblem]) {
+      setCode(testData.problems[selectedProblem].starter_code);
+      setExecutionResult(null);
+    }
+  }, [selectedProblem, testData]);
 
   const loadCodingTest = async () => {
     try {
@@ -177,7 +185,7 @@ export default function CodingTestPage() {
 
     if (attemptedCount < totalProblems) {
       const confirmed = window.confirm(
-        `⚠️ You have only run code for ${attemptedCount} out of ${totalProblems} problems.\n\n` +
+        ` You have only run code for ${attemptedCount} out of ${totalProblems} problems.\n\n` +
         `Problems you haven't executed will be marked as "Not attempted" and will fail.\n\n` +
         `Do you want to submit anyway?`
       );
@@ -249,7 +257,7 @@ export default function CodingTestPage() {
     return (
       <div className={styles.page}>
         <div className={styles.errorBox}>
-          <span className={styles.errorText}>✗ CODING TEST NOT FOUND</span>
+          <span className={styles.errorText}> CODING TEST NOT FOUND</span>
           <Link href={`/dashboard/courses/${courseId}`}>
             <motion.button className={styles.retryBtn} whileHover={{ x: -2, y: -2 }}>
               BACK TO COURSE →
@@ -272,9 +280,9 @@ export default function CodingTestPage() {
             <div className={styles.resultHeader}>
               <h1 className={styles.resultTitle}>
                 {testResult.passed ? (
-                  <span className={styles.passed}>✓ PASSED</span>
+                  <span className={styles.passed}> PASSED</span>
                 ) : (
-                  <span className={styles.failed}>✗ FAILED</span>
+                  <span className={styles.failed}> FAILED</span>
                 )}
               </h1>
               <div className={styles.scoreSummary}>
@@ -290,7 +298,7 @@ export default function CodingTestPage() {
                   <div key={index} className={styles.problemResult}>
                     <div className={styles.problemResultHeader}>
                       <span className={styles.problemNumber}>Problem {index + 1}</span>
-                      {submission?.passed ? (
+                      {submission?.is_correct ? (
                         <Check className={styles.passedIcon} />
                       ) : (
                         <X className={styles.failedIcon} />
@@ -320,18 +328,16 @@ export default function CodingTestPage() {
                   whileHover={{ x: -2, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  🔄 RETAKE TEST →
+                   RETAKE TEST →
                 </motion.button>
               )}
-              <Link href={testResult.passed && testNumber === 1
-                ? `/dashboard/courses/${courseId}/week/${week}/coding-test/2`
-                : `/dashboard/courses/${courseId}`}>
+              <Link href={`/dashboard/courses/${courseId}`}>
                 <motion.button
                   className={styles.continueBtn}
                   whileHover={{ x: -2, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {testResult.passed && testNumber === 1 ? 'CONTINUE TO CODING TEST 2 →' : 'CONTINUE →'}
+                  {testResult.passed ? ' TEST PASSED — BACK TO WEEK →' : 'BACK TO COURSE →'}
                 </motion.button>
               </Link>
             </div>
@@ -383,9 +389,9 @@ export default function CodingTestPage() {
                     <span className={styles.problemTabText}>Problem {index + 1}</span>
                     {isAttempted ? (
                       isCorrect ? (
-                        <span className={styles.statusPassed} title="Passed">✓</span>
+                        <span className={styles.statusPassed} title="Passed"></span>
                       ) : (
-                        <span className={styles.statusFailed} title="Failed">✗</span>
+                        <span className={styles.statusFailed} title="Failed"></span>
                       )
                     ) : (
                       <span className={styles.statusNotAttempted} title="Not attempted">○</span>

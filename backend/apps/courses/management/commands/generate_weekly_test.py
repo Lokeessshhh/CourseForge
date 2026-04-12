@@ -18,13 +18,13 @@ class Command(BaseCommand):
         week_number = options['week_number']
 
         try:
-            self.stdout.write(self.style.WARNING(f"\n🔄 Generating weekly MCQ test for course {course_id}, week {week_number}..."))
+            self.stdout.write(self.style.WARNING(f"\n Generating weekly MCQ test for course {course_id}, week {week_number}..."))
             
             # Trigger the task synchronously
             result = generate_weekly_test_task(course_id, week_number)
             
-            self.stdout.write(self.style.SUCCESS(f"\n✅ Weekly MCQ test generated successfully for week {week_number}!"))
-            self.stdout.write(self.style.SUCCESS(f"\n🎉 You can now take the weekly test at:"))
+            self.stdout.write(self.style.SUCCESS(f"\n Weekly MCQ test generated successfully for week {week_number}!"))
+            self.stdout.write(self.style.SUCCESS(f"\n You can now take the weekly test at:"))
             self.stdout.write(f"   http://localhost:3000/dashboard/courses/{course_id}/week/{week_number}/test")
             
         except Exception as e:

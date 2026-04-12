@@ -18,7 +18,7 @@ export default function WebSearchToggle({ enabled, onToggle, disabled = false }:
       title={enabled ? 'Web search enabled - AI will search the internet' : 'Enable web search for real-time information'}
     >
       <span className={styles.toggleIcon}>
-        {enabled ? '🌐' : '🌍'}
+        {enabled ? '' : ''}
       </span>
       <span className={styles.toggleLabel}>
         {enabled ? 'Web Search ON' : 'Web Search'}

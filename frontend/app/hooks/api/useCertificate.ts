@@ -18,12 +18,14 @@ export interface Certificate {
   share_url: string;
   is_unlocked: boolean;
   status: string | null;
+  instructor_name: string;
+  director_name: string;
 }
 
 // API Functions
 export const certificateApi = {
   getCertificate: (courseId: string) =>
-    api.get<Certificate>(`/api/courses/${courseId}/certificate/`),
+    api.get<Certificate>(`/api/certificates/courses/${courseId}/`),
 
   generateCertificate: (courseId: string) =>
     api.post<Certificate>(`/api/courses/${courseId}/certificate/generate/`),

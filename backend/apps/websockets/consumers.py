@@ -69,7 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
 
         logger.info("=" * 80)
-        logger.info("🔌 WEBSOCKET CONNECTION ATTEMPT")
+        logger.info(" WEBSOCKET CONNECTION ATTEMPT")
         logger.info(f"   Scope: {scope_info}")
         logger.info(f"   Query: {self.scope.get('query_string', b'').decode()[:200]}")
         logger.info("=" * 80)
@@ -84,14 +84,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         logger.info("[WS] Connect - user: %s, auth_error: %s", user.id if user else None, auth_error)
 
         if not user or auth_error:
-            logger.warning("[WS] ❌ WebSocket connection refused: %s", auth_error or "no user")
+            logger.warning("[WS]  WebSocket connection refused: %s", auth_error or "no user")
             await self.close(code=4001)
             return
 
         self.user = user
         self.user_id = str(user.id)
 
-        logger.info("[WS] ✅ User authenticated: %s (%s)", user.email, user.id)
+        logger.info("[WS]  User authenticated: %s (%s)", user.email, user.id)
 
         # Extract scope from URL kwargs
         url_kwargs = self.scope["url_route"]["kwargs"]
@@ -164,7 +164,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
 
         logger.info("=" * 80)
-        logger.info("🔌 WEBSOCKET CONNECTION ATTEMPT")
+        logger.info(" WEBSOCKET CONNECTION ATTEMPT")
         logger.info(f"   Scope: {scope_info}")
         logger.info(f"   Query: {self.scope.get('query_string', b'').decode()[:200]}")
         logger.info("=" * 80)
@@ -179,14 +179,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         logger.info("[WS] Connect - user: %s, auth_error: %s", user.id if user else None, auth_error)
 
         if not user or auth_error:
-            logger.warning("[WS] ❌ WebSocket connection refused: %s", auth_error or "no user")
+            logger.warning("[WS]  WebSocket connection refused: %s", auth_error or "no user")
             await self.close(code=4001)
             return
 
         self.user = user
         self.user_id = str(user.id)
 
-        logger.info("[WS] ✅ User authenticated: %s (%s)", user.email, user.id)
+        logger.info("[WS]  User authenticated: %s (%s)", user.email, user.id)
 
         # Extract scope from URL kwargs
         url_kwargs = self.scope["url_route"]["kwargs"]
@@ -250,7 +250,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         to send responses to client, so conversations are never lost.
         """
         logger.info("=" * 80)
-        logger.info("🔌 WEBSOCKET DISCONNECTED")
+        logger.info(" WEBSOCKET DISCONNECTED")
         logger.info(f"   User: {self.user.email if hasattr(self, 'user') else 'Unknown'}")
         logger.info(f"   Session: {getattr(self, 'session_id', 'N/A')}")
         logger.info(f"   Close Code: {close_code}")
@@ -272,7 +272,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             except asyncio.CancelledError:
                 pass
             
-        logger.info("[WS] 🧹 Cleanup completed for session %s", getattr(self, 'session_id', 'N/A'))
+        logger.info("[WS]  Cleanup completed for session %s", getattr(self, 'session_id', 'N/A'))
 
         if hasattr(self, "room_group_name"):
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -297,7 +297,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
         """
         logger.info("=" * 60)
-        logger.info("💬 MESSAGE RECEIVED")
+        logger.info(" MESSAGE RECEIVED")
         logger.info(f"   User: {self.user.email if hasattr(self, 'user') else 'Unknown'}")
         logger.info(f"   Session: {getattr(self, 'session_id', 'N/A')}")
         logger.info(f"   Message: {text_data[:200]}")
@@ -315,8 +315,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message_id = data.get("message_id", str(uuid.uuid4()))
         include_sources = data.get("include_sources", self.include_sources)
         web_search = data.get("web_search", False)
+        rag_enabled = data.get("rag_enabled", False)
 
-        logger.info("[WS] 📩 Processing message: '%s...' (ID: %s, web_search: %s)", message[:50], message_id, web_search)
+        logger.info("[WS]  Processing message: '%s...' (ID: %s, web_search: %s, rag_enabled: %s)", message[:50], message_id, web_search, rag_enabled)
         
         # Use session_id from message payload if provided (for new sessions)
         message_session_id = data.get("session_id")
@@ -403,15 +404,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             # Run chat pipeline
             logger.info(
-                "WS calling _process_message: session=%s message_id=%s include_sources=%s web_search=%s",
-                self.session_id, message_id, include_sources, web_search
+                "WS calling _process_message: session=%s message_id=%s include_sources=%s web_search=%s rag_enabled=%s",
+                self.session_id, message_id, include_sources, web_search, rag_enabled
             )
-            await self._process_message(message, message_id, include_sources, web_search)
+            await self._process_message(message, message_id, include_sources, web_search, rag_enabled)
         except Exception as exc:
             logger.exception("Chat pipeline error: %s", exc)
             await self._send_error("Processing error. Please try again.", message_id)
 
-    async def _process_message(self, query: str, message_id: str, include_sources: bool, web_search: bool = False):
+    async def _process_message(self, query: str, message_id: str, include_sources: bool, web_search: bool = False, rag_enabled: bool = True):
         """
         Process message with full RAG pipeline:
         1. Web search if enabled (Tavily API)
@@ -508,33 +509,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
         rag_chunks = []
         knowledge_state = {}
 
-        try:
-            # Load knowledge state for adaptive prompting
-            from apps.memory.knowledge import get_knowledge_state
-            knowledge_state = await get_knowledge_state(self.user_id)
+        if rag_enabled:
+            try:
+                # Load knowledge state for adaptive prompting
+                from apps.memory.knowledge import get_knowledge_state
+                knowledge_state = await get_knowledge_state(self.user_id)
 
-            # Run hybrid RAG retrieval
-            from services.rag_pipeline.retriever import hybrid_retrieve
-            rag_chunks = await hybrid_retrieve(
-                query=query,
-                top_k=60,
-                course_id=self.course_id,
-                use_hyde=True,
-                use_decomposition=True,
-            )
+                # Run hybrid RAG retrieval
+                from services.rag_pipeline.retriever import hybrid_retrieve
+                rag_chunks = await hybrid_retrieve(
+                    query=query,
+                    top_k=60,
+                    course_id=self.course_id,
+                    use_hyde=True,
+                    use_decomposition=True,
+                )
 
-            if rag_chunks:
-                # Rerank
-                from services.rag_pipeline.reranker import reranker
-                rag_chunks = reranker.rerank(query, rag_chunks, top_k=10)
-                logger.info("WS RAG retrieved %d chunks for: %s", len(rag_chunks), query[:80])
-            else:
-                logger.info("WS RAG returned no chunks for: %s", query[:80])
+                if rag_chunks:
+                    # Rerank
+                    from services.rag_pipeline.reranker import reranker
+                    rag_chunks = reranker.rerank(query, rag_chunks, top_k=10)
+                    logger.info("WS RAG retrieved %d chunks for: %s", len(rag_chunks), query[:80])
+                else:
+                    logger.info("WS RAG returned no chunks for: %s", query[:80])
 
-        except Exception as exc:
-            logger.warning("WS RAG retrieval failed (falling back to no-RAG): %s", exc)
-            rag_chunks = []
-            knowledge_state = {}
+            except Exception as exc:
+                logger.warning("WS RAG retrieval failed (falling back to no-RAG): %s", exc)
+                rag_chunks = []
+                knowledge_state = {}
+        else:
+            logger.info("WS RAG disabled, skipping retrieval for: %s", query[:80])
 
         # ── Step 5: Build RAG prompt ──
         if rag_chunks:
@@ -556,7 +560,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             logger.info("WS RAG prompt built with %d chunks", len(rag_chunks))
         else:
-            # Fallback: use original enhanced query
+            # Fallback: use original enhanced query (no RAG context)
             rag_prompt = enhanced_query
 
         # ── Step 6: Stream LLM response ──

@@ -241,6 +241,57 @@ class WeeklyTestAttempt(models.Model):
         return f"Week {self.week_number} Attempt by {self.user.email}"
 
 
+class DailyActivity(models.Model):
+    """Daily study activity tracking for streak calendar and activity charts."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="daily_activities",
+        db_column="user_id",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="daily_activities",
+        db_column="course_id",
+    )
+    date = models.DateField()  # The date of activity
+    study_minutes = models.IntegerField(default=0)
+    days_completed = models.IntegerField(default=0)  # Number of days completed on this date
+    quizzes_taken = models.IntegerField(default=0)  # Number of quizzes taken on this date
+
+    class Meta:
+        db_table = "daily_activities"
+        unique_together = [("user", "course", "date")]
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"Activity: {self.user.email} - {self.course.course_name} - {self.date}"
+
+    @classmethod
+    def add_activity(cls, user, course, date, minutes=0, day_completed=False, quiz_taken=False):
+        """Add or update activity for a given date."""
+        activity, created = cls.objects.get_or_create(
+            user=user,
+            course=course,
+            date=date,
+            defaults={
+                "study_minutes": minutes,
+                "days_completed": 1 if day_completed else 0,
+                "quizzes_taken": 1 if quiz_taken else 0,
+            }
+        )
+        if not created:
+            activity.study_minutes += minutes
+            if day_completed:
+                activity.days_completed += 1
+            if quiz_taken:
+                activity.quizzes_taken += 1
+            activity.save(update_fields=["study_minutes", "days_completed", "quizzes_taken"])
+        return activity
+
+
 class CourseProgress(models.Model):
     """Complete progress tracking for a user in a course."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -277,3 +328,15 @@ class CourseProgress(models.Model):
 
     def __str__(self):
         return f"Progress: {self.user.email} - {self.course.topic}"
+
+    @property
+    def is_completed(self):
+        """Check if the course is fully completed."""
+        return self.completed_at is not None
+
+    @property
+    def completion_percentage(self):
+        """Get completion percentage (0-100)."""
+        if self.total_weeks > 0:
+            return round((self.completed_weeks / self.total_weeks) * 100, 1)
+        return 0.0

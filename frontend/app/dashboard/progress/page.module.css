@@ -19,6 +19,12 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
+  padding: 6px 12px;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  width: fit-content;
+  transform: rotate(-1deg);
 }
 
 .labelIcon {
@@ -37,9 +43,15 @@
   flex-direction: column;
   gap: 8px;
   padding: 24px;
-  border: 2px solid var(--black);
+  border: 3px solid var(--black);
   box-shadow: 6px 6px 0px var(--black);
   background-color: var(--white);
+  transition: var(--transition);
+}
+
+.statBox:hover {
+  box-shadow: 8px 8px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .statLabel {
@@ -47,7 +59,9 @@
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 1px;
+  color: var(--black);
   opacity: 0.6;
+  text-transform: uppercase;
 }
 
 .statValue {
@@ -77,12 +91,16 @@
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 1px;
-  opacity: 0.5;
+  color: var(--black);
+  opacity: 0.4;
 }
 
 .monthLabel.currentMonth {
   opacity: 1;
   font-weight: 700;
+  color: var(--black);
+  background: var(--yellow);
+  padding: 2px 4px;
 }
 
 .calendarGrid {
@@ -99,16 +117,20 @@
 .calendarDay {
   width: 12px;
   height: 12px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   background-color: var(--white);
 }
 
 .calendarDay.studied {
-  background-color: var(--black);
+  background-color: var(--yellow);
+  border-color: var(--black);
+  box-shadow: 1px 1px 0px var(--black);
 }
 
 .calendarDay.today {
-  border-width: 2px;
+  border-width: 3px;
+  border-color: var(--black);
+  box-shadow: 0 0 0 2px var(--yellow);
 }
 
 .dayLabels {
@@ -161,7 +183,10 @@
 .courseTopic {
   font-family: var(--font-mono);
   font-size: 11px;
-  opacity: 0.6;
+  color: var(--black);
+  background: var(--yellow-light);
+  padding: 3px 8px;
+  border: 1px solid var(--black);
 }
 
 .courseProgressBar {
@@ -173,12 +198,13 @@
 
 .courseProgressFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .courseProgressText {
   font-family: var(--font-mono);
   font-size: 11px;
+  color: var(--black);
   opacity: 0.6;
 }
 
@@ -187,7 +213,7 @@
   gap: 16px;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--black);
+  border-top: 2px solid var(--black);
 }
 
 .weekItem {
@@ -206,19 +232,23 @@
 .weekMiniBar {
   width: 60px;
   height: 6px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   background-color: var(--white);
 }
 
 .weekMiniFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .weekTestScore {
   font-family: var(--font-mono);
   font-size: 9px;
+  color: var(--black);
   opacity: 0.6;
+  background: var(--yellow-light);
+  padding: 2px 6px;
+  border: 1px solid var(--black);
 }
 
 /* Concept Mastery */
@@ -249,11 +279,14 @@
 
 .filterBtn:hover {
   box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .filterBtn.active {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .sortToggle {
@@ -277,6 +310,7 @@
   border: 2px solid var(--black);
   box-shadow: 4px 4px 0px var(--black);
   background-color: var(--white);
+  min-height: 100px;
 }
 
 .conceptRow {
@@ -284,7 +318,7 @@
   align-items: center;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--black);
+  border-bottom: 2px solid var(--black);
 }
 
 .conceptRow:last-child {
@@ -300,17 +334,18 @@
 .conceptBar {
   flex: 1;
   height: 8px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   background-color: var(--white);
 }
 
 .conceptFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 .conceptFill.weak {
-  opacity: 0.4;
+  background-color: var(--yellow-light);
+  opacity: 0.8;
 }
 
 .conceptPercent {
@@ -328,8 +363,52 @@
 }
 
 /* Quiz History */
+.quizTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quizTab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  background-color: var(--white);
+  color: var(--black);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.quizTab:hover {
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
+}
+
+.quizTab.active {
+  background-color: var(--yellow);
+  color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
+}
+
+.loadingMessage,
+.emptyQuizMessage,
+.emptyConceptMessage {
+  padding: 40px 20px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--black);
+  border: 2px dashed var(--black);
+  background: var(--yellow-light);
+}
+
 .quizTable {
   border: 2px solid var(--black);
+  min-height: 150px;
 }
 
 .tableHeader,
@@ -354,11 +433,15 @@
 .passed {
   color: var(--black);
   font-weight: 700;
+  background: var(--yellow);
+  padding: 2px 8px;
+  border: 1px solid var(--black);
 }
 
 .failed {
   color: var(--black);
   font-weight: 700;
+  opacity: 0.5;
 }
 
 /* Mobile */

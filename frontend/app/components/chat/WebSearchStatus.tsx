@@ -29,7 +29,7 @@ export default function WebSearchStatus({ webSearchState }: Props) {
           {isActive && (
             <div className={styles.searchingState}>
               <div className={styles.searchingContent}>
-                <span className={styles.searchingIcon}>🔍</span>
+                <span className={styles.searchingIcon}></span>
                 <span className={styles.searchingText}>SEARCHING WEB</span>
                 <div className={styles.searchingDots}>
                   <span className={styles.dot}></span>
@@ -50,7 +50,7 @@ export default function WebSearchStatus({ webSearchState }: Props) {
                 className={styles.resultsHeader}
                 onClick={() => setIsExpanded(!isExpanded)}
               >
-                <span className={styles.resultsIcon}>🌐</span>
+                <span className={styles.resultsIcon}></span>
                 <span className={styles.resultsTitle}>WEB SEARCH</span>
                 <span className={styles.resultsCount}>{results.length} sources</span>
                 <span className={styles.toggleIcon}>{isExpanded ? '▼' : '▲'}</span>

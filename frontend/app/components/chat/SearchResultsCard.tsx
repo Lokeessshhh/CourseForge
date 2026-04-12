@@ -31,7 +31,7 @@ export default function SearchResultsCard({ results, query, isLoading }: Props) 
         transition={{ duration: 0.3 }}
       >
         <div className={styles.loadingState}>
-          <span className={styles.loadingSpinner}>🔍</span>
+          <span className={styles.loadingSpinner}></span>
           <span className={styles.loadingText}>Searching web...</span>
         </div>
       </motion.div>
@@ -55,7 +55,7 @@ export default function SearchResultsCard({ results, query, isLoading }: Props) 
         type="button"
       >
         <div className={styles.headerLeft}>
-          <span className={styles.icon}>🔍</span>
+          <span className={styles.icon}></span>
           <span className={styles.title}>
             Search Results{query ? ` for "${query}"` : ''}
           </span>
@@ -102,7 +102,7 @@ export default function SearchResultsCard({ results, query, isLoading }: Props) 
                 <p className={styles.resultContent}>{result.content}</p>
                 {result.published_date && (
                   <div className={styles.resultDate}>
-                    📅 {new Date(result.published_date).toLocaleDateString()}
+                     {new Date(result.published_date).toLocaleDateString()}
                   </div>
                 )}
               </motion.div>

@@ -149,3 +149,7 @@ urlpatterns = [
 
 # Static files for admin
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Media files (certificates, uploads, etc.) - only in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

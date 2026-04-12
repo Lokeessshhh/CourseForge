@@ -24,8 +24,8 @@ try:
     course = Course.objects.get(id=COURSE_ID)
     week = course.weeks.get(week_number=WEEK_NUMBER)
     
-    print(f"\n✓ Found course: {course.course_name}")
-    print(f"✓ Found week: {WEEK_NUMBER}")
+    print(f"\n Found course: {course.course_name}")
+    print(f" Found week: {WEEK_NUMBER}")
     
     # Unlock coding tests
     week.coding_tests_generated = True
@@ -39,7 +39,7 @@ try:
         'test_unlocked'
     ])
     
-    print("\n✓ WeekPlan updated:")
+    print("\n WeekPlan updated:")
     print(f"  - coding_tests_generated: {week.coding_tests_generated}")
     print(f"  - coding_test_1_unlocked: {week.coding_test_1_unlocked}")
     print(f"  - coding_test_2_unlocked: {week.coding_test_2_unlocked}")
@@ -138,9 +138,9 @@ try:
             }
         ]
         coding_test_1.save(update_fields=['problems'])
-        print("\n✓ Coding Test 1 updated with sample problems")
+        print("\n Coding Test 1 updated with sample problems")
     else:
-        print("\n✓ Coding Test 1 created with sample problems")
+        print("\n Coding Test 1 created with sample problems")
     
     # Create or update Coding Test 2
     coding_test_2, created = CodingTest.objects.get_or_create(
@@ -243,9 +243,9 @@ try:
             }
         ]
         coding_test_2.save(update_fields=['problems'])
-        print("✓ Coding Test 2 updated with sample problems")
+        print(" Coding Test 2 updated with sample problems")
     else:
-        print("✓ Coding Test 2 created with sample problems")
+        print(" Coding Test 2 created with sample problems")
     
     print("\n" + "=" * 60)
     print("SUCCESS! Coding tests are now unlocked and ready to test.")
@@ -262,10 +262,10 @@ try:
     print("    2. FizzBuzz (Medium)")
     
 except Course.DoesNotExist:
-    print(f"\n✗ ERROR: Course {COURSE_ID} not found!")
+    print(f"\n ERROR: Course {COURSE_ID} not found!")
 except WeekPlan.DoesNotExist:
-    print(f"\n✗ ERROR: Week {WEEK_NUMBER} not found in course!")
+    print(f"\n ERROR: Week {WEEK_NUMBER} not found in course!")
 except Exception as e:
-    print(f"\n✗ ERROR: {str(e)}")
+    print(f"\n ERROR: {str(e)}")
     import traceback
     traceback.print_exc()

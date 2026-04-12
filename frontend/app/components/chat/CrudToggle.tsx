@@ -18,7 +18,7 @@ export default function CrudToggle({ enabled, onToggle, disabled = false }: Prop
       title={enabled ? 'Course management enabled - AI can create, delete, and manage courses' : 'Enable AI to manage courses (create, delete, view)'}
     >
       <span className={styles.toggleIcon}>
-        {enabled ? '📚' : '📖'}
+        {enabled ? '' : ''}
       </span>
       <span className={styles.toggleLabel}>
         {enabled ? 'Course Mgmt ON' : 'Course Mgmt'}

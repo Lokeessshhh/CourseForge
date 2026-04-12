@@ -234,7 +234,7 @@ def build_welcome_message(
         Welcome message string
     """
     if scope == "global":
-        return f"""Hi {user_name}! 👋
+        return f"""Hi {user_name}! 
 
 I'm your AI learning assistant. I can see all your courses and progress.
 
@@ -245,7 +245,7 @@ How can I help you today? You can ask me about:
 - Connecting ideas across courses"""
 
     elif scope == "course" and course_topic:
-        msg = f"""Hi {user_name}! 👋
+        msg = f"""Hi {user_name}! 
 
 I'm your AI tutor for **{course_topic}**."""
         
@@ -266,7 +266,7 @@ What would you like to learn about? I can:
         return msg
 
     elif scope == "day" and course_topic and current_day:
-        return f"""Hi {user_name}! 👋
+        return f"""Hi {user_name}! 
 
 I'm here to help you with today's lesson: **{current_day}**
 
@@ -275,7 +275,7 @@ in your {course_topic} course.
 What's on your mind? I can explain concepts, help with code, or guide you through the quiz."""
 
     else:
-        return f"""Hi {user_name}! 👋
+        return f"""Hi {user_name}! 
 
 I'm your AI tutor. How can I help you learn today?"""
 

@@ -315,7 +315,7 @@ export default function CourseUpdateModal({
               /* Confirmation Screen */
               <div className={styles.confirmBox}>
                 <div className={styles.confirmHeader}>
-                  <span className={styles.confirmIcon}>⚠️</span>
+                  <span className={styles.confirmIcon}></span>
                   <h4 className={styles.confirmTitle}>CONFIRM UPDATE</h4>
                 </div>
 
@@ -388,7 +388,7 @@ export default function CourseUpdateModal({
                   onClick={handleConfirm}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'UPDATING...' : '✓ CONFIRM UPDATE'}
+                  {isSubmitting ? 'UPDATING...' : ' CONFIRM UPDATE'}
                 </button>
               </>
             )}

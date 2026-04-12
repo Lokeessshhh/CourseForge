@@ -67,4 +67,4 @@ class QuizAttempt(models.Model):
         ordering = ["-attempted_at"]
 
     def __str__(self):
-        return f"{self.user.email} — {self.question_id} ({'✓' if self.is_correct else '✗'})"
+        return f"{self.user.email} — {self.question_id} ({'' if self.is_correct else ''})"

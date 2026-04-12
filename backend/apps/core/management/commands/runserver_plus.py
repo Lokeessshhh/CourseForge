@@ -76,7 +76,7 @@ class Command(BaseCommand):
             ]
             
             self.stdout.write(self.style.SUCCESS("\n" + "=" * 80))
-            self.stdout.write(self.style.SUCCESS("🚀 STARTING CELERY WORKER"))
+            self.stdout.write(self.style.SUCCESS(" STARTING CELERY WORKER"))
             self.stdout.write(self.style.SUCCESS(f"   Command: {' '.join(celery_cmd)}"))
             self.stdout.write(self.style.SUCCESS(f"   Project: {project_name}"))
             self.stdout.write(self.style.SUCCESS("=" * 80 + "\n"))
@@ -100,12 +100,12 @@ class Command(BaseCommand):
             # Wait for Celery to start
             time.sleep(3)
             
-            self.stdout.write(self.style.SUCCESS("✅ Celery worker started successfully\n"))
+            self.stdout.write(self.style.SUCCESS(" Celery worker started successfully\n"))
             
             return process
             
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Failed to start Celery: {e}"))
+            self.stdout.write(self.style.ERROR(f" Failed to start Celery: {e}"))
             return None
 
     def print_celery_logs(self, process):
@@ -115,11 +115,11 @@ class Command(BaseCommand):
                 # Filter and format Celery logs
                 if "[celery]" in line.lower() or "worker" in line.lower() or "task" in line.lower():
                     if "received" in line.lower() or "starting" in line.lower():
-                        self.stdout.write(self.style.SUCCESS(f"[Celery] 📨 {line.strip()}"))
+                        self.stdout.write(self.style.SUCCESS(f"[Celery]  {line.strip()}"))
                     elif "completed" in line.lower() or "ready" in line.lower():
-                        self.stdout.write(self.style.SUCCESS(f"[Celery] ✅ {line.strip()}"))
+                        self.stdout.write(self.style.SUCCESS(f"[Celery]  {line.strip()}"))
                     elif "error" in line.lower() or "failed" in line.lower():
-                        self.stdout.write(self.style.ERROR(f"[Celery] ❌ {line.strip()}"))
+                        self.stdout.write(self.style.ERROR(f"[Celery]  {line.strip()}"))
                     else:
                         self.stdout.write(f"[Celery] {line.strip()}\n")
         except Exception:

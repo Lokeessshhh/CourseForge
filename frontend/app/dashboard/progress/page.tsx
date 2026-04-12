@@ -54,7 +54,7 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
   return (
     <div className={styles.page}>
       <div className={styles.errorBox}>
-        <span className={styles.errorText}>✗ FAILED TO LOAD · {message}</span>
+        <span className={styles.errorText}> FAILED TO LOAD · {message}</span>
         <motion.button
           className={styles.retryBtn}
           onClick={onRetry}
@@ -97,6 +97,13 @@ export default function ProgressPage() {
   const [conceptFilter, setConceptFilter] = useState<'all' | 'weak' | 'strong'>('all');
   const [sortByWeakest, setSortByWeakest] = useState(true);
   const [courses, setCourses] = useState<any[]>([]);
+  const [quizHistoryTab, setQuizHistoryTab] = useState<'daily' | 'weekly' | 'tests'>('daily');
+  const [aggregatedQuizHistory, setAggregatedQuizHistory] = useState<any>({
+    daily_mcq: [],
+    weekly_mcq: [],
+    weekly_tests: [],
+  });
+  const [isLoadingQuizHistory, setIsLoadingQuizHistory] = useState(false);
 
   const streakCalendar = useMemo(() => {
     return progress?.streak_calendar?.weeks || [];
@@ -159,6 +166,25 @@ export default function ProgressPage() {
 
     return () => clearInterval(pollInterval);
   }, [fetchCoursesForGeneration]);
+
+  // Fetch aggregated quiz history
+  useEffect(() => {
+    const fetchQuizHistory = async () => {
+      setIsLoadingQuizHistory(true);
+      try {
+        const data = await api.get<any>('/api/users/me/quiz-history-aggregated/').catch(() => null);
+        if (data) {
+          setAggregatedQuizHistory(data);
+        }
+      } catch (err) {
+        console.error('[Progress] Error fetching quiz history:', err);
+      } finally {
+        setIsLoadingQuizHistory(false);
+      }
+    };
+
+    fetchQuizHistory();
+  }, [api]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (error) {
@@ -307,27 +333,35 @@ export default function ProgressPage() {
           </label>
         </div>
         <div className={styles.conceptList}>
-          {filteredConcepts.map((concept, index) => (
-            <motion.div
-              key={concept.concept}
-              className={styles.conceptRow}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <span className={styles.conceptName}>{concept.concept}</span>
-              <div className={styles.conceptBar}>
-                <motion.div
-                  className={`${styles.conceptFill} ${concept.mastery < 40 ? styles.weak : ''}`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${concept.mastery}%` }}
-                  transition={{ duration: 0.6, delay: index * 0.05 }}
-                />
-              </div>
-              <span className={styles.conceptPercent}>{concept.mastery}%</span>
-              <span className={styles.conceptPracticed}>PRACTICED {concept.practiced_count}x</span>
-            </motion.div>
-          ))}
+          {filteredConcepts.length === 0 ? (
+            <div className={styles.emptyConceptMessage}>
+              {progress?.concepts && progress.concepts.length === 0
+                ? 'No concept mastery data yet. Complete quizzes to track your progress!'
+                : 'No concepts match your current filter. Try changing the filters above.'}
+            </div>
+          ) : (
+            filteredConcepts.map((concept, index) => (
+              <motion.div
+                key={concept.concept}
+                className={styles.conceptRow}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <span className={styles.conceptName}>{concept.concept}</span>
+                <div className={styles.conceptBar}>
+                  <motion.div
+                    className={`${styles.conceptFill} ${concept.mastery < 40 ? styles.weak : ''}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${concept.mastery}%` }}
+                    transition={{ duration: 0.6, delay: index * 0.05 }}
+                  />
+                </div>
+                <span className={styles.conceptPercent}>{concept.mastery}%</span>
+                <span className={styles.conceptPracticed}>PRACTICED {concept.practiced_count}x</span>
+              </motion.div>
+            ))
+          )}
         </div>
       </section>
 
@@ -337,31 +371,119 @@ export default function ProgressPage() {
           <span className={styles.labelIcon}>►</span>
           QUIZ HISTORY
         </div>
+        
+        {/* Tab Controls */}
+        <div className={styles.quizTabs}>
+          <button
+            className={`${styles.quizTab} ${quizHistoryTab === 'daily' ? styles.active : ''}`}
+            onClick={() => setQuizHistoryTab('daily')}
+          >
+            DAILY MCQ
+          </button>
+          <button
+            className={`${styles.quizTab} ${quizHistoryTab === 'weekly' ? styles.active : ''}`}
+            onClick={() => setQuizHistoryTab('weekly')}
+          >
+            WEEKLY MCQ
+          </button>
+          <button
+            className={`${styles.quizTab} ${quizHistoryTab === 'tests' ? styles.active : ''}`}
+            onClick={() => setQuizHistoryTab('tests')}
+          >
+            WEEKLY TESTS
+          </button>
+        </div>
+
+        {/* Quiz History Table */}
         <div className={styles.quizTable}>
-          <div className={styles.tableHeader}>
-            <span>DATE</span>
-            <span>COURSE</span>
-            <span>DAY</span>
-            <span>SCORE</span>
-            <span>RESULT</span>
-          </div>
-          {progress?.quiz_history?.map((quiz, index) => (
-            <motion.div
-              key={index}
-              className={styles.tableRow}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.03 }}
-            >
-              <span>{quiz.date}</span>
-              <span>{quiz.course}</span>
-              <span>{quiz.day}</span>
-              <span>{quiz.score}%</span>
-              <span className={quiz.passed ? styles.passed : styles.failed}>
-                {quiz.passed ? '✓ PASS' : '✗ FAIL'}
-              </span>
-            </motion.div>
-          ))}
+          {isLoadingQuizHistory ? (
+            <div className={styles.loadingMessage}>Loading quiz history...</div>
+          ) : quizHistoryTab === 'daily' && aggregatedQuizHistory.daily_mcq.length > 0 ? (
+            <>
+              <div className={styles.tableHeader}>
+                <span>DATE</span>
+                <span>COURSE</span>
+                <span>SCORE</span>
+                <span>CORRECT</span>
+                <span>RESULT</span>
+              </div>
+              {aggregatedQuizHistory.daily_mcq.map((quiz: any, index: number) => (
+                <motion.div
+                  key={index}
+                  className={styles.tableRow}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <span>{new Date(quiz.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  <span>{quiz.course_name}</span>
+                  <span>{quiz.score}%</span>
+                  <span>{quiz.correct_answers}/{quiz.total_questions}</span>
+                  <span className={quiz.score >= 70 ? styles.passed : styles.failed}>
+                    {quiz.score >= 70 ? ' PASS' : ' FAIL'}
+                  </span>
+                </motion.div>
+              ))}
+            </>
+          ) : quizHistoryTab === 'weekly' && aggregatedQuizHistory.weekly_mcq.length > 0 ? (
+            <>
+              <div className={styles.tableHeader}>
+                <span>WEEK</span>
+                <span>COURSE</span>
+                <span>SCORE</span>
+                <span>CORRECT</span>
+                <span>STATUS</span>
+              </div>
+              {aggregatedQuizHistory.weekly_mcq.map((quiz: any, index: number) => (
+                <motion.div
+                  key={index}
+                  className={styles.tableRow}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <span>Week {quiz.week_number}</span>
+                  <span>{quiz.course_name}</span>
+                  <span>{quiz.score}%</span>
+                  <span>{quiz.correct_answers}/{quiz.total_questions}</span>
+                  <span className={quiz.score >= 70 ? styles.passed : styles.failed}>
+                    {quiz.score >= 70 ? ' PASS' : ' FAIL'}
+                  </span>
+                </motion.div>
+              ))}
+            </>
+          ) : quizHistoryTab === 'tests' && aggregatedQuizHistory.weekly_tests.length > 0 ? (
+            <>
+              <div className={styles.tableHeader}>
+                <span>DATE</span>
+                <span>COURSE</span>
+                <span>WEEK</span>
+                <span>SCORE</span>
+                <span>RESULT</span>
+              </div>
+              {aggregatedQuizHistory.weekly_tests.map((quiz: any, index: number) => (
+                <motion.div
+                  key={index}
+                  className={styles.tableRow}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <span>{new Date(quiz.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span>{quiz.course_name}</span>
+                  <span>Week {quiz.week_number}</span>
+                  <span>{quiz.score}%</span>
+                  <span className={quiz.passed ? styles.passed : styles.failed}>
+                    {quiz.passed ? ' PASS' : ' FAIL'}
+                  </span>
+                </motion.div>
+              ))}
+            </>
+          ) : (
+            <div className={styles.emptyQuizMessage}>
+              No quiz history available yet. Complete lessons to unlock quizzes!
+            </div>
+          )}
         </div>
       </section>
     </div>

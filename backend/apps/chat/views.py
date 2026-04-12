@@ -281,7 +281,7 @@ def chat_course_management(request):
                 return _ok({
                     "command": "delete_course",
                     "action": "deleted",
-                    "response": f"✅ Course '{course_name_full}' has been deleted.",
+                    "response": f" Course '{course_name_full}' has been deleted.",
                 })
             except Course.DoesNotExist:
                 return _err("Course not found")
@@ -321,7 +321,7 @@ def chat_course_management(request):
                 return _ok({
                     "command": "delete_course",
                     "action": "deleted",
-                    "response": f"✅ Course '{course_name_full}' has been deleted.",
+                    "response": f" Course '{course_name_full}' has been deleted.",
                     "course_id": matched_course["id"],
                 })
             except Course.DoesNotExist:

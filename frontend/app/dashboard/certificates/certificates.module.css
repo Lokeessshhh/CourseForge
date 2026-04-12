@@ -42,6 +42,441 @@
   border-bottom: 2px solid var(--black);
 }
 
+/* Big Demo Certificate */
+.bigDemoCertificate {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+  margin-bottom: 24px;
+}
+
+.demoCertPreview {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 600px;
+  border: 4px solid var(--black);
+  box-shadow: 16px 16px 0px var(--black);
+  background: var(--white);
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* Corner Decorations */
+.cornerDecoration {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-top: 3px solid var(--black);
+  border-left: 3px solid var(--black);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.cornerDecoration.topLeft {
+  top: 16px;
+  left: 16px;
+}
+
+.cornerDecoration.topRight {
+  top: 16px;
+  right: 16px;
+  border-left: none;
+  border-right: 3px solid var(--black);
+}
+
+.cornerDecoration.bottomLeft {
+  bottom: 16px;
+  left: 16px;
+  border-top: none;
+  border-bottom: 3px solid var(--black);
+}
+
+.cornerDecoration.bottomRight {
+  bottom: 16px;
+  right: 16px;
+  border-left: none;
+  border-top: none;
+  border-right: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
+}
+
+/* Watermark */
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-family: var(--font-heading);
+  font-size: 120px;
+  font-weight: 700;
+  color: var(--black);
+  opacity: 0.03;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 20px;
+  z-index: 1;
+}
+
+.demoCertInner {
+  position: relative;
+  z-index: 5;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 3px solid var(--black);
+  padding: 40px;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Header Section */
+.demoHeader {
+  margin-bottom: 24px;
+}
+
+.demoLogo {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  margin-top: 0;
+  color: var(--black);
+}
+
+.demoAccreditation {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  color: var(--black);
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* Title Section */
+.demoTitleSection {
+  margin-bottom: 32px;
+}
+
+.decorativeDivider {
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--black), transparent);
+  margin: 0 auto 16px;
+}
+
+.demoTitle {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+  margin-top: 0;
+  color: var(--black);
+}
+
+.ornamentalLine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.lineLeft,
+.lineRight {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--black), transparent);
+}
+
+.lineCenter {
+  width: 8px;
+  height: 8px;
+  background-color: var(--black);
+  transform: rotate(45deg);
+}
+
+/* Body Section */
+.demoBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.demoCertifyText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--black);
+  margin-bottom: 12px;
+  margin-top: 0;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.nameContainer {
+  padding: 16px 40px;
+  border-left: 3px solid var(--black);
+  border-right: 3px solid var(--black);
+  margin: 16px 0;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.demoStudentName {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 42px;
+  font-weight: 400;
+  font-style: italic;
+  margin: 0;
+  color: var(--black);
+  letter-spacing: 2px;
+}
+
+.demoCompletedText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--black);
+  margin-bottom: 20px;
+  margin-top: 0;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.demoCourseContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.demoCourseBorderLeft,
+.demoCourseBorderRight {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--black), transparent);
+}
+
+.demoCourseBorderRight {
+  background: linear-gradient(90deg, transparent, var(--black));
+}
+
+.demoCourseName {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--black);
+  letter-spacing: 2px;
+}
+
+/* Achievement Badge */
+.achievementBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-light) 100%);
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  margin-top: 16px;
+}
+
+.badgeIcon {
+  font-size: 20px;
+  color: var(--black);
+}
+
+.badgeText {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--black);
+}
+
+/* Stats Section */
+.demoStatsSection {
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  border: 2px solid var(--black);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0px var(--black);
+  transition: var(--transition);
+}
+
+.statBox:hover {
+  box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
+}
+
+.demoStatLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.7;
+}
+
+.demoStatValue {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+/* Footer Section */
+.demoFooter {
+  width: 100%;
+}
+
+.footerDivider {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--black), transparent);
+  margin-bottom: 24px;
+}
+
+.footerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.footerLeft,
+.footerCenter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.footerLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.7;
+}
+
+.footerValue {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: 1px;
+}
+
+/* Certificate Seal */
+.certSeal {
+  flex-shrink: 0;
+}
+
+.sealOuter {
+  width: 80px;
+  height: 80px;
+  border: 3px solid var(--black);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-light) 100%);
+  box-shadow: 4px 4px 0px var(--black);
+}
+
+.sealInner {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--black);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white);
+}
+
+.sealText {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--black);
+}
+
+/* Signature Section */
+.signatureSection {
+  display: flex;
+  justify-content: space-around;
+  gap: 40px;
+  margin-bottom: 24px;
+}
+
+.signatureBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.signatureLine {
+  width: 160px;
+  height: 2px;
+  background-color: var(--black);
+}
+
+.signatureLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--black);
+  opacity: 0.7;
+}
+
+/* Verification Footer */
+.verificationFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--white);
+  border: 2px solid var(--black);
+  margin-top: 16px;
+}
+
+.verificationText {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--black);
+}
+
 /* Certificate Grid */
 .certGrid {
   display: grid;
@@ -72,7 +507,7 @@
 /* Certificate Preview */
 .certPreview {
   height: 180px;
-  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  background: var(--gray);
   padding: 16px;
   border-bottom: 2px solid var(--black);
   position: relative;
@@ -199,7 +634,8 @@
 .certTopic {
   font-family: var(--font-body);
   font-size: 11px;
-  color: #555;
+  color: var(--black);
+  opacity: 0.6;
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -233,8 +669,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px;
-  background-color: #f0f0f0;
-  border: 1px solid var(--black);
+  background-color: var(--gray);
+  border: 2px solid var(--black);
 }
 
 .reqItem {
@@ -242,7 +678,60 @@
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.3px;
-  color: #333;
+  color: var(--black);
+}
+
+/* Progress Section for Locked Certificates */
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: var(--gray);
+  border: 2px solid var(--black);
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--black);
+}
+
+.progressValue {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.progressBar {
+  height: 6px;
+  background-color: var(--white);
+  border: 2px solid var(--black);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--yellow);
+  transition: width 0.5s ease-out;
+}
+
+.progressHint {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--black);
+  opacity: 0.6;
+  margin: 0;
+  text-align: center;
 }
 
 /* Buttons */
@@ -264,6 +753,7 @@
 .viewBtn:hover,
 .continueBtn:hover {
   box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .continueBtn {
@@ -316,6 +806,7 @@
 
 .createBtn:hover {
   box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 /* Error State */
@@ -379,5 +870,107 @@
 
   .courseRowTopic {
     font-size: 10px;
+  }
+
+  /* Big Demo Certificate Mobile */
+  .demoCertPreview {
+    min-height: 800px;
+    padding: 12px;
+  }
+
+  .demoCertInner {
+    padding: 20px;
+  }
+
+  .cornerDecoration {
+    width: 24px;
+    height: 24px;
+  }
+
+  .watermark {
+    font-size: 60px;
+    letter-spacing: 10px;
+  }
+
+  .demoLogo {
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+
+  .demoAccreditation {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+
+  .demoTitle {
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .decorativeDivider {
+    width: 80px;
+    height: 1px;
+  }
+
+  .demoStudentName {
+    font-size: 28px;
+  }
+
+  .nameContainer {
+    padding: 12px 20px;
+  }
+
+  .demoCourseName {
+    font-size: 18px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .statBox {
+    padding: 12px;
+  }
+
+  .demoStatValue {
+    font-size: 20px;
+  }
+
+  .footerContent {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sealOuter {
+    width: 60px;
+    height: 60px;
+  }
+
+  .sealInner {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sealText {
+    font-size: 7px;
+  }
+
+  .signatureSection {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .signatureLine {
+    width: 120px;
+  }
+
+  .achievementBadge {
+    padding: 10px 16px;
+  }
+
+  .badgeText {
+    font-size: 8px;
+    letter-spacing: 1px;
   }
 }

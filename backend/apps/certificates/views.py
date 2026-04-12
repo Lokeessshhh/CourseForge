@@ -30,34 +30,44 @@ def _err(msg, status_code=status.HTTP_400_BAD_REQUEST):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def certificate_list(request):
-    """All certificates for the current user (both locked and unlocked)."""
-    from apps.courses.models import Course
-    
-    # Get all courses for this user - use filter with user_id
+    """All certificates for the current user (both locked and unlocked) with progress data."""
+    from apps.courses.models import Course, CourseProgress
+
+    # Get all courses for this user
     courses = Course.objects.filter(user_id=request.user.id).order_by('-created_at')
-    
+
     logger.info("Found %d courses for user %s", courses.count(), request.user.id)
-    
+
     certs = []
     for course in courses:
+        # Get course progress
+        progress = CourseProgress.objects.filter(
+            user=request.user,
+            course=course
+        ).first()
+
+        completion_percentage = progress.overall_percentage if progress else 0
+
         cert = Certificate.objects.filter(user=request.user, course=course).first()
-        
-        if cert:
+
+        if cert and cert.is_unlocked:
+            # Certificate unlocked (course complete)
             certs.append({
                 "id": str(cert.id),
                 "course_id": str(course.id),
                 "course_name": course.course_name,
                 "topic": course.topic[:50] + "..." if len(course.topic) > 50 else course.topic,
-                "is_unlocked": cert.is_unlocked,
+                "is_unlocked": True,
                 "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
                 "quiz_score_avg": cert.quiz_score_avg,
                 "test_score_avg": cert.test_score_avg,
                 "total_study_hours": cert.total_study_hours,
+                "completion_percentage": 100,
             })
         else:
-            # No certificate record yet - course in progress
+            # Certificate locked (course in progress)
             certs.append({
-                "id": None,
+                "id": str(cert.id) if cert else None,
                 "course_id": str(course.id),
                 "course_name": course.course_name,
                 "topic": course.topic[:50] + "..." if len(course.topic) > 50 else course.topic,
@@ -66,9 +76,9 @@ def certificate_list(request):
                 "quiz_score_avg": 0,
                 "test_score_avg": 0,
                 "total_study_hours": 0,
-                "status": "in_progress"
+                "completion_percentage": completion_percentage,
             })
-    
+
     logger.info("Returning %d certificates for user %s", len(certs), request.user.id)
     return _ok(certs)
 
@@ -108,57 +118,88 @@ def unlocked_certificates(request):
 @permission_classes([IsAuthenticated])
 def course_certificate(request, course_id):
     """Get certificate info for a specific course."""
-    from services.certificate.generator import CertificateGenerator
-    from apps.courses.models import Course
+    from apps.courses.models import Course, CourseProgress
+    from apps.certificates.models import Certificate
 
     try:
-        generator = CertificateGenerator()
-        cert_data = generator.get_certificate(str(request.user.id), course_id)
+        user_id = str(request.user.id)
+        logger.info(f"Certificate view: user={user_id}, course={course_id}")
 
-        if not cert_data:
-            # Check if user is eligible but cert hasn't been created yet
-            from apps.courses.models import CourseProgress
-            
-            progress = CourseProgress.objects.filter(
-                user=request.user, 
-                course_id=course_id
-            ).first()
-            
-            if progress and progress.is_completed:
-                # Eligible! Generate it now.
+        course = Course.objects.get(id=course_id)
+        cert = Certificate.objects.filter(user_id=user_id, course=course).first()
+
+        logger.info(f"Certificate found: {cert is not None}, unlocked={cert.is_unlocked if cert else None}")
+
+        if cert and cert.is_unlocked:
+            user_full_name = getattr(request.user, "name", None) or ""
+            email_name = request.user.email.split('@')[0] if request.user.email else ""
+            student_name = user_full_name or email_name
+
+            # If PDF hasn't been generated yet, trigger generation
+            if not cert.pdf_url:
                 from apps.courses.tasks import generate_certificate_task
-                generate_certificate_task.delay(str(request.user.id), course_id)
+                generate_certificate_task.delay(user_id, course_id)
+                logger.info(f"Triggered PDF generation for certificate {cert.id}")
                 return _ok({
                     "is_unlocked": True,
+                    "certificate_id": str(cert.id),
+                    "course_name": course.course_name,
+                    "student_name": student_name,
+                    "final_score": cert.quiz_score_avg,
+                    "avg_test_score": cert.test_score_avg,
+                    "total_study_hours": cert.total_study_hours,
+                    "total_days": course.total_days,
+                    "completion_date": cert.issued_at.strftime("%Y-%m-%d") if cert.issued_at else None,
+                    "days_taken": 0,
+                    "download_url": None,
+                    "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
                     "status": "generating",
-                    "message": "Certificate is being generated. Please refresh in a moment."
+                    "message": "Certificate PDF is being generated. Please refresh in a moment.",
+                    "instructor_name": "Dr. AURA (AI Unified Research Assistant)",
+                    "director_name": "Prof. COGNITO (Cognitive Optimization & Guidance Intelligence)",
                 })
-            
-            # Not eligible yet
+
             return _ok({
-                "is_unlocked": False,
-                "issued_at": None,
-                "download_url": None,
-                "stats": None,
-                "completion_progress": progress.completion_percentage if progress else 0,
+                "is_unlocked": True,
+                "certificate_id": str(cert.id),
+                "course_name": course.course_name,
+                "student_name": student_name,
+                "final_score": cert.quiz_score_avg,
+                "avg_test_score": cert.test_score_avg,
+                "total_study_hours": cert.total_study_hours,
+                "total_days": course.total_days,
+                "completion_date": cert.issued_at.strftime("%Y-%m-%d") if cert.issued_at else None,
+                "days_taken": 0,
+                "download_url": cert.pdf_url,
+                "issued_at": cert.issued_at.isoformat() if cert.issued_at else None,
+                "status": "ready",
+                "instructor_name": "Dr. AURA (AI Unified Research Assistant)",
+                "director_name": "Prof. COGNITO (Cognitive Optimization & Guidance Intelligence)",
             })
 
-        # Add more fields expected by frontend
-        course = Course.objects.get(id=course_id)
+        # Certificate not unlocked yet
+        progress = CourseProgress.objects.filter(user_id=user_id, course=course).first()
 
-        cert_data.update({
-            "certificate_id": cert_data.get("download_url", "").split("/")[-1].split(".")[0] if cert_data.get("download_url") else "CERT-" + str(course_id)[:8],
-            "course_name": course.course_name,
-            "student_name": f"{request.user.first_name} {request.user.last_name}".strip() or request.user.email.split('@')[0],
-            "final_score": cert_data["stats"]["avg_quiz_score"],
-            "avg_test_score": cert_data["stats"]["avg_test_score"],
-            "total_study_hours": cert_data["stats"]["total_study_hours"],
-            "total_days": course.total_days,
-            "completion_date": cert_data["issued_at"][:10] if cert_data.get("issued_at") else None,
-            "days_taken": 0,
+        if progress and progress.is_completed:
+            # Eligible but cert not generated yet
+            from apps.courses.tasks import generate_certificate_task
+            generate_certificate_task.delay(user_id, course_id)
+            return _ok({
+                "is_unlocked": True,
+                "status": "generating",
+                "message": "Certificate is being generated. Please refresh in a moment."
+            })
+
+        return _ok({
+            "is_unlocked": False,
+            "issued_at": None,
+            "download_url": None,
+            "stats": None,
+            "completion_progress": progress.completion_percentage if progress else 0,
+            "completed_weeks": progress.completed_weeks if progress else 0,
+            "total_weeks": progress.total_weeks if progress else 0,
+            "is_completed": progress.is_completed if progress else False,
         })
-
-        return _ok(cert_data)
 
     except Exception as exc:
         logger.exception("Error getting certificate: %s", exc)

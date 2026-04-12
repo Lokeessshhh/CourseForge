@@ -453,38 +453,55 @@ class CourseCompletionService:
     ) -> Dict[str, Any]:
         """
         Complete a weekly test.
-        
+
         Args:
             user_id: User UUID
             course_id: Course UUID
             week_number: Week number
             test_score: Test score (0-100)
             passed: Whether test was passed
-            
+
         Returns:
             Dict with completion status
         """
         from apps.courses.models import Course, WeekPlan, CourseProgress
-        
+
         try:
             course = Course.objects.get(id=course_id, user_id=user_id)
             week = WeekPlan.objects.get(course=course, week_number=week_number)
-            
-            # Mark week as completed
+
+            # ONLY mark week as completed if test was PASSED
+            if not passed:
+                logger.warning(
+                    f"Weekly test failed: user={user_id}, course={course_id}, "
+                    f"week={week_number}, score={test_score}%"
+                )
+                return {
+                    "success": False,
+                    "week_completed": False,
+                    "next_week_unlocked": False,
+                    "course_complete": False,
+                    "certificate_generated": False,
+                    "test_score": test_score,
+                    "passed": False,
+                    "message": f"Test score {test_score}% is below passing (70%). Please retake the test.",
+                }
+
+            # Mark week as completed (only when passed)
             week.is_completed = True
             week.test_generated = True
             week.save(update_fields=["is_completed", "test_generated"])
-            
+
             # Update course progress
             progress, _ = CourseProgress.objects.get_or_create(
                 user_id=user_id,
                 course=course,
             )
-            
+
             progress.avg_test_score = test_score
             progress.last_activity = timezone.now()
             progress.save()
-            
+
             # Unlock next week if not last week
             next_week_unlocked = False
             if week_number < course.duration_weeks:
@@ -492,25 +509,25 @@ class CourseCompletionService:
                     course=course,
                     week_number=week_number + 1,
                 ).first()
-                
+
                 if next_week:
                     # Unlock all days in next week
                     next_week.days.update(is_locked=False)
                     next_week_unlocked = True
-                    
+
                     # Update progress current position
                     progress.current_week = week_number + 1
                     progress.current_day = 1
                     progress.save()
-            
+
             # Check if course is complete
             course_complete = self._check_course_completion(course)
-            
+
             # Generate certificate if course complete
             certificate_generated = False
             if course_complete:
                 certificate_generated = self._generate_certificate(user_id, course_id)
-            
+
             return {
                 "success": True,
                 "week_completed": True,
@@ -520,7 +537,7 @@ class CourseCompletionService:
                 "test_score": test_score,
                 "passed": passed,
             }
-            
+
         except Exception as exc:
             logger.exception(f"Error completing weekly test: {exc}")
             return {

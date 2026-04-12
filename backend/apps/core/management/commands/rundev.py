@@ -30,7 +30,7 @@ class Command(BaseCommand):
         """Handle shutdown signals gracefully."""
         if not self.shutting_down:
             self.shutting_down = True
-            self.stdout.write(self.style.WARNING('\n\n🛑 Shutdown signal received...'))
+            self.stdout.write(self.style.WARNING('\n\n Shutdown signal received...'))
             self.cleanup_processes()
         sys.exit(0)
 
@@ -94,11 +94,11 @@ class Command(BaseCommand):
 
         # Print startup banner
         self.stdout.write(self.style.SUCCESS('\n' + '=' * 80))
-        self.stdout.write(self.style.SUCCESS('🚀 STARTING DEVELOPMENT SERVER'))
+        self.stdout.write(self.style.SUCCESS(' STARTING DEVELOPMENT SERVER'))
         self.stdout.write(self.style.SUCCESS('=' * 80))
         self.stdout.write(self.style.SUCCESS('   Django + Daphne (ASGI) + Celery + WebSocket'))
-        self.stdout.write(self.style.SUCCESS(f'   🌐 http://{host}:{port}'))
-        self.stdout.write(self.style.SUCCESS(f'   📝 Logs: {self.logs_dir}'))
+        self.stdout.write(self.style.SUCCESS(f'    http://{host}:{port}'))
+        self.stdout.write(self.style.SUCCESS(f'    Logs: {self.logs_dir}'))
         self.stdout.write(self.style.SUCCESS('=' * 80 + '\n'))
 
         # Setup signal handlers for graceful shutdown
@@ -107,15 +107,15 @@ class Command(BaseCommand):
 
         # Start Celery worker if not disabled
         if not no_celery:
-            self.stdout.write(self.style.SUCCESS('📦 Starting Celery worker...'))
+            self.stdout.write(self.style.SUCCESS(' Starting Celery worker...'))
             self.start_celery_worker()
             # Wait for Celery to initialize
             self.celery_started.wait(timeout=5)
         else:
-            self.stdout.write(self.style.WARNING('⏭️  Celery worker disabled (--no-celery flag set)\n'))
+            self.stdout.write(self.style.WARNING('⏭  Celery worker disabled (--no-celery flag set)\n'))
 
         # Start Daphne ASGI server (blocks)
-        self.stdout.write(self.style.SUCCESS('🌐 Starting Daphne ASGI server...'))
+        self.stdout.write(self.style.SUCCESS(' Starting Daphne ASGI server...'))
         self.start_daphne(f'{host}:{port}')
 
         # Cleanup on exit
@@ -126,7 +126,7 @@ class Command(BaseCommand):
         if self.shutting_down:
             return
 
-        self.stdout.write(self.style.WARNING('\n🛑 Shutting down all services...\n'))
+        self.stdout.write(self.style.WARNING('\n Shutting down all services...\n'))
 
         # Close log files first
         self.cleanup_log_files()
@@ -139,14 +139,14 @@ class Command(BaseCommand):
                     process.terminate()
                     try:
                         process.wait(timeout=5)
-                        self.stdout.write(self.style.SUCCESS(f'   ✅ {service_name} stopped'))
+                        self.stdout.write(self.style.SUCCESS(f'    {service_name} stopped'))
                     except subprocess.TimeoutExpired:
                         process.kill()
-                        self.stdout.write(self.style.WARNING(f'   ⚠️  {service_name} force killed'))
+                        self.stdout.write(self.style.WARNING(f'     {service_name} force killed'))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'   Error stopping process: {e}'))
 
-        self.stdout.write(self.style.SUCCESS('\n✅ All services stopped\n'))
+        self.stdout.write(self.style.SUCCESS('\n All services stopped\n'))
         self.shutting_down = True
 
     def start_celery_worker(self):
@@ -165,7 +165,7 @@ class Command(BaseCommand):
                 "-Q", "celery,course_generation,quiz_generation,certificates",
             ]
 
-            self.stdout.write(self.style.SUCCESS(f'   📦 Command: {" ".join(celery_cmd)}'))
+            self.stdout.write(self.style.SUCCESS(f'    Command: {" ".join(celery_cmd)}'))
 
             env = os.environ.copy()
             env["PYTHONUNBUFFERED"] = "1"
@@ -193,12 +193,12 @@ class Command(BaseCommand):
                 name="CeleryLogStreamer"
             ).start()
 
-            self.stdout.write(self.style.SUCCESS('   ✅ Celery worker started\n'))
+            self.stdout.write(self.style.SUCCESS('    Celery worker started\n'))
 
             return process
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'❌ Failed to start Celery: {e}'))
+            self.stdout.write(self.style.ERROR(f' Failed to start Celery: {e}'))
             return None
 
     def stream_celery_logs(self, process):
@@ -238,11 +238,11 @@ class Command(BaseCommand):
 
                 # Terminal output - filtered for readability
                 if "ERROR" in line or "Traceback" in line or "Exception" in line:
-                    self.stdout.write(self.style.ERROR(f'❌ [Celery] {line.rstrip()}'))
+                    self.stdout.write(self.style.ERROR(f' [Celery] {line.rstrip()}'))
                     continue
 
                 if "WARNING" in line or "WARN" in line or "retrying" in line.lower():
-                    self.stdout.write(self.style.WARNING(f'⚠️ [Celery] {line.rstrip()}'))
+                    self.stdout.write(self.style.WARNING(f' [Celery] {line.rstrip()}'))
                     continue
 
                 # SKIP only Celery internal debug noise in terminal
@@ -257,19 +257,19 @@ class Command(BaseCommand):
                     continue
 
                 # Show all other Celery logs in terminal
-                self.stdout.write(f'📦 [Celery] {line.rstrip()}\n')
+                self.stdout.write(f' [Celery] {line.rstrip()}\n')
 
             # Check if process exited unexpectedly
             if process.poll() is not None and process.returncode != 0 and not self.shutting_down:
                 self.stdout.write(self.style.ERROR(
-                    f'\n⚠️  Celery worker exited with code {process.returncode}\n'
+                    f'\n  Celery worker exited with code {process.returncode}\n'
                 ))
                 if self.celery_log_file:
                     self.celery_log_file.write(f"\n# Celery exited with code {process.returncode}\n")
 
         except Exception as e:
             if not self.shutting_down:
-                self.stdout.write(self.style.ERROR(f'❌ [Celery Log Error] {e}'))
+                self.stdout.write(self.style.ERROR(f' [Celery Log Error] {e}'))
 
     def start_daphne(self, addrport):
         """Start Daphne ASGI server - runs in foreground with proper log streaming."""
@@ -286,14 +286,14 @@ class Command(BaseCommand):
                 "config.asgi:application",
             ]
 
-            self.stdout.write(self.style.SUCCESS(f'   🌐 Command: {" ".join(daphne_cmd)}'))
-            self.stdout.write(self.style.SUCCESS('   ✅ Daphne started\n'))
+            self.stdout.write(self.style.SUCCESS(f'    Command: {" ".join(daphne_cmd)}'))
+            self.stdout.write(self.style.SUCCESS('    Daphne started\n'))
             self.stdout.write(self.style.SUCCESS('=' * 80))
-            self.stdout.write(self.style.SUCCESS('📋 Logs will show:'))
-            self.stdout.write(self.style.SUCCESS('   🔌 WebSocket connections/disconnections'))
-            self.stdout.write(self.style.SUCCESS('   🎯 Celery tasks (prefixed with [Celery])'))
-            self.stdout.write(self.style.SUCCESS('   📡 API requests'))
-            self.stdout.write(self.style.SUCCESS('   ⚠️  Errors and warnings'))
+            self.stdout.write(self.style.SUCCESS(' Logs will show:'))
+            self.stdout.write(self.style.SUCCESS('    WebSocket connections/disconnections'))
+            self.stdout.write(self.style.SUCCESS('    Celery tasks (prefixed with [Celery])'))
+            self.stdout.write(self.style.SUCCESS('    API requests'))
+            self.stdout.write(self.style.SUCCESS('     Errors and warnings'))
             self.stdout.write(self.style.SUCCESS('=' * 80 + '\n'))
 
             # Set environment for unbuffered output
@@ -344,26 +344,26 @@ class Command(BaseCommand):
 
                 # Terminal output - filtered for readability
                 if "ERROR" in line or "Traceback" in line or "Exception" in line:
-                    self.stdout.write(self.style.ERROR(f'❌ [Daphne] {line.rstrip()}'))
+                    self.stdout.write(self.style.ERROR(f' [Daphne] {line.rstrip()}'))
                     continue
 
                 if "WARNING" in line or "WARN" in line:
-                    self.stdout.write(self.style.WARNING(f'⚠️ [Daphne] {line.rstrip()}'))
+                    self.stdout.write(self.style.WARNING(f' [Daphne] {line.rstrip()}'))
                     continue
 
                 # WebSocket connection logs
                 if "WebSocket" in line or "websocket" in line:
-                    self.stdout.write(self.style.SUCCESS(f'🔌 [Daphne] {line.rstrip()}'))
+                    self.stdout.write(self.style.SUCCESS(f' [Daphne] {line.rstrip()}'))
                     continue
 
                 # HTTP request logs
                 if "HTTP" in line:
-                    self.stdout.write(f'📡 [Daphne] {line.rstrip()}\n')
+                    self.stdout.write(f' [Daphne] {line.rstrip()}\n')
                     continue
 
                 # ASGI logs
                 if "[ASGI]" in line:
-                    self.stdout.write(f'🌐 [Daphne] {line.rstrip()}\n')
+                    self.stdout.write(f' [Daphne] {line.rstrip()}\n')
                     continue
 
                 # Default: Show any other Daphne log
@@ -371,4 +371,4 @@ class Command(BaseCommand):
 
         except Exception as e:
             if not self.shutting_down:
-                self.stdout.write(self.style.ERROR(f'❌ [Daphne Log Error] {e}'))
+                self.stdout.write(self.style.ERROR(f' [Daphne Log Error] {e}'))

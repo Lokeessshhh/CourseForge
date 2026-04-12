@@ -98,7 +98,7 @@ class SSEEventGenerator:
         # Start Redis listener
         self._redis_listener_task = asyncio.create_task(self._listen_to_redis())
 
-        logger.info("📡 SSE connection opened for course %s user %s",
+        logger.info(" SSE connection opened for course %s user %s",
                    self.course_id, self.user_id)
 
         try:
@@ -123,7 +123,7 @@ class SSEEventGenerator:
 
                     # Check if generation is complete
                     if event.get("generation_status") in ("ready", "failed"):
-                        logger.info("✅ SSE generation complete for course %s",
+                        logger.info(" SSE generation complete for course %s",
                                    self.course_id)
                         yield self._format_sse_event("complete", event)
                         break
@@ -136,11 +136,11 @@ class SSEEventGenerator:
                     })
 
         except asyncio.CancelledError:
-            logger.info("⚠️ SSE connection cancelled for course %s", self.course_id)
+            logger.info(" SSE connection cancelled for course %s", self.course_id)
         except GeneratorExit:
-            logger.info("⚠️ SSE generator closed for course %s", self.course_id)
+            logger.info(" SSE generator closed for course %s", self.course_id)
         except Exception as exc:
-            logger.exception("❌ SSE error for course %s: %s", self.course_id, exc)
+            logger.exception(" SSE error for course %s: %s", self.course_id, exc)
             yield self._format_sse_event("error", {
                 "error": str(exc),
             })
@@ -161,7 +161,12 @@ class SSEEventGenerator:
                         del _sse_queues[self.course_id]
                 except (ValueError, KeyError):
                     pass
-            logger.info("🔌 SSE connection closed for course %s", self.course_id)
+            logger.info(" SSE connection closed for course %s", self.course_id)
+
+
+# Standard Django view is required for SSE.
+# DRF @api_view causes 406 errors because it tries to match 'text/event-stream' against JSON renderers.
+from django.views.decorators.http import require_GET
 
 
 @csrf_exempt
@@ -189,14 +194,14 @@ def course_progress_sse(request, course_id):
     try:
         course = Course.objects.get(id=course_id)
     except Course.DoesNotExist:
-        logger.warning("❌ SSE: Course not found: %s", course_id)
+        logger.warning(" SSE: Course not found: %s", course_id)
         return StreamingHttpResponse(
             SSEEventGenerator._format_sse_event("error", {"error": "Course not found"}),
             content_type="text/event-stream",
             status=404,
         )
     except Exception as exc:
-        logger.exception("❌ SSE: Error accessing course %s: %s", course_id, exc)
+        logger.exception(" SSE: Error accessing course %s: %s", course_id, exc)
         return StreamingHttpResponse(
             SSEEventGenerator._format_sse_event("error", {"error": str(exc)}),
             content_type="text/event-stream",
@@ -218,7 +223,7 @@ def course_progress_sse(request, course_id):
     response["Connection"] = "keep-alive"
     response["Access-Control-Allow-Origin"] = "*"  # CORS for development
 
-    logger.info("✅ SSE response created for course %s", course_id)
+    logger.info(" SSE response created for course %s", course_id)
     return response
 
 
@@ -252,20 +257,20 @@ def broadcast_progress_update(course_id: str | UUID, data: dict):
 
         redis_client.publish(REDIS_SSE_CHANNEL, message)
 
-        logger.info("📢 Broadcast progress update for course %s: %d%% via Redis",
+        logger.info(" Broadcast progress update for course %s: %d%% via Redis",
                    course_id_str, data.get("progress", 0))
 
     except Exception as exc:
-        logger.exception("❌ Failed to broadcast progress update: %s", exc)
+        logger.exception(" Failed to broadcast progress update: %s", exc)
 
 
 def broadcast_generation_complete(course_id: str | UUID, data: dict):
     """
     Broadcast FINAL completion event to all SSE clients via Redis.
     This tells frontend to CLOSE the SSE connection and dismiss the toast.
-    
+
     MUST be called when the LAST weekly test completes.
-    
+
     Usage:
         broadcast_generation_complete(course_id, {
             "progress": 100,
@@ -283,7 +288,7 @@ def broadcast_generation_complete(course_id: str | UUID, data: dict):
 
     try:
         redis_client = get_redis_client()
-        
+
         # Send with 'complete' event type - frontend will close connection on this
         message = json.dumps({
             "course_id": course_id_str,
@@ -293,7 +298,54 @@ def broadcast_generation_complete(course_id: str | UUID, data: dict):
 
         redis_client.publish(REDIS_SSE_CHANNEL, message)
 
-        logger.info("✅📢 Broadcast GENERATION COMPLETE for course %s via Redis", course_id_str)
+        logger.info(" Broadcast GENERATION COMPLETE for course %s via Redis", course_id_str)
 
     except Exception as exc:
-        logger.exception("❌ Failed to broadcast generation complete: %s", exc)
+        logger.exception(" Failed to broadcast generation complete: %s", exc)
+
+
+def broadcast_day_complete(course_id: str | UUID, week_number: int, day_number: int, day_data: dict):
+    """
+    Broadcast that a specific day has completed generation and is now unlocked.
+    This allows frontend to immediately unlock the day for user access.
+
+    Called immediately after a day's content is saved to DB.
+
+    Usage:
+        broadcast_day_complete(course_id, week, day, {
+            "theory_generated": True,
+            "code_generated": True,
+            "quiz_generated": True,
+            "is_completed": True,
+            "is_locked": False,
+        })
+
+    Args:
+        course_id: Course UUID or string
+        week_number: Week number (1-N)
+        day_number: Day number (1-5)
+        day_data: Day status data
+    """
+    course_id_str = str(course_id)
+
+    try:
+        redis_client = get_redis_client()
+
+        # Send with 'day_complete' event type
+        message = json.dumps({
+            "course_id": course_id_str,
+            "data": {
+                "week_number": week_number,
+                "day_number": day_number,
+                **day_data,
+            },
+            "event_type": "day_complete",  # ← Tells frontend to unlock this specific day
+        })
+
+        redis_client.publish(REDIS_SSE_CHANNEL, message)
+
+        logger.info(" Broadcast DAY COMPLETE: Course %s, Week %d, Day %d via Redis",
+                   course_id_str, week_number, day_number)
+
+    except Exception as exc:
+        logger.exception(" Failed to broadcast day complete: %s", exc)

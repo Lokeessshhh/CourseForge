@@ -4,6 +4,7 @@ Saves messages with embeddings, retrieves recent history,
 searches past conversations semantically.
 Uses the existing Conversation model from apps.conversations.
 """
+import asyncio
 import uuid
 import logging
 
@@ -29,16 +30,19 @@ async def save_message(
     embedding = await embedder.aembed(content)
     vec_str = "[" + ",".join(f"{v:.8f}" for v in embedding) + "]"
 
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            INSERT INTO conversations
-                (id, user_id, session_id, role, content, embedding, course_id)
-            VALUES
-                (%s, %s, %s, %s, %s, %s::vector, %s)
-            """,
-            [msg_id, user_id, session_id, role, content, vec_str, course_id],
-        )
+    def _insert():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO conversations
+                    (id, user_id, session_id, role, content, embedding, course_id)
+                VALUES
+                    (%s, %s, %s, %s, %s, %s::vector, %s)
+                """,
+                [msg_id, user_id, session_id, role, content, vec_str, course_id],
+            )
+
+    await asyncio.to_thread(_insert)
 
 
 async def get_recent_history(
@@ -48,10 +52,13 @@ async def get_recent_history(
     """Get last N messages for a session."""
     from apps.conversations.models import Conversation
 
-    messages = (
-        Conversation.objects.filter(session_id=session_id)
-        .order_by("created_at")[:limit]
-    )
+    def _fetch():
+        return list(
+            Conversation.objects.filter(session_id=session_id)
+            .order_by("created_at")[:limit]
+        )
+
+    messages = await asyncio.to_thread(_fetch)
     return [{"role": m.role, "content": m.content} for m in messages]
 
 
@@ -67,20 +74,23 @@ async def search_past_conversations(
     query_embedding = await embedder.aembed(query)
     vec_str = "[" + ",".join(f"{v:.8f}" for v in query_embedding) + "]"
 
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT role, content,
-                1 - (embedding <=> %s::vector) AS similarity
-            FROM conversations
-            WHERE user_id = %s
-                AND embedding IS NOT NULL
-            ORDER BY embedding <=> %s::vector
-            LIMIT %s
-            """,
-            [vec_str, user_id, vec_str, top_k],
-        )
-        rows = cursor.fetchall()
+    def _search():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT role, content,
+                    1 - (embedding <=> %s::vector) AS similarity
+                FROM conversations
+                WHERE user_id = %s
+                    AND embedding IS NOT NULL
+                ORDER BY embedding <=> %s::vector
+                LIMIT %s
+                """,
+                [vec_str, user_id, vec_str, top_k],
+            )
+            return cursor.fetchall()
+
+    rows = await asyncio.to_thread(_search)
 
     return [
         {"role": row[0], "content": row[1], "similarity": float(row[2])}

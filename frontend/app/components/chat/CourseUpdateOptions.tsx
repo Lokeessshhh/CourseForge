@@ -91,7 +91,7 @@ export function CourseUpdateOptions({
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <span className={styles.icon}>✏️</span>
+        <span className={styles.icon}></span>
         <div>
           <h3 className={styles.title}>Update Course</h3>
           <p className={styles.courseName}>{courseName}</p>
@@ -183,7 +183,7 @@ export function CourseUpdateOptions({
         /* Input Confirmation */
         <div className={styles.confirmBox}>
           <div className={styles.confirmHeader}>
-            <span className={styles.confirmIcon}>📦</span>
+            <span className={styles.confirmIcon}></span>
             <h4 className={styles.confirmTitle}>Compact Course</h4>
           </div>
           <p className={styles.confirmText}>
@@ -195,7 +195,7 @@ export function CourseUpdateOptions({
           </div>
           <div className={styles.confirmActions}>
             <button onClick={handleFinalConfirm} className={styles.confirmBtn}>
-              ✓ Confirm Compact to {targetWeeks} Weeks
+               Confirm Compact to {targetWeeks} Weeks
             </button>
             <button onClick={handleBack} className={styles.backBtn}>
               ← Go Back
@@ -206,7 +206,7 @@ export function CourseUpdateOptions({
         /* Final Confirmation */
         <div className={styles.confirmBox}>
           <div className={styles.confirmHeader}>
-            <span className={styles.confirmIcon}>⚠️</span>
+            <span className={styles.confirmIcon}></span>
             <h4 className={styles.confirmTitle}>Confirm Update</h4>
           </div>
           <p className={styles.confirmText}>
@@ -220,7 +220,7 @@ export function CourseUpdateOptions({
           </div>
           <div className={styles.confirmActions}>
             <button onClick={handleFinalConfirm} className={styles.confirmBtn}>
-              ✓ Confirm Update
+               Confirm Update
             </button>
             <button onClick={handleBack} className={styles.backBtn}>
               ← Go Back
@@ -232,7 +232,7 @@ export function CourseUpdateOptions({
       {/* Info Box */}
       <div className={styles.infoBox}>
         <div className={styles.infoHeader}>
-          <span className={styles.infoIcon}>ℹ️</span>
+          <span className={styles.infoIcon}>ℹ</span>
           <h5 className={styles.infoTitle}>Available Options:</h5>
         </div>
         <ul className={styles.infoList}>

@@ -68,20 +68,20 @@ export default function DayContentCard({
           className={`${styles.tab} ${activeTab === 'theory' ? styles.active : ''}`}
           onClick={() => setActiveTab('theory')}
         >
-          📖 Theory
+           Theory
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'code' ? styles.active : ''}`}
           onClick={() => setActiveTab('code')}
         >
-          💻 Code
+           Code
         </button>
         {quizzes && quizzes.length > 0 && (
           <button
             className={`${styles.tab} ${activeTab === 'quiz' ? styles.active : ''}`}
             onClick={() => setActiveTab('quiz')}
           >
-            📝 Quiz ({quizzes.length})
+            Quiz ({quizzes.length})
           </button>
         )}
       </div>
@@ -140,7 +140,7 @@ export default function DayContentCard({
 
       {tasks && (
         <div className={styles.tasks}>
-          <h4 className={styles.tasksTitle}>📋 Tasks</h4>
+          <h4 className={styles.tasksTitle}> Tasks</h4>
           {tasks.concepts && (
             <div className={styles.taskSection}>
               <strong>Concepts:</strong>

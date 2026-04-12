@@ -29,7 +29,7 @@
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #000;
+  color: var(--black);
   margin: 0;
 }
 
@@ -39,8 +39,8 @@
   gap: 12px;
   padding: 8px 16px;
   border: 2px solid var(--black);
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  box-shadow: 4px 4px 0px var(--black);
 }
 
 .levelTitle {
@@ -48,7 +48,7 @@
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: var(--white);
+  color: var(--black);
 }
 
 .levelXp {
@@ -56,8 +56,8 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--white);
-  opacity: 0.9;
+  color: var(--black);
+  opacity: 0.7;
 }
 
 .xpContainer {
@@ -67,7 +67,7 @@
 .xpBar {
   width: 100%;
   height: 16px;
-  background: #e5e5e5;
+  background: var(--gray);
   border: 2px solid var(--black);
   position: relative;
   overflow: hidden;
@@ -121,24 +121,30 @@
 }
 
 .statBox.highlighted {
-  background: var(--black);
-  animation: pulse 2s infinite;
+  background: var(--yellow) !important;
+  animation: pulseHighlight 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 6px 6px 0px var(--black); }
-  50% { box-shadow: 8px 8px 0px var(--black); }
+@keyframes pulseHighlight {
+  0%, 100% {
+    background: var(--yellow);
+    box-shadow: 6px 6px 0px var(--black);
+  }
+  50% {
+    background: var(--yellow-light);
+    box-shadow: 8px 8px 0px var(--black);
+  }
 }
 
 .statValue {
   font-family: var(--font-heading);
   font-size: 36px;
   font-weight: 700;
-  color: #000;
+  color: var(--black);
 }
 
 .statBox.highlighted .statValue {
-  color: var(--white);
+  color: var(--black);
 }
 
 .statLabel {
@@ -146,20 +152,22 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
   text-transform: uppercase;
 }
 
 .statBox.highlighted .statLabel {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--black);
+  opacity: 0.7;
 }
 
 /* Stat Box Progress Bar - specific to statBox */
 .statBox .statProgressBar {
   width: 100% !important;
   height: 8px;
-  background: #e0e0e0 !important;
-  border: 2px solid #000 !important;
+  background: var(--gray) !important;
+  border: 2px solid var(--black) !important;
   border-radius: 0 !important;
   overflow: hidden;
   margin-top: 12px !important;
@@ -169,7 +177,7 @@
 
 .statBox .statProgressFill {
   height: 100% !important;
-  background: #000 !important;
+  background: var(--black) !important;
   transition: width 1.2s ease-out;
   min-width: 1% !important;
   display: block !important;
@@ -206,7 +214,7 @@
 .quoteDot {
   width: 8px;
   height: 8px;
-  border: 1px solid var(--black);
+  border: 2px solid var(--black);
   background: var(--white);
   cursor: pointer;
   padding: 0;
@@ -214,11 +222,13 @@
 }
 
 .quoteDot:hover {
-  background: var(--black);
+  background: var(--yellow);
 }
 
 .quoteDot.active {
-  background: var(--black);
+  background: var(--yellow);
+  border-color: var(--black);
+  box-shadow: 2px 2px 0px var(--black);
 }
 
 .aiBadge {
@@ -228,8 +238,8 @@
   letter-spacing: 0.5px;
   padding: 3px 8px;
   background: var(--black);
-  color: var(--white);
-  border: 1px solid var(--black);
+  color: var(--yellow);
+  border: 2px solid var(--black);
 }
 
 .aiQuotesCarousel {
@@ -254,10 +264,10 @@
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: var(--white);
+  color: var(--black);
   padding: 4px 8px;
-  background: #666;
-  border: 1px solid var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
   display: inline-block;
   width: fit-content;
 }
@@ -278,6 +288,9 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--black);
+  background: var(--yellow);
+  padding: 2px 6px;
+  border: 1px solid var(--black);
 }
 
 /* Charts Grid - Side by Side */
@@ -291,6 +304,16 @@
   .chartsGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.chartContainer {
+  width: 100%;
+  height: 250px;
+  background: var(--yellow-light);
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  padding: 16px;
+  position: relative;
 }
 
 /* Courses List */
@@ -313,7 +336,7 @@
 }
 
 .courseRow:hover {
-  background: var(--black);
+  background: var(--yellow-light);
   box-shadow: 6px 6px 0px var(--black);
   transform: translate(-2px, -2px);
 }
@@ -322,7 +345,7 @@
 .courseRow:hover .courseRowTopic,
 .courseRow:hover .courseRowWeek,
 .courseRow:hover .courseRowPercent {
-  color: var(--white);
+  color: var(--black);
 }
 
 .courseRowContent {
@@ -345,7 +368,8 @@
 .courseRowTopic {
   font-family: var(--font-body);
   font-size: 12px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -362,14 +386,14 @@
 .miniProgressBar {
   flex: 1;
   height: 8px;
-  background: #e0e0e0;
+  background: var(--gray);
   border: 2px solid var(--black);
   overflow: hidden;
 }
 
 .miniProgressFill {
   height: 100%;
-  background: var(--black);
+  background: var(--yellow);
   transition: width 0.3s ease;
 }
 
@@ -396,9 +420,10 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 10px 20px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -424,15 +449,16 @@
   background: var(--white);
   color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .deleteBtn:hover:not(:disabled) {
-  background: var(--black);
-  color: var(--white);
-  box-shadow: 3px 3px 0px var(--black);
-  transform: translate(-1px, -1px);
+  background: var(--yellow);
+  color: var(--black);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 .deleteBtn:disabled {
@@ -520,12 +546,15 @@
   background: var(--white);
   color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .modalCancelBtn:hover:not(:disabled) {
-  background: var(--gray);
+  background: var(--yellow-light);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .modalCancelBtn:disabled {
@@ -539,16 +568,18 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 10px 20px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .modalDeleteBtn:hover:not(:disabled) {
-  background: var(--white);
-  color: var(--black);
+  background: var(--yellow-light);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .modalDeleteBtn:disabled {
@@ -603,7 +634,7 @@
 .chartContainer {
   width: 100%;
   height: 250px;
-  background: #fafafa;
+  background: var(--white);
   border: 2px solid var(--black);
   padding: 16px;
   position: relative;
@@ -643,7 +674,7 @@
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  background: #fafafa;
+  background: var(--white);
   border: 2px dashed var(--black);
 }
 
@@ -652,11 +683,12 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #999;
+  color: var(--black);
+  opacity: 0.4;
   margin-bottom: 16px;
   padding: 8px 16px;
-  border: 1px solid var(--black);
-  background: var(--white);
+  border: 2px solid var(--black);
+  background: var(--yellow-light);
 }
 
 .emptyTitle {
@@ -664,14 +696,15 @@
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #000;
+  color: var(--black);
   margin: 0 0 8px 0;
 }
 
 .emptySubtitle {
   font-family: var(--font-body);
   font-size: 12px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
   margin: 0 0 24px 0;
   line-height: 1.5;
 }
@@ -682,15 +715,16 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 12px 24px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
   text-decoration: none;
   transition: var(--transition);
 }
 
 .actionButton:hover {
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 6px 6px 0px var(--black);
   transform: translate(-2px, -2px);
 }
 
@@ -700,8 +734,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   padding: 20px;
-  background: #fafafa;
+  background: var(--white);
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
 }
 
 @media (max-width: 768px) {
@@ -720,7 +755,7 @@
   font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 700;
-  color: #000;
+  color: var(--black);
   margin: 0;
 }
 
@@ -731,9 +766,10 @@
   font-weight: 700;
   letter-spacing: 1px;
   padding: 6px 12px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   width: fit-content;
 }
 
@@ -750,13 +786,14 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
 }
 
 .progressBar {
   width: 100%;
   height: 10px;
-  background: #e0e0e0;
+  background: var(--gray);
   border: 2px solid var(--black);
   overflow: hidden;
   position: relative;
@@ -764,7 +801,7 @@
 
 .progressFill {
   height: 100%;
-  background: var(--black);
+  background: var(--yellow);
   transition: width 0.3s ease;
   min-width: 2%;
 }
@@ -772,7 +809,8 @@
 .lastStudied {
   font-family: var(--font-body);
   font-size: 11px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
   margin: 0;
 }
 
@@ -782,9 +820,10 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 14px 24px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
   text-decoration: none;
   display: inline-block;
   width: fit-content;
@@ -792,7 +831,8 @@
 }
 
 .resumeButton:hover {
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 /* Week Grid */
@@ -812,7 +852,8 @@
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 600;
-  color: #666;
+  color: var(--black);
+  opacity: 0.5;
   width: 30px;
 }
 
@@ -833,7 +874,7 @@
 }
 
 .dayDot.current {
-  background: var(--white);
+  background: var(--yellow);
   border: 2px solid var(--black);
   box-shadow: 0 0 0 2px var(--black);
 }
@@ -852,13 +893,19 @@
   gap: 12px;
   padding: 20px;
   border: 2px solid var(--black);
-  background: #fafafa;
+  background: var(--white);
+  box-shadow: 3px 3px 0px var(--black);
   transition: var(--transition);
 }
 
 .courseContinueCard:hover {
+  background: var(--yellow-light);
   box-shadow: 6px 6px 0px var(--black);
   transform: translate(-2px, -2px);
+}
+
+.courseContinueCard:hover .courseContinueName {
+  color: var(--black);
 }
 
 .courseContinueHeader {
@@ -872,7 +919,7 @@
   font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 700;
-  color: #000;
+  color: var(--black);
   margin: 0;
   flex: 1;
 }
@@ -883,15 +930,24 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   padding: 4px 8px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
+  border: 1px solid var(--black);
+  box-shadow: 2px 2px 0px var(--black);
   white-space: nowrap;
+}
+
+.courseContinueBadge.testBadge {
+  background: var(--black);
+  color: var(--yellow);
+  border-color: var(--yellow);
 }
 
 .courseContinueTopic {
   font-family: var(--font-body);
   font-size: 12px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
   margin: 0;
   line-height: 1.4;
 }
@@ -944,13 +1000,13 @@
 }
 
 .tableRow:hover {
-  background: #fafafa;
+  background: var(--yellow-light);
 }
 
 .tableCell {
   font-family: var(--font-body);
   font-size: 12px;
-  color: #333;
+  color: var(--black);
 }
 
 .tableProgress {
@@ -962,14 +1018,14 @@
 .tableProgressBar {
   flex: 1;
   height: 8px;
-  background: #e0e0e0;
+  background: var(--gray);
   border: 2px solid var(--black);
   overflow: hidden;
 }
 
 .tableProgressFill {
   height: 100%;
-  background: var(--black);
+  background: var(--yellow);
   transition: width 0.3s ease;
 }
 
@@ -977,7 +1033,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  color: #000;
+  color: var(--black);
   width: 35px;
 }
 
@@ -994,6 +1050,8 @@
 .tableAction:hover {
   color: var(--black);
   text-decoration: underline;
+  text-decoration-color: var(--yellow);
+  text-decoration-thickness: 3px;
 }
 
 /* Skeleton Loading */
@@ -1008,20 +1066,16 @@
   width: 100%;
   height: 100%;
   min-height: 150px;
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 0%,
-    #e0e0e0 50%,
-    #f0f0f0 100%
-  );
+  background: var(--gray);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border: 2px solid var(--black);
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 /* Error State */
@@ -1052,15 +1106,17 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 12px 24px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .retryBtn:hover {
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
 }
 
 /* Activity and Progress Grid - Side by Side */
@@ -1112,8 +1168,8 @@
 }
 
 .gameNavBtn:hover {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   box-shadow: 4px 4px 0px var(--black);
   transform: translate(-2px, -2px);
 }
@@ -1124,9 +1180,10 @@
   font-weight: 700;
   letter-spacing: 1px;
   padding: 6px 12px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 2px 2px 0px var(--black);
 }
 
 .compactGameContainer {
@@ -1156,15 +1213,16 @@
   font-weight: 700;
   letter-spacing: 1px;
   padding: 12px 24px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .createCourseBtn:hover:not(:disabled) {
-  box-shadow: 4px 4px 0px var(--black);
+  box-shadow: 6px 6px 0px var(--black);
   transform: translate(-2px, -2px);
 }
 
@@ -1198,5 +1256,6 @@
 .emptySubtext {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: #666;
+  color: var(--black);
+  opacity: 0.6;
 }

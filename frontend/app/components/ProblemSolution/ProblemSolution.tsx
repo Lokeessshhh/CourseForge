@@ -38,7 +38,7 @@ export default function ProblemSolution() {
             <ul className={styles.list}>
               {oldWay.map((item, index) => (
                 <li key={index} className={styles.item}>
-                  <span className={styles.x}>✗</span>
+                  <span className={styles.x}></span>
                   <span>{item}</span>
                 </li>
               ))}
@@ -55,7 +55,7 @@ export default function ProblemSolution() {
             <ul className={styles.listWhite}>
               {newWay.map((item, index) => (
                 <li key={index} className={styles.itemWhite}>
-                  <span className={styles.check}>✓</span>
+                  <span className={styles.check}></span>
                   <span>{item}</span>
                 </li>
               ))}

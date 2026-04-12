@@ -277,11 +277,11 @@ class CourseReaderHandler:
             status = course.get('generation_status', 'ready')
             
             if status == 'generating':
-                status_text = "🔄 Generating"
+                status_text = " Generating"
             elif progress >= 100:
-                status_text = "✅ Completed"
+                status_text = " Completed"
             else:
-                status_text = f"📚 {progress}% complete"
+                status_text = f" {progress}% complete"
             
             courses_summary.append({
                 'id': course.get('id'),

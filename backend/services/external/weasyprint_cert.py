@@ -90,32 +90,50 @@ class CertificateService:
         
         .details {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
+            gap: 50px;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
-        
+
         .detail-item {
             text-align: center;
+            min-width: 120px;
         }
-        
+
         .detail-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        
+
         .detail-value {
-            font-size: 18px;
+            font-size: 16px;
             color: #2c5282;
             font-weight: bold;
             margin-top: 5px;
         }
-        
-        .signature {
-            margin-top: 50px;
-            font-style: italic;
-            color: #666;
+
+        .footer-bar {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            text-align: left;
+        }
+
+        .footer-center {
+            text-align: center;
+        }
+
+        .footer-right {
+            text-align: right;
         }
         
         .certificate-id {
@@ -141,7 +159,7 @@ class CertificateService:
 <body>
     <div class="certificate">
         <div class="header">Certificate of Completion</div>
-        <div class="badge">✓</div>
+        <div class="badge"></div>
         <div class="title">LearnAI Academy</div>
         
         <p class="completion-text">
@@ -163,25 +181,35 @@ class CertificateService:
         
         <div class="details">
             <div class="detail-item">
-                <div class="detail-label">Issue Date</div>
-                <div class="detail-value">{{ issue_date }}</div>
+                <div class="detail-label">Final Score</div>
+                <div class="detail-value">{{ average_score }}%</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Duration</div>
-                <div class="detail-value">{{ duration }} weeks</div>
+                <div class="detail-label">Study Weeks</div>
+                <div class="detail-value">{{ study_weeks }} weeks</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Total Days</div>
+                <div class="detail-value">{{ total_days }} days</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Skill Level</div>
                 <div class="detail-value">{{ skill_level }}</div>
             </div>
         </div>
-        
-        <div class="signature">
-            Authorized by LearnAI Academy
-        </div>
-        
-        <div class="certificate-id">
-            Certificate ID: {{ certificate_id }}
+
+        <div class="footer-bar">
+            <div class="footer-left">
+                <div class="detail-label">Date of Issuance</div>
+                <div class="detail-value">{{ issue_date }}</div>
+            </div>
+            <div class="footer-center">
+                <div class="detail-label">Verified by LearnAI Academy</div>
+            </div>
+            <div class="footer-right">
+                <div class="detail-label">Certificate ID</div>
+                <div class="detail-value">{{ certificate_id }}</div>
+            </div>
         </div>
     </div>
 </body>
@@ -219,10 +247,12 @@ class CertificateService:
         skill_level: str = "Beginner",
         issue_date: Optional[datetime] = None,
         output_path: Optional[str] = None,
+        study_weeks: int = 0,
+        total_days: int = 0,
     ) -> bytes:
         """
         Generate a PDF certificate.
-        
+
         Args:
             user_name: Name of the certificate recipient
             course_name: Name of the completed course
@@ -232,23 +262,27 @@ class CertificateService:
             skill_level: Course skill level
             issue_date: Certificate issue date (defaults to now)
             output_path: Optional path to save PDF
-            
+            study_weeks: Number of study weeks completed
+            total_days: Total number of course days
+
         Returns:
             PDF content as bytes
         """
         HTML, CSS = self._get_weasyprint()
-        
+
         if issue_date is None:
             issue_date = timezone.now()
-        
+
         # Render template
         html_content = self.template.replace("{{ user_name }}", user_name)
         html_content = html_content.replace("{{ course_name }}", course_name)
         html_content = html_content.replace("{{ certificate_id }}", certificate_id)
-        html_content = html_content.replace("{{ average_score }}", str(round(average_score)))
+        html_content = html_content.replace("{{ average_score }}", str(round(average_score, 1)))
         html_content = html_content.replace("{{ duration }}", str(duration))
         html_content = html_content.replace("{{ skill_level }}", skill_level)
         html_content = html_content.replace("{{ issue_date }}", issue_date.strftime("%B %d, %Y"))
+        html_content = html_content.replace("{{ study_weeks }}", str(study_weeks))
+        html_content = html_content.replace("{{ total_days }}", str(total_days))
         
         # Generate PDF
         html = HTML(string=html_content)
@@ -347,11 +381,11 @@ class CertificateService:
             # Generate PDF
             pdf_base64 = self.generate_certificate_base64(
                 user_name=user.name or user.email,
-                course_name=course.name,
+                course_name=course.course_name,
                 certificate_id=certificate_id,
                 average_score=average_score,
-                duration=course.total_weeks,
-                skill_level=course.skill_level or "Beginner",
+                duration=course.duration_weeks or 0,
+                skill_level=course.level or "Beginner",
             )
             
             # Update certificate URL

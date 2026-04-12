@@ -39,7 +39,7 @@ def unlock_weekly_test(course_id, week_number, user_email):
         
         # Verify ownership
         if course.user != user:
-            print(f"❌ Error: User {user_email} does not own course {course_id}")
+            print(f" Error: User {user_email} does not own course {course_id}")
             return False
         
         # Get week
@@ -49,7 +49,7 @@ def unlock_weekly_test(course_id, week_number, user_email):
         completed_days = week.days.filter(is_completed=True).count()
         total_days = week.days.count()
         
-        print(f"\n📊 Current State:")
+        print(f"\n Current State:")
         print(f"   Course: {course.course_name}")
         print(f"   Week: {week_number}")
         print(f"   Completed Days: {completed_days}/{total_days}")
@@ -59,7 +59,7 @@ def unlock_weekly_test(course_id, week_number, user_email):
         week.test_unlocked = True
         week.save(update_fields=["test_unlocked"])
         
-        print(f"\n✅ Weekly test unlocked for week {week_number}!")
+        print(f"\n Weekly test unlocked for week {week_number}!")
         
         # Generate weekly test if not exists
         test, created = WeeklyTest.objects.get_or_create(
@@ -72,30 +72,30 @@ def unlock_weekly_test(course_id, week_number, user_email):
         )
         
         if created:
-            print(f"✅ Created weekly test for week {week_number}")
+            print(f" Created weekly test for week {week_number}")
             # Trigger test generation
             from apps.courses.tasks import generate_weekly_test_task
             generate_weekly_test_task.delay(str(course_id), week_number)
-            print(f"✅ Triggered weekly test generation (running in background)")
+            print(f" Triggered weekly test generation (running in background)")
         else:
-            print(f"✅ Weekly test already exists for week {week_number}")
+            print(f" Weekly test already exists for week {week_number}")
         
-        print(f"\n🎉 You can now take the weekly test at:")
+        print(f"\n You can now take the weekly test at:")
         print(f"   http://localhost:3000/dashboard/courses/{course_id}/week/{week_number}/test")
         
         return True
         
     except Course.DoesNotExist:
-        print(f"❌ Error: Course {course_id} not found")
+        print(f" Error: Course {course_id} not found")
         return False
     except User.DoesNotExist:
-        print(f"❌ Error: User {user_email} not found")
+        print(f" Error: User {user_email} not found")
         return False
     except WeekPlan.DoesNotExist:
-        print(f"❌ Error: Week {week_number} not found for course {course_id}")
+        print(f" Error: Week {week_number} not found for course {course_id}")
         return False
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         return False
 
 
@@ -110,21 +110,21 @@ if __name__ == "__main__":
     user_email = input("Enter User Email: ").strip()
     
     if not course_id or not week_number or not user_email:
-        print("\n❌ Error: All fields are required")
+        print("\n Error: All fields are required")
         sys.exit(1)
     
     try:
         week_number = int(week_number)
     except ValueError:
-        print("\n❌ Error: Week number must be an integer")
+        print("\n Error: Week number must be an integer")
         sys.exit(1)
     
     # Unlock the test
     success = unlock_weekly_test(course_id, week_number, user_email)
     
     if success:
-        print("\n✅ Done! Refresh your browser to see the weekly test.")
+        print("\n Done! Refresh your browser to see the weekly test.")
     else:
-        print("\n❌ Failed to unlock weekly test. Check the error above.")
+        print("\n Failed to unlock weekly test. Check the error above.")
     
     sys.exit(0 if success else 1)

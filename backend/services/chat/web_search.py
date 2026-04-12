@@ -105,7 +105,7 @@ def format_web_search_for_prompt(
     
     return f"""
 
-🔍 WEB SEARCH RESULTS:
+ WEB SEARCH RESULTS:
 {search_result.get('formatted', 'No results available')}
 
 Instructions:

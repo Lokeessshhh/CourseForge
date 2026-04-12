@@ -80,18 +80,22 @@
   font-weight: 500;
   text-align: left;
   background-color: var(--white);
-  border: 1px solid transparent;
+  border: 2px solid var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .weekHeader:hover {
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .weekHeader.expanded {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  border-color: var(--black);
+  box-shadow: 3px 3px 0px var(--black);
 }
 
 .expandIcon {
@@ -105,6 +109,17 @@
 
 .checkMark {
   font-size: 12px;
+}
+
+.weeklyTestBadge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: var(--black);
+  color: var(--yellow);
+  border: 1px solid var(--yellow);
 }
 
 .daysList {
@@ -128,13 +143,15 @@
 }
 
 .dayItem:hover:not(.locked) {
-  background-color: var(--gray);
+  background-color: var(--yellow-light);
 }
 
 .dayItem.current {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border-left: 4px solid var(--black);
+  box-shadow: 2px 2px 0px var(--black);
+  font-weight: 700;
 }
 
 .dayItem.completed {
@@ -159,6 +176,21 @@
   font-size: 10px;
 }
 
+.generatingBadge {
+  font-size: 9px;
+  padding: 2px 6px;
+  background-color: var(--yellow);
+  color: var(--black);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0px var(--black);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .testLink {
   display: flex;
   align-items: center;
@@ -171,11 +203,21 @@
   text-decoration: none;
   margin-top: 8px;
   border: 2px solid var(--black);
+  background: var(--white);
+  transition: var(--transition);
+}
+
+.testLink:hover:not(.locked) {
+  background: var(--yellow-light);
+  box-shadow: 2px 2px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .testLink.completed {
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
+  border-color: var(--black);
+  box-shadow: 2px 2px 0px var(--black);
 }
 
 .testLink.locked {
@@ -235,8 +277,8 @@
 }
 
 .deleteCourseBtn:hover:not(:disabled) {
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   box-shadow: 4px 4px 0px var(--black);
   transform: translate(-2px, -2px);
 }
@@ -273,6 +315,7 @@
 .progressSection {
   padding: 20px;
   border: 2px solid var(--black);
+  box-shadow: 4px 4px 0px var(--black);
   background-color: var(--white);
 }
 
@@ -298,12 +341,12 @@
 .progressBar {
   height: 12px;
   border: 2px solid var(--black);
-  background-color: var(--white);
+  background-color: var(--gray);
 }
 
 .progressFill {
   height: 100%;
-  background-color: var(--black);
+  background-color: var(--yellow);
 }
 
 /* Current Day Card */
@@ -323,6 +366,11 @@
   font-weight: 600;
   letter-spacing: 1px;
   margin-bottom: 12px;
+  padding: 4px 10px;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  box-shadow: 2px 2px 0px var(--black);
+  width: fit-content;
 }
 
 .labelIcon {
@@ -368,8 +416,8 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 14px 32px;
-  background-color: var(--black);
-  color: var(--white);
+  background-color: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
   box-shadow: 4px 4px 0px var(--black);
   cursor: pointer;
@@ -378,6 +426,28 @@
 
 .goBtn:hover {
   box-shadow: 6px 6px 0px var(--black);
+  transform: translate(-2px, -2px);
+}
+
+/* Weekly Test Card Styles */
+.weeklyTestCard {
+  border-color: var(--yellow);
+  background: linear-gradient(135deg, var(--white) 0%, #FFFDE7 100%);
+}
+
+.weeklyTestCard .cardLabel {
+  background: var(--black);
+  color: var(--yellow);
+}
+
+.testBtn {
+  background-color: var(--black);
+  color: var(--yellow);
+}
+
+.testBtn:hover {
+  background-color: #333;
+  color: var(--white);
 }
 
 /* Mobile */
@@ -491,12 +561,9 @@
 }
 
 .modalCancelBtn:hover:not(:disabled) {
-  background: var(--gray);
-}
-
-.modalCancelBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  background: var(--yellow-light);
+  box-shadow: 3px 3px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .modalDeleteBtn {
@@ -505,16 +572,18 @@
   font-weight: 600;
   letter-spacing: 1px;
   padding: 10px 20px;
-  background: var(--black);
-  color: var(--white);
+  background: var(--yellow);
+  color: var(--black);
   border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .modalDeleteBtn:hover:not(:disabled) {
-  background: var(--white);
-  color: var(--black);
+  background: var(--yellow-light);
+  box-shadow: 4px 4px 0px var(--black);
+  transform: translate(-1px, -1px);
 }
 
 .modalDeleteBtn:disabled {
