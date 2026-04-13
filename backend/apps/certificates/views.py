@@ -137,8 +137,12 @@ def course_certificate(request, course_id):
 
             # If PDF hasn't been generated yet, trigger generation
             if not cert.pdf_url:
-                from apps.courses.tasks import generate_certificate_task
-                generate_certificate_task.delay(user_id, course_id)
+                from apps.courses.tasks import generate_certificate_task, _start_background_task
+                _start_background_task(
+                    generate_certificate_task,
+                    (user_id, course_id),
+                    task_name="generate_certificate",
+                )
                 logger.info(f"Triggered PDF generation for certificate {cert.id}")
                 return _ok({
                     "is_unlocked": True,
@@ -182,8 +186,12 @@ def course_certificate(request, course_id):
 
         if progress and progress.is_completed:
             # Eligible but cert not generated yet
-            from apps.courses.tasks import generate_certificate_task
-            generate_certificate_task.delay(user_id, course_id)
+            from apps.courses.tasks import generate_certificate_task, _start_background_task
+            _start_background_task(
+                generate_certificate_task,
+                (user_id, course_id),
+                task_name="generate_certificate",
+            )
             return _ok({
                 "is_unlocked": True,
                 "status": "generating",

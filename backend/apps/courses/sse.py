@@ -115,7 +115,7 @@ class SSEEventGenerator:
                     # Wait for event with timeout
                     event = await asyncio.wait_for(
                         self.queue.get(),
-                        timeout=30.0
+                        timeout=120.0  # 2 minutes — handles long-running course generation
                     )
 
                     # Send progress event

@@ -288,8 +288,12 @@ class CourseCompletionService:
 
             # Trigger weekly test generation if not already generated
             if not week.test_generated:
-                from apps.courses.tasks import generate_weekly_test_task
-                generate_weekly_test_task.delay(str(week.course.id), week.week_number)
+                from apps.courses.tasks import generate_weekly_test_task, _start_background_task
+                _start_background_task(
+                    generate_weekly_test_task,
+                    (str(week.course.id), week.week_number),
+                    task_name="generate_weekly_test",
+                )
             
             return True
         

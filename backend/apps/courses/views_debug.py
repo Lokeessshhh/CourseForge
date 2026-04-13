@@ -62,8 +62,12 @@ def unlock_weekly_test(request, course_id, week_number):
         if created:
             logger.info(f"DEBUG: Created weekly test for week {week_number}")
             # Trigger test generation
-            from apps.courses.tasks import generate_weekly_test_task
-            generate_weekly_test_task.delay(course_id, week_number)
+            from apps.courses.tasks import generate_weekly_test_task, _start_background_task
+            _start_background_task(
+                generate_weekly_test_task,
+                (course_id, week_number),
+                task_name="generate_weekly_test",
+            )
     except Exception as e:
         logger.error(f"DEBUG: Error creating weekly test: {e}")
 

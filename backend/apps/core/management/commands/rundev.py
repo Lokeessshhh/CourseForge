@@ -1,5 +1,6 @@
 """
-Custom management command that starts Daphne (ASGI) + Celery worker + WebSocket support.
+Custom management command that starts Daphne (ASGI) with WebSocket support.
+Background tasks now run via threading (no separate worker needed).
 Usage: python manage.py rundev
 """
 import os
@@ -15,14 +16,12 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
-    help = "Runs Daphne (ASGI) server with Celery worker and WebSocket support"
+    help = "Runs Daphne (ASGI) server with WebSocket support (background tasks run in-process)"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.processes = []
         self.shutting_down = False
-        self.celery_started = threading.Event()
-        self.celery_log_file = None
         self.daphne_log_file = None
         self.logs_dir = None
 

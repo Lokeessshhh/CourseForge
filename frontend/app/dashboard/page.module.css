@@ -336,7 +336,7 @@
 }
 
 .courseRow:hover {
-  background: var(--yellow-light);
+  background: var(--black);
   box-shadow: 6px 6px 0px var(--black);
   transform: translate(-2px, -2px);
 }
@@ -345,7 +345,7 @@
 .courseRow:hover .courseRowTopic,
 .courseRow:hover .courseRowWeek,
 .courseRow:hover .courseRowPercent {
-  color: var(--black);
+  color: var(--white);
 }
 
 .courseRowContent {

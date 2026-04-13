@@ -1,17 +1,18 @@
 @echo off
 REM ===================================================================
 REM LearnAI Backend - Start All Services
-REM Starts: Daphne (ASGI) + Celery Worker + WebSocket Support
+REM Starts: Daphne (ASGI Server - HTTP + WebSocket)
+REM Background tasks run in-process via threading (no separate worker)
 REM ===================================================================
 
 echo.
 echo ========================================================================
-echo 🚀 STARTING LEARNAI BACKEND
+echo  STARTING LEARNAI BACKEND
 echo ========================================================================
 echo.
 echo Services:
-echo   🌐 Daphne (ASGI Server - HTTP + WebSocket)
-echo   📦 Celery Worker (Async Task Queue)
+echo   Uvicorn (ASGI Server - HTTP + WebSocket + SSE)
+echo   Background Tasks (in-process via threading)
 echo.
 echo Server: http://localhost:8000
 echo ========================================================================
@@ -19,7 +20,7 @@ echo.
 
 REM Check if virtual environment is activated
 if "%VIRTUAL_ENV%"=="" (
-    echo ⚠️  WARNING: Virtual environment not activated!
+    echo WARNING: Virtual environment not activated!
     echo    Please activate your venv first:
     echo    .\venv\Scripts\activate
     echo.
@@ -27,49 +28,34 @@ if "%VIRTUAL_ENV%"=="" (
     exit /b 1
 )
 
-echo ✅ Virtual environment: %VIRTUAL_ENV%
+echo Virtual environment: %VIRTUAL_ENV%
 echo.
 
 REM Check if Redis is running
-echo 🔍 Checking Redis connection...
+echo Checking Redis connection...
 redis-cli ping >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ⚠️  WARNING: Redis is not running!
+    echo WARNING: Redis is not running!
     echo    Please start Redis first:
     echo    redis-server
     echo.
-    echo    Celery tasks will not work until Redis is started.
-    echo.
 ) else (
-    echo ✅ Redis is running
-)
-echo.
-
-REM Check if database is accessible
-echo 🔍 Checking database connection...
-python manage.py check --database default >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ⚠️  WARNING: Database connection failed!
-    echo    Please ensure PostgreSQL is running and configured.
-    echo.
-) else (
-    echo ✅ Database is accessible
+    echo Redis is running
 )
 echo.
 
 echo ========================================================================
-echo 🎯 Starting server with: python manage.py rundev
+echo Starting server...
 echo ========================================================================
 echo.
-echo Press Ctrl+C to stop all services
+echo Press Ctrl+C to stop
 echo.
 
-REM Run the custom rundev command (starts Daphne + Celery)
-python manage.py rundev 8000
+uvicorn config.asgi:application --host 127.0.0.1 --port 8000 --timeout-keep-alive 300
 
 echo.
 echo ========================================================================
-echo ✅ Server stopped
+echo Server stopped
 echo ========================================================================
 echo.
 pause

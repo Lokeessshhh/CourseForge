@@ -1,5 +1,5 @@
 """
-Courses app — Celery tasks.
+Courses app — Background task functions (threading-based, no Celery).
 - generate_course_content_task: Fill skeleton with AI content (parallel weeks)
 - generate_day_content_task: Generate full content for a single day
 - generate_all_quizzes: Generate quiz questions for all days
@@ -13,9 +13,9 @@ import asyncio
 import logging
 import sys
 import time
-
-from celery import shared_task
+import threading
 from asgiref.sync import sync_to_async, async_to_sync
+from django.db import transaction
 
 # Explicit logger name matching Django logging configuration
 logger = logging.getLogger('apps.courses.tasks')
@@ -24,7 +24,6 @@ logger = logging.getLogger('apps.courses.tasks')
 class WindowsSafeLogFilter(logging.Filter):
     """Filter that ensures log messages are safe for Windows console encoding."""
     def filter(self, record):
-        # Remove any non-ASCII characters that might cause encoding issues
         if hasattr(record, 'msg') and isinstance(record.msg, str):
             try:
                 record.msg.encode('ascii')
@@ -43,39 +42,127 @@ class WindowsSafeLogFilter(logging.Filter):
         return True
 
 
-# Add the filter to the logger
 if sys.platform == 'win32':
     logger.addFilter(WindowsSafeLogFilter())
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=30)
+# ──────────────────────────────────────────────
+# Background task launcher (replaces Celery .delay())
+# ──────────────────────────────────────────────
+def _start_background_task(target, args, task_name=None):
+    """Launch a function in a background thread with error handling."""
+    if task_name is None:
+        task_name = target.__name__
+
+    def _run():
+        try:
+            logger.info("[%s] Starting in background thread", task_name)
+            target(*args)
+            logger.info("[%s] Completed successfully", task_name)
+        except Exception:
+            logger.exception("[%s] FAILED in background thread", task_name)
+            try:
+                from apps.courses.models import Course
+                course_id = args[0] if args else None
+                if course_id:
+                    Course.objects.filter(
+                        pk=course_id, generation_status="generating"
+                    ).update(generation_status="failed")
+            except Exception:
+                pass
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def _start_background_task_kwargs(target, args, kwargs, task_name=None):
+    """Launch a function with keyword arguments in a background thread with error handling."""
+    if task_name is None:
+        task_name = target.__name__
+    all_args = args + (kwargs,) if kwargs else args
+
+    def _run():
+        try:
+            logger.info("[%s] Starting in background thread", task_name)
+            target(*args, **kwargs)
+            logger.info("[%s] Completed successfully", task_name)
+        except Exception:
+            logger.exception("[%s] FAILED in background thread", task_name)
+            try:
+                from apps.courses.models import Course
+                course_id = args[0] if args else None
+                if course_id:
+                    Course.objects.filter(
+                        pk=course_id, generation_status="generating"
+                    ).update(generation_status="failed")
+            except Exception:
+                pass
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+# ──────────────────────────────────────────────
+# Concurrency limiter for course generation
+# ──────────────────────────────────────────────
+_course_generation_semaphore = threading.Semaphore(3)  # Max 3 concurrent generations
+
+
 def generate_course_content_task(
-    self,
     course_id: str,
     course_name: str,
     duration_weeks: int,
     level: str,
     goals: list,
-    description: str = None,  # Optional user-provided description
+    description: str = None,
 ):
     """
-    Async task: Fill course skeleton with AI-generated content.
+    Background task: Fill course skeleton with AI-generated content.
     All weeks run in PARALLEL using asyncio.gather().
     Each week saves to DB immediately upon completion.
     Updates generation_progress after each day.
     """
-    # ABSOLUTE MINIMUM - before any imports
+    MAX_RETRIES = 3
+    RETRY_DELAY = 30  # seconds
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            return _generate_course_content_task_impl(
+                course_id, course_name, duration_weeks, level, goals, description
+            )
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_course_content_task FAILED after %d retries (course=%s)", MAX_RETRIES, course_id)
+                # Mark course as failed
+                try:
+                    from apps.courses.models import Course
+                    Course.objects.filter(pk=course_id, generation_status="generating").update(generation_status="failed")
+                except Exception:
+                    pass
+                raise
+            logger.warning("generate_course_content_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
+
+
+def _generate_course_content_task_impl(
+    course_id: str,
+    course_name: str,
+    duration_weeks: int,
+    level: str,
+    goals: list,
+    description: str = None,
+):
+    """
+    Implementation of course content generation (called with retry loop).
+    """
     import sys
     print(f"\n\n*** TASK STARTED: generate_course_content_task ***", flush=True)
-    print(f"*** Task ID: {self.request.id} ***", flush=True)
     print(f"*** Course: {course_name} ***\n\n", flush=True)
     sys.stdout.flush()
     sys.stderr.flush()
-    
+
     import logging
     task_logger = logging.getLogger('apps.courses.tasks')
     task_logger.info("TASK FUNCTION ENTERED - generate_course_content_task")
-    
+
     try:
         from apps.courses.models import Course
         from services.course.generator import CourseGenerator
@@ -86,8 +173,7 @@ def generate_course_content_task(
         raise
 
     logger.info("=" * 80)
-    logger.info(" CELERY TASK: GENERATE COURSE CONTENT")
-    logger.info(f"   Task ID: {self.request.id}")
+    logger.info(" COURSE CONTENT GENERATION")
     logger.info(f"   Course ID: {course_id}")
     logger.info(f"   Course Name: {course_name}")
     logger.info(f"   Duration: {duration_weeks} weeks")
@@ -122,7 +208,6 @@ def generate_course_content_task(
 
         print(f"\n{'='*80}")
         print(f" [TASK] RECEIVED: generate_course_content_task")
-        print(f"   Task ID: {self.request.id}")
         print(f"   Course ID: {course_id}")
         print(f"   Course Name: {course_name}")
         print(f"   Duration: {duration_weeks} weeks")
@@ -212,10 +297,9 @@ def generate_course_content_task(
         time.sleep(0.5)
 
         # Generate weekly tests (MCQ + Coding) for all weeks
-        # Use .delay() to run ASYNCHRONOUSLY so the main task can complete cleanly
-        from apps.courses.tasks import generate_weekly_tests_for_course
+        # Run as background tasks so the main task can complete cleanly
         try:
-            generate_weekly_tests_for_course.delay(course_id)
+            _start_background_task(generate_weekly_tests_for_course, (course_id,))
             logger.info(" Weekly test generation queued (async)")
         except Exception as test_exc:
             logger.error(" Weekly test generation failed: %s", test_exc)
@@ -244,7 +328,7 @@ def generate_course_content_task(
             course.save(update_fields=["generation_status"])
         except Exception:
             pass
-        raise self.retry(exc=exc)
+        raise
 
 
 async def _generate_in_blocks_with_web_search(
@@ -693,6 +777,8 @@ async def _generate_single_day_with_titles(
                         max_quiz_retries, week_number, day_num)
 
         # Save to DB
+        from services.course.generator import _sanitize_mermaid
+        theory = _sanitize_mermaid(theory)
         day.theory_content = theory
         
         # Parse code content into structured format before saving
@@ -884,9 +970,7 @@ async def _fill_week_with_progress(
     logger.info("Completed week %d for course %s (%d/%d days successful)", week_number, course_id, successful, len(days))
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def generate_day_content_task(
-    self,
     day_id: str,
     topic: str,
     skill_level: str,
@@ -898,89 +982,104 @@ def generate_day_content_task(
     from apps.courses.models import DayPlan
     from services.course.generator import CourseGenerator
 
-    try:
-        day = DayPlan.objects.select_related("week_plan", "week_plan__course").get(id=day_id)
-    except DayPlan.DoesNotExist:
-        logger.error("Day %s not found", day_id)
-        return
+    MAX_RETRIES = 3
+    RETRY_DELAY = 60  # seconds
 
-    if day.theory_generated and day.code_generated:
-        logger.info("Day %s already has content, skipping", day_id)
-        return
+    for attempt in range(MAX_RETRIES):
+        try:
+            try:
+                day = DayPlan.objects.select_related("week_plan", "week_plan__course").get(id=day_id)
+            except DayPlan.DoesNotExist:
+                logger.error("Day %s not found", day_id)
+                return
 
-    try:
-        generator = CourseGenerator()
+            if day.theory_generated and day.code_generated:
+                logger.info("Day %s already has content, skipping", day_id)
+                return
 
-        # Generate theory content
-        logger.info("[LLM REQUEST] Generating theory content for day %s...", day_id)
-        theory = generator._generate_theory_content(
-            day_title=day.title or f"Day {day.day_number}",
-            week_theme=day.week_plan.theme or "",
-            topic=topic,
-            skill_level=skill_level,
-        )
+            generator = CourseGenerator()
 
-        # LOG raw theory output
-        logger.info("="*70)
-        logger.info(" RAW AI OUTPUT: Day %s THEORY", day_id)
-        logger.info("="*70)
-        logger.info("THEORY (%d chars):\n%s", len(theory) if theory else 0, theory if theory else "EMPTY")
-        logger.info("="*70)
+            # Generate theory content
+            logger.info("[LLM REQUEST] Generating theory content for day %s...", day_id)
+            theory = generator._generate_theory_content(
+                day_title=day.title or f"Day {day.day_number}",
+                week_theme=day.week_plan.theme or "",
+                topic=topic,
+                skill_level=skill_level,
+            )
 
-        day.theory_content = theory
-        day.theory_generated = True
+            # LOG raw theory output
+            logger.info("="*70)
+            logger.info(" RAW AI OUTPUT: Day %s THEORY", day_id)
+            logger.info("="*70)
+            logger.info("THEORY (%d chars):\n%s", len(theory) if theory else 0, theory if theory else "EMPTY")
+            logger.info("="*70)
 
-        # Generate code content
-        logger.info("[LLM REQUEST] Generating code content for day %s...", day_id)
-        code = generator._generate_code_content(
-            day_title=day.title or f"Day {day.day_number}",
-            week_theme=day.week_plan.theme or "",
-            topic=topic,
-            skill_level=skill_level,
-        )
+            from services.course.generator import _sanitize_mermaid
+            day.theory_content = _sanitize_mermaid(theory)
+            day.theory_generated = True
 
-        # LOG raw code output
-        logger.info("="*70)
-        logger.info(" RAW AI OUTPUT: Day %s CODE", day_id)
-        logger.info("="*70)
-        logger.info("CODE (%d chars):\n%s", len(code) if code else 0, code if code else "EMPTY")
-        logger.info("="*70)
+            # Generate code content
+            logger.info("[LLM REQUEST] Generating code content for day %s...", day_id)
+            code = generator._generate_code_content(
+                day_title=day.title or f"Day {day.day_number}",
+                week_theme=day.week_plan.theme or "",
+                topic=topic,
+                skill_level=skill_level,
+            )
 
-        day.code_content = code
-        day.code_generated = True
+            # LOG raw code output
+            logger.info("="*70)
+            logger.info(" RAW AI OUTPUT: Day %s CODE", day_id)
+            logger.info("="*70)
+            logger.info("CODE (%d chars):\n%s", len(code) if code else 0, code if code else "EMPTY")
+            logger.info("="*70)
 
-        day.save(update_fields=["theory_content", "theory_generated", "code_content", "code_generated"])
+            day.code_content = code
+            day.code_generated = True
 
-        logger.info(" [DAY COMPLETE] Day %s: theory=%d chars, code=%d chars", day_id, len(theory) if theory else 0, len(code) if code else 0)
+            day.save(update_fields=["theory_content", "theory_generated", "code_content", "code_generated"])
 
-    except Exception as exc:
-        logger.exception("Error generating content for day %s: %s", day_id, exc)
-        raise self.retry(exc=exc)
+            logger.info(" [DAY COMPLETE] Day %s: theory=%d chars, code=%d chars", day_id, len(theory) if theory else 0, len(code) if code else 0)
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_day_content_task FAILED after %d retries (day=%s)", MAX_RETRIES, day_id)
+                raise
+            logger.warning("generate_day_content_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30)
-def generate_all_quizzes(self, course_id: str):
+def generate_all_quizzes(course_id: str):
     """
     Generate quiz questions for all days in a course.
     """
     from apps.courses.models import Course, DayPlan
     from apps.quizzes.tasks import generate_quiz_for_day
 
-    try:
-        course = Course.objects.get(id=course_id)
-        days = DayPlan.objects.filter(week_plan__course=course)
+    MAX_RETRIES = 2
+    RETRY_DELAY = 30  # seconds
 
-        for day in days:
-            generate_quiz_for_day.delay(str(day.id))
+    for attempt in range(MAX_RETRIES):
+        try:
+            course = Course.objects.get(id=course_id)
+            days = DayPlan.objects.filter(week_plan__course=course)
 
-        logger.info("Queued quiz generation for %d days in course %s", days.count(), course_id)
+            for day in days:
+                _start_background_task(generate_quiz_for_day, (str(day.id),))
 
-    except Exception as exc:
-        logger.exception("Failed to queue quizzes for course %s: %s", course_id, exc)
-        raise self.retry(exc=exc)
+            logger.info("Queued quiz generation for %d days in course %s", days.count(), course_id)
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_all_quizzes FAILED after %d retries (course=%s)", MAX_RETRIES, course_id)
+                raise
+            logger.warning("generate_all_quizzes attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
-@shared_task
 def unlock_next_day(course_id: str, week_number: int, day_number: int):
     """
     Unlock the next day after quiz completion.
@@ -1029,8 +1128,7 @@ def unlock_next_day(course_id: str, week_number: int, day_number: int):
         logger.exception("Error unlocking next day: %s", exc)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=5)
-def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_steps: int = None, skip_broadcast: bool = False):
+def generate_weekly_test_task(course_id: str, week_number: int, total_sub_steps: int = None, skip_broadcast: bool = False):
     """
     Generate a weekly test covering all 5 days of a week.
     10 MCQ questions covering entire week content.
@@ -1047,107 +1145,119 @@ def generate_weekly_test_task(self, course_id: str, week_number: int, total_sub_
     from services.course.generator import CourseGenerator
     import asyncio
 
-    logger.info("=" * 60)
-    logger.info(" CELERY TASK: GENERATE WEEKLY TEST")
-    logger.info(f"   Task ID: {self.request.id}")
-    logger.info(f"   Course ID: {course_id}")
-    logger.info(f"   Week: {week_number}")
-    logger.info(f"   Attempt: {self.request.retries + 1}/{self.max_retries}")
-    logger.info("=" * 60)
+    MAX_RETRIES = 2
+    RETRY_DELAY = 5  # seconds
 
-    try:
-        # Validate course exists before attempting generation
-        from apps.courses.models import Course as CourseModel
+    for attempt in range(MAX_RETRIES):
         try:
-            course_check = CourseModel.objects.get(id=course_id)
-            logger.info(" Course validated: %s", course_check.course_name)
-        except CourseModel.DoesNotExist:
-            logger.error(" Course %s does not exist - aborting task", course_id)
-            return {"error": "Course not found", "success": False}
-        
-        generator = CourseGenerator()
-        result = asyncio.run(generator.generate_weekly_test(course_id, week_number))
+            logger.info("=" * 60)
+            logger.info(" TASK: GENERATE WEEKLY TEST")
+            logger.info("   Course ID: %s", course_id)
+            logger.info("   Week: %d", week_number)
+            logger.info("   Attempt: %d/%d", attempt + 1, MAX_RETRIES)
+            logger.info("=" * 60)
 
-        if result.get("success"):
-            total_q = result.get("total_questions", 0)
-            logger.info(" Weekly test generated successfully")
-            logger.info(f"   Test ID: {result.get('test_id')}")
-            logger.info(f"   Questions: {total_q}")
-            if total_q < 10:
-                logger.warning(" Only %d/10 questions generated - partial test saved", total_q)
+            # Validate course exists before attempting generation
+            from apps.courses.models import Course as CourseModel
+            try:
+                course_check = CourseModel.objects.get(id=course_id)
+                logger.info(" Course validated: %s", course_check.course_name)
+            except CourseModel.DoesNotExist:
+                logger.error(" Course %s does not exist - aborting task", course_id)
+                return {"error": "Course not found", "success": False}
 
-            # MCQ tests run AFTER coding tests
-            # Coding steps: total_weeks*7 + num_blocks*2 + (1 to total_weeks)
-            # MCQ steps: total_weeks*8 + num_blocks*2 + (1 to total_weeks) = total_sub_steps
-            from apps.courses.models import Course
-            from apps.courses.sse import broadcast_progress_update, broadcast_generation_complete
+            generator = CourseGenerator()
+            result = asyncio.run(generator.generate_weekly_test(course_id, week_number))
 
-            course = Course.objects.get(id=course_id)
-            total_weeks = course.duration_weeks or 0
-            num_blocks = (total_weeks + 3) // 4
-            total_sub_steps = total_weeks * 9 + num_blocks * 2
+            if result.get("success"):
+                total_q = result.get("total_questions", 0)
+                logger.info(" Weekly test generated successfully")
+                logger.info("   Test ID: %s", result.get("test_id"))
+                logger.info("   Questions: %d", total_q)
+                if total_q < 10:
+                    logger.warning(" Only %d/10 questions generated - partial test saved", total_q)
 
-            # MCQ step = all days + web + rag + theme + titles + all coding tests + this week's MCQ
-            mcq_step = total_weeks * 8 + num_blocks * 2 + week_number
-            progress_percent = round((mcq_step / total_sub_steps) * 100)
-            logger.info(" Weekly MCQ test complete: step %d/%d (%d%%)", mcq_step, total_sub_steps, progress_percent)
+                # MCQ tests run AFTER coding tests
+                # Coding steps: total_weeks*7 + num_blocks*2 + (1 to total_weeks)
+                # MCQ steps: total_weeks*8 + num_blocks*2 + (1 to total_weeks) = total_sub_steps
+                from apps.courses.models import Course
+                from apps.courses.sse import broadcast_progress_update, broadcast_generation_complete
 
-            # Atomic completion tracking: only fire COMPLETE when ALL weeks are done
-            from apps.courses.sse import get_redis_client
-            redis_client = get_redis_client()
-            completion_key = f"course_completion:{course_id}"
-            completed_count = redis_client.incr(completion_key)
-            redis_client.expire(completion_key, 3600)  # Expire after 1 hour
-            logger.info(" Completion counter: %d/%d weeks for course %s", completed_count, total_weeks, course_id)
+                course = Course.objects.get(id=course_id)
+                total_weeks = course.duration_weeks or 0
+                num_blocks = (total_weeks + 3) // 4
+                total_sub_steps = total_weeks * 9 + num_blocks * 2
 
-            # Only mark as READY and broadcast when ALL weeks are complete
-            if completed_count >= total_weeks:
-                course.generation_status = "ready"
-                course.status = "active"
-                course.save(update_fields=["generation_status", "status"])
-                logger.info(" ALL %d WEEKS COMPLETE - Course %s marked as READY!", total_weeks, course_id)
-                broadcast_generation_complete(course_id, {
-                    "progress": 100,
-                    "completed_days": total_sub_steps,
-                    "total_days": total_sub_steps,
-                    "generation_status": "ready",
-                    "current_stage": "Course generation complete!",
-                })
+                # MCQ step = all days + web + rag + theme + titles + all coding tests + this week's MCQ
+                mcq_step = total_weeks * 8 + num_blocks * 2 + week_number
+                progress_percent = round((mcq_step / total_sub_steps) * 100)
+                logger.info(" Weekly MCQ test complete: step %d/%d (%d%%)", mcq_step, total_sub_steps, progress_percent)
+
+                # Atomic completion tracking: only fire COMPLETE when ALL weeks are done
+                from apps.courses.sse import get_redis_client
+                redis_client = get_redis_client()
+                completion_key = f"course_completion:{course_id}"
+                completed_count = redis_client.incr(completion_key)
+                redis_client.expire(completion_key, 3600)  # Expire after 1 hour
+                logger.info(" Completion counter: %d/%d weeks for course %s", completed_count, total_weeks, course_id)
+
+                # Only mark as READY and broadcast when ALL weeks are complete
+                if completed_count >= total_weeks:
+                    course.generation_status = "ready"
+                    course.status = "active"
+                    course.save(update_fields=["generation_status", "status"])
+                    logger.info(" ALL %d WEEKS COMPLETE - Course %s marked as READY!", total_weeks, course_id)
+                    broadcast_generation_complete(course_id, {
+                        "progress": 100,
+                        "completed_days": total_sub_steps,
+                        "total_days": total_sub_steps,
+                        "generation_status": "ready",
+                        "current_stage": "Course generation complete!",
+                    })
+                else:
+                    logger.info("Waiting for remaining weeks to complete: %d/%d", completed_count, total_weeks)
             else:
-                logger.info("Waiting for remaining weeks to complete: %d/%d", completed_count, total_weeks)
-        else:
-            logger.warning(" Weekly test generation failed: %s", result.get("error"))
-            raise Exception(result.get("error"))
+                logger.warning(" Weekly test generation failed: %s", result.get("error"))
+                raise Exception(result.get("error"))
+            break
 
-    except Exception as exc:
-        logger.exception("Error generating weekly test (attempt %d): %s", self.request.retries + 1, exc)
-        # Short backoff: 5s, 10s
-        raise self.retry(exc=exc, countdown=min(10, 5 * (self.request.retries + 1)))
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_weekly_test_task FAILED after %d retries (course=%s, week=%d)", MAX_RETRIES, course_id, week_number)
+                raise
+            logger.warning("generate_weekly_test_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def generate_certificate_task(self, user_id: str, course_id: str):
+def generate_certificate_task(user_id: str, course_id: str):
     """
     Generate a PDF certificate for a completed course.
     """
     from services.certificate.generator import CertificateGenerator
 
-    try:
-        generator = CertificateGenerator()
-        result = generator.generate_certificate(user_id, course_id)
+    MAX_RETRIES = 3
+    RETRY_DELAY = 60  # seconds
 
-        if result.get("success"):
-            logger.info("Generated certificate for user %s course %s", user_id, course_id)
-        else:
-            logger.warning("Certificate generation failed: %s", result.get("error"))
-            raise Exception(result.get("error"))
+    for attempt in range(MAX_RETRIES):
+        try:
+            generator = CertificateGenerator()
+            result = generator.generate_certificate(user_id, course_id)
 
-    except Exception as exc:
-        logger.exception("Error generating certificate: %s", exc)
-        raise self.retry(exc=exc)
+            if result.get("success"):
+                logger.info("Generated certificate for user %s course %s", user_id, course_id)
+            else:
+                logger.warning("Certificate generation failed: %s", result.get("error"))
+                raise Exception(result.get("error"))
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_certificate_task FAILED after %d retries (user=%s, course=%s)", MAX_RETRIES, user_id, course_id)
+                raise
+            logger.warning("generate_certificate_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
-@shared_task
 def update_knowledge_state_task(user_id: str, quiz_results: list):
     """
     Update user knowledge state based on quiz results.
@@ -1182,7 +1292,6 @@ def update_knowledge_state_task(user_id: str, quiz_results: list):
         logger.exception("Error updating knowledge state: %s", exc)
 
 
-@shared_task
 def send_streak_reminder(user_id: str):
     """
     Send streak reminder to user if they haven't studied today.
@@ -1211,8 +1320,7 @@ def send_streak_reminder(user_id: str):
         logger.exception("Error sending streak reminder: %s", exc)
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=5)
-def generate_coding_test_task(self, course_id: str, week_number: int, test_number: int = 1, total_sub_steps: int = None, skip_broadcast: bool = False):
+def generate_coding_test_task(course_id: str, week_number: int, test_number: int = 1, total_sub_steps: int = None, skip_broadcast: bool = False):
     """
     Generate a weekly coding test with coding problems.
 
@@ -1228,67 +1336,72 @@ def generate_coding_test_task(self, course_id: str, week_number: int, test_numbe
     from services.course.generator import CourseGenerator
     import asyncio
 
-    logger.info("=" * 60)
-    logger.info(" CELERY TASK: GENERATE CODING TEST %d", test_number)
-    logger.info(f"   Task ID: {self.request.id}")
-    logger.info(f"   Course ID: {course_id}")
-    logger.info(f"   Week: {week_number}")
-    logger.info(f"   Test Number: {test_number}")
-    logger.info(f"   Attempt: {self.request.retries + 1}/{self.max_retries}")
-    logger.info("=" * 60)
+    MAX_RETRIES = 2
+    RETRY_DELAY = 5  # seconds
 
-    try:
-        # Validate course exists before attempting generation
-        from apps.courses.models import Course as CourseModel
+    for attempt in range(MAX_RETRIES):
         try:
-            course_check = CourseModel.objects.get(id=course_id)
-            logger.info(" Course validated: %s", course_check.course_name)
-        except CourseModel.DoesNotExist:
-            logger.error(" Course %s does not exist - aborting task", course_id)
-            return {"error": "Course not found", "success": False}
-        
-        generator = CourseGenerator()
-        result = asyncio.run(generator.generate_coding_test(course_id, week_number))
+            logger.info("=" * 60)
+            logger.info(" TASK: GENERATE CODING TEST %d", test_number)
+            logger.info("   Course ID: %s", course_id)
+            logger.info("   Week: %d", week_number)
+            logger.info("   Test Number: %d", test_number)
+            logger.info("   Attempt: %d/%d", attempt + 1, MAX_RETRIES)
+            logger.info("=" * 60)
 
-        if result.get("success"):
-            logger.info(" Coding test %d generated successfully", test_number)
-            logger.info(f"   Problems: {result.get('total_problems')}")
+            # Validate course exists before attempting generation
+            from apps.courses.models import Course as CourseModel
+            try:
+                course_check = CourseModel.objects.get(id=course_id)
+                logger.info(" Course validated: %s", course_check.course_name)
+            except CourseModel.DoesNotExist:
+                logger.error(" Course %s does not exist - aborting task", course_id)
+                return {"error": "Course not found", "success": False}
 
-            # Coding tests run FIRST (before MCQ)
-            from apps.courses.models import Course
-            from apps.courses.sse import broadcast_progress_update
+            generator = CourseGenerator()
+            result = asyncio.run(generator.generate_coding_test(course_id, week_number))
 
-            course = Course.objects.get(id=course_id)
-            total_weeks = course.duration_weeks or 0
-            num_blocks = (total_weeks + 3) // 4
-            total_sub_steps = total_weeks * 9 + num_blocks * 2
+            if result.get("success"):
+                logger.info(" Coding test %d generated successfully", test_number)
+                logger.info("   Problems: %s", result.get("total_problems"))
 
-            # Coding step = all days + web + rag + theme + titles + this week's coding
-            coding_step = total_weeks * 7 + num_blocks * 2 + week_number
-            progress_percent = round((coding_step / total_sub_steps) * 100)
-            logger.info(" Weekly coding test complete: step %d/%d (%d%%)", coding_step, total_sub_steps, progress_percent)
+                # Coding tests run FIRST (before MCQ)
+                from apps.courses.models import Course
+                from apps.courses.sse import broadcast_progress_update
 
-            # Just broadcast progress (MCQ will fire complete)
-            broadcast_progress_update(course_id, {
-                "progress": progress_percent,
-                "completed_days": coding_step,
-                "total_days": total_sub_steps,
-                "generation_status": "generating",
-                "current_stage": f"Generated coding test {test_number} for Week {week_number}...",
-                "coding_test_status": f"Week {week_number} coding test {test_number} complete",
-            })
-        else:
-            logger.warning(" Coding test %d generation failed: %s", test_number, result.get("error"))
-            raise Exception(result.get("error"))
+                course = Course.objects.get(id=course_id)
+                total_weeks = course.duration_weeks or 0
+                num_blocks = (total_weeks + 3) // 4
+                total_sub_steps = total_weeks * 9 + num_blocks * 2
 
-    except Exception as exc:
-        logger.exception("Error generating coding test %d (attempt %d): %s", test_number, self.request.retries + 1, exc)
-        # Short backoff: 5s, 10s
-        raise self.retry(exc=exc, countdown=min(10, 5 * (self.request.retries + 1)))
+                # Coding step = all days + web + rag + theme + titles + this week's coding
+                coding_step = total_weeks * 7 + num_blocks * 2 + week_number
+                progress_percent = round((coding_step / total_sub_steps) * 100)
+                logger.info(" Weekly coding test complete: step %d/%d (%d%%)", coding_step, total_sub_steps, progress_percent)
+
+                # Just broadcast progress (MCQ will fire complete)
+                broadcast_progress_update(course_id, {
+                    "progress": progress_percent,
+                    "completed_days": coding_step,
+                    "total_days": total_sub_steps,
+                    "generation_status": "generating",
+                    "current_stage": f"Generated coding test {test_number} for Week {week_number}...",
+                    "coding_test_status": f"Week {week_number} coding test {test_number} complete",
+                })
+            else:
+                logger.warning(" Coding test %d generation failed: %s", test_number, result.get("error"))
+                raise Exception(result.get("error"))
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_coding_test_task FAILED after %d retries (course=%s, week=%d)", MAX_RETRIES, course_id, week_number)
+                raise
+            logger.warning("generate_coding_test_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=30)
-def generate_weekly_tests_for_course(self, course_id: str):
+def generate_weekly_tests_for_course(course_id: str):
     """
     Generate both MCQ test and coding test for all weeks in a course.
     Called after all days are generated.
@@ -1300,59 +1413,65 @@ def generate_weekly_tests_for_course(self, course_id: str):
     from django.db import transaction
     from django.db.models import F
 
-    try:
-        course = Course.objects.get(id=course_id)
-        total_weeks = course.duration_weeks
+    MAX_RETRIES = 3
+    RETRY_DELAY = 30  # seconds
 
-        logger.info("Starting sequential weekly test generation for %d weeks in course %s",
-                   total_weeks, course_id)
+    for attempt in range(MAX_RETRIES):
+        try:
+            course = Course.objects.get(id=course_id)
+            total_weeks = course.duration_weeks
 
-        # Reset completion counter for this course
-        from apps.courses.sse import get_redis_client
-        redis_client = get_redis_client()
-        completion_key = f"course_completion:{course_id}"
-        redis_client.delete(completion_key)
+            logger.info("Starting sequential weekly test generation for %d weeks in course %s",
+                       total_weeks, course_id)
 
-        # Broadcast that weekly test generation is starting
-        from apps.courses.sse import broadcast_progress_update
+            # Reset completion counter for this course
+            from apps.courses.sse import get_redis_client
+            redis_client = get_redis_client()
+            completion_key = f"course_completion:{course_id}"
+            redis_client.delete(completion_key)
 
-        # Calculate total granular sub-steps (must match _generate_in_blocks_with_web_search)
-        num_blocks = (total_weeks + 3) // 4
-        total_sub_steps = total_weeks * 9 + num_blocks * 2
+            # Broadcast that weekly test generation is starting
+            from apps.courses.sse import broadcast_progress_update
 
-        broadcast_progress_update(course_id, {
-            "progress": round(((total_weeks * 7 + num_blocks * 2) / total_sub_steps) * 100),
-            "completed_days": total_weeks * 7 + num_blocks * 2,
-            "total_days": total_sub_steps,
-            "generation_status": "generating",
-            "current_stage": "Generating weekly tests...",
-            "weekly_test_status": f"Starting weekly tests for {total_weeks} weeks",
-        })
+            # Calculate total granular sub-steps (must match _generate_in_blocks_with_web_search)
+            num_blocks = (total_weeks + 3) // 4
+            total_sub_steps = total_weeks * 9 + num_blocks * 2
 
-        # Queue coding tests FIRST for all weeks
-        for week_number in range(1, total_weeks + 1):
-            logger.info("Queuing coding test for Week %d...", week_number)
-            generate_coding_test_task.delay(course_id, week_number, total_sub_steps)
+            broadcast_progress_update(course_id, {
+                "progress": round(((total_weeks * 7 + num_blocks * 2) / total_sub_steps) * 100),
+                "completed_days": total_weeks * 7 + num_blocks * 2,
+                "total_days": total_sub_steps,
+                "generation_status": "generating",
+                "current_stage": "Generating weekly tests...",
+                "weekly_test_status": f"Starting weekly tests for {total_weeks} weeks",
+            })
 
-        # Then queue MCQ tests batch-wise (week by week)
-        for week_number in range(1, total_weeks + 1):
-            logger.info("Queuing MCQ test for Week %d...", week_number)
-            generate_weekly_test_task.delay(course_id, week_number, total_sub_steps)
+            # Queue coding tests FIRST for all weeks
+            for week_number in range(1, total_weeks + 1):
+                logger.info("Queuing coding test for Week %d...", week_number)
+                _start_background_task(generate_coding_test_task, (course_id, week_number, total_sub_steps))
 
-        logger.info("Queued %d coding tests + %d MCQ tests for course %s",
-                   total_weeks, total_weeks, course_id)
+            # Then queue MCQ tests batch-wise (week by week)
+            for week_number in range(1, total_weeks + 1):
+                logger.info("Queuing MCQ test for Week %d...", week_number)
+                _start_background_task(generate_weekly_test_task, (course_id, week_number, total_sub_steps))
 
-    except Exception as exc:
-        logger.exception("Error queueing weekly tests: %s", exc)
-        raise
+            logger.info("Queued %d coding tests + %d MCQ tests for course %s",
+                       total_weeks, total_weeks, course_id)
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("generate_weekly_tests_for_course FAILED after %d retries (course=%s)", MAX_RETRIES, course_id)
+                raise
+            logger.warning("generate_weekly_tests_for_course attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
 # ──────────────────────────────────────────────
 # COURSE UPDATE TASK
 # ──────────────────────────────────────────────
-@shared_task(bind=True, max_retries=3, default_retry_delay=30)
 def update_course_content_task(
-    self,
     course_id: str,
     course_name: str,
     topic: str,
@@ -1386,56 +1505,59 @@ def update_course_content_task(
     from services.course.web_search import get_web_search_service
     import asyncio
 
-    logger.info("=" * 80)
-    logger.info(" CELERY TASK: UPDATE COURSE CONTENT")
-    logger.info(f"   Task ID: {self.request.id}")
-    logger.info(f"   Course ID: {course_id}")
-    logger.info(f"   Course Name: {course_name}")
-    logger.info(f"   Update Type: {update_type}")
-    logger.info(f"   Weeks to Update: {weeks_to_update}")
-    logger.info(f"   User Query: {user_query}")
-    logger.info("=" * 80)
+    MAX_RETRIES = 3
+    RETRY_DELAY = 30  # seconds
 
-    if weeks_to_update is None:
-        weeks_to_update = []
+    for attempt in range(MAX_RETRIES):
+        try:
+            logger.info("=" * 80)
+            logger.info(" TASK: UPDATE COURSE CONTENT")
+            logger.info("   Course ID: %s", course_id)
+            logger.info("   Course Name: %s", course_name)
+            logger.info("   Update Type: %s", update_type)
+            logger.info("   Weeks to Update: %s", weeks_to_update)
+            logger.info("   User Query: %s", user_query)
+            logger.info("=" * 80)
 
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        logger.error(" Course %s not found", course_id)
-        return
+            if weeks_to_update is None:
+                weeks_to_update = []
 
-    try:
-        course.generation_status = "updating"
-        course.save(update_fields=["generation_status"])
+            try:
+                course = Course.objects.get(id=course_id)
+            except Course.DoesNotExist:
+                logger.error(" Course %s not found", course_id)
+                return
 
-        logger.info(" Course status set to 'updating'")
+            course.generation_status = "updating"
+            course.save(update_fields=["generation_status"])
 
-        # Create generator
-        generator = CourseGenerator()
+            logger.info(" Course status set to 'updating'")
 
-        # Get total weeks for reference
-        total_weeks = new_duration_weeks or course.duration_weeks
+            # Create generator
+            generator = CourseGenerator()
 
-        # Calculate total tasks for progress tracking
-        # Each week has: 5 days + 1 MCQ test + 1 coding test = 7 tasks
-        weeks_being_updated = len(weeks_to_update)
-        total_days_to_update = weeks_being_updated * 5
-        total_tests_to_update = weeks_being_updated * 2  # MCQ + coding per week
-        total_tasks = total_days_to_update + total_tests_to_update
-        
-        logger.info("Progress calculation: %d weeks × (5 days + 2 tests) = %d tasks", 
-                   weeks_being_updated, total_tasks)
+            # Get total weeks for reference
+            total_weeks = new_duration_weeks or course.duration_weeks
 
-        # Build combined context: existing content + user query
-        existing_context = _build_existing_context(course, weeks_to_update)
+            # Calculate total tasks for progress tracking
+            # Each week has: 5 days + 1 MCQ test + 1 coding test = 7 tasks
+            weeks_being_updated = len(weeks_to_update)
+            total_days_to_update = weeks_being_updated * 5
+            total_tests_to_update = weeks_being_updated * 2  # MCQ + coding per week
+            total_tasks = total_days_to_update + total_tests_to_update
 
-        # Combined prompt for LLM: PRIORITIZE user query over existing content
-        combined_context = f"""
+            logger.info("Progress calculation: %d weeks × (5 days + 2 tests) = %d tasks",
+                       weeks_being_updated, total_tasks)
+
+            # Build combined context: existing content + user query
+            existing_context = _build_existing_context(course, weeks_to_update)
+
+            # Combined prompt for LLM: PRIORITIZE user query over existing content
+            combined_context = f"""
 EXISTING COURSE CONTEXT:
 {existing_context}
 
- CRITICAL USER UPDATE REQUEST (PRIORITIZE THIS): 
+ CRITICAL USER UPDATE REQUEST (PRIORITIZE THIS):
 {user_query}
 
 IMPORTANT GENERATION RULES:
@@ -1454,173 +1576,176 @@ EXAMPLE OF WHAT TO GENERATE:
 - Make it PRACTICAL and HANDS-ON with real-world examples
 """
 
-        logger.info("Starting update generation for %d weeks", len(weeks_to_update))
+            logger.info("Starting update generation for %d weeks", len(weeks_to_update))
 
-        # Track progress
-        tasks_completed = 0
+            # Track progress
+            tasks_completed = 0
 
-        # Log update type with clear message
-        if update_type == "compact":
-            logger.info(" COMPACT UPDATE: Compressing course from %d to %d weeks",
-                       course.duration_weeks, new_duration_weeks or target_weeks)
-            # For compact, skip web search and use special prompting
-            web_search_enabled = False
-        elif update_type == "extend":
-            extend_weeks_count = len(weeks_to_update)
-            logger.info(" EXTEND UPDATE: Adding %d new weeks (weeks %s)",
-                       extend_weeks_count, weeks_to_update)
-        elif update_type == "percentage":
-            logger.info(" PERCENTAGE UPDATE: Replacing last %d%% of course (%d weeks)",
-                       percentage, len(weeks_to_update))
+            # Log update type with clear message
+            if update_type == "compact":
+                logger.info(" COMPACT UPDATE: Compressing course from %d to %d weeks",
+                           course.duration_weeks, new_duration_weeks or target_weeks)
+                # For compact, skip web search and use special prompting
+                web_search_enabled = False
+            elif update_type == "extend":
+                extend_weeks_count = len(weeks_to_update)
+                logger.info(" EXTEND UPDATE: Adding %d new weeks (weeks %s)",
+                           extend_weeks_count, weeks_to_update)
+            elif update_type == "percentage":
+                logger.info(" PERCENTAGE UPDATE: Replacing last %d%% of course (%d weeks)",
+                           percentage, len(weeks_to_update))
 
-        # Run async generation using async_to_sync for better event loop management
-        # This avoids issues with multiple event loops in Celery workers
-        tasks_completed = async_to_sync(_update_course_async)(
-            generator=generator,
-            course=course,
-            weeks_to_update=weeks_to_update,
-            total_weeks=total_weeks,
-            topic=topic,
-            level=level,
-            goals=goals,
-            description=description,
-            user_query=user_query,
-            update_type=update_type,
-            new_duration_weeks=new_duration_weeks,
-            web_search_enabled=web_search_enabled,
-            total_tasks=total_tasks,  # Pass total tasks for progress calculation
-            target_weeks=target_weeks,  # Pass for compact update
-        )
+            # Run async generation using async_to_sync for better event loop management
+            tasks_completed = async_to_sync(_update_course_async)(
+                generator=generator,
+                course=course,
+                weeks_to_update=weeks_to_update,
+                total_weeks=total_weeks,
+                topic=topic,
+                level=level,
+                goals=goals,
+                description=description,
+                user_query=user_query,
+                update_type=update_type,
+                new_duration_weeks=new_duration_weeks,
+                web_search_enabled=web_search_enabled,
+                total_tasks=total_tasks,  # Pass total tasks for progress calculation
+                target_weeks=target_weeks,  # Pass for compact update
+            )
 
-        # For extend_50% type, create new week/day skeleton for added weeks
-        if update_type == "extend_50%" and new_duration_weeks and new_duration_weeks > course.duration_weeks:
-            old_duration = course.duration_weeks
-            for week_num in range(old_duration + 1, new_duration_weeks + 1):
-                week = WeekPlan.objects.create(
-                    course=course,
-                    week_number=week_num,
-                    theme=None,
-                    objectives=[],
-                )
-                for day_num in range(1, 6):
-                    DayPlan.objects.create(
-                        week_plan=week,
-                        day_number=day_num,
-                        title=None,
-                        tasks={},
-                        theory_content="",
-                        code_content="",
-                        is_locked=True,
-                        theory_generated=False,
-                        code_generated=False,
-                        quiz_generated=False,
+            # For extend_50% type, create new week/day skeleton for added weeks
+            if update_type == "extend_50%" and new_duration_weeks and new_duration_weeks > course.duration_weeks:
+                old_duration = course.duration_weeks
+                for week_num in range(old_duration + 1, new_duration_weeks + 1):
+                    week = WeekPlan.objects.create(
+                        course=course,
+                        week_number=week_num,
+                        theme=None,
+                        objectives=[],
                     )
-            logger.info("Created skeleton for %d new weeks", new_duration_weeks - old_duration)
+                    for day_num in range(1, 6):
+                        DayPlan.objects.create(
+                            week_plan=week,
+                            day_number=day_num,
+                            title=None,
+                            tasks={},
+                            theory_content="",
+                            code_content="",
+                            is_locked=True,
+                            theory_generated=False,
+                            code_generated=False,
+                            quiz_generated=False,
+                        )
+                logger.info("Created skeleton for %d new weeks", new_duration_weeks - old_duration)
 
-        # Update course progress - set to 100%
-        course.refresh_from_db()
-        course.generation_progress = total_days_to_update  # Only count days, not tests
-        course.generation_status = "ready"
-        course.duration_weeks = new_duration_weeks
-        course.save(update_fields=["generation_progress", "generation_status", "duration_weeks"])
-
-        # Reset progress for updated weeks if course was completed
-        _reset_user_progress_for_updated_weeks(course, weeks_to_update)
-
-        # Generate weekly tests for updated weeks (these run separately, don't count toward main progress)
-        if weeks_to_update:
-            from apps.courses.tasks import generate_weekly_test_task, generate_coding_test_task
-            from apps.courses.sse import broadcast_progress_update
-
-            test_count = 0
-            total_tests = len(weeks_to_update) * 2  # MCQ + coding per week
-
-            # CRITICAL: Refresh course to get ACTUAL generation_progress from database
-            # This MUST be done here because weeks were updated in parallel above
+            # Update course progress - set to 100%
             course.refresh_from_db()
-            days_completed = course.generation_progress
-            
-            # Verify the calculation
-            expected_days = len(weeks_to_update) * 5
-            logger.info(" [TEST PHASE] Starting test generation:")
-            logger.info("   - Weeks to update: %s", weeks_to_update)
-            logger.info("   - Expected days completed: %d", expected_days)
-            logger.info("   - Actual days_completed from DB: %d", days_completed)
-            logger.info("   - Total tasks (days+tests): %d", total_tasks)
-            logger.info("   - Expected progress after days: %d%%", round((days_completed / total_tasks) * 100))
+            course.generation_progress = total_days_to_update  # Only count days, not tests
+            course.generation_status = "ready"
+            course.duration_weeks = new_duration_weeks
+            course.save(update_fields=["generation_progress", "generation_status", "duration_weeks"])
 
-            # Progress calculation for tests:
-            # Days completed = days_completed (already done, ~70% of total_tasks)
-            # Each test adds: (1 / total_tasks) * 100 percent
-            # Final progress should reach 100% after all tests complete
+            # Reset progress for updated weeks if course was completed
+            _reset_user_progress_for_updated_weeks(course, weeks_to_update)
 
-            for week_num in weeks_to_update:
-                logger.info(" [TEST] Regenerating weekly test for week %d", week_num)
-                generate_weekly_test_task.apply(args=[course_id, week_num, True])  # skip_broadcast=True
-                test_count += 1
+            # Generate weekly tests for updated weeks (these run separately, don't count toward main progress)
+            if weeks_to_update:
+                from apps.courses.tasks import generate_weekly_test_task, generate_coding_test_task
+                from apps.courses.sse import broadcast_progress_update
 
-                # Update progress for MCQ test completion
-                # Start from days progress (~70%) and add test progress
-                tasks_done = days_completed + test_count
-                progress_percent = round((tasks_done / total_tasks) * 100)
-                
-                logger.info(" [TEST PROGRESS] MCQ Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
-                           week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
-                
-                broadcast_progress_update(course_id, {
-                    "progress": int(progress_percent),
-                    "completed_days": days_completed,
-                    "total_days": total_days_to_update,
-                    "generation_status": "updating",
-                    "current_stage": f"Generating tests for Week {week_num}...",
-                })
+                test_count = 0
+                total_tests = len(weeks_to_update) * 2  # MCQ + coding per week
 
-                logger.info(" [TEST] Regenerating coding test for week %d", week_num)
-                generate_coding_test_task.apply(args=[course_id, week_num, True])  # skip_broadcast=True
-                test_count += 1
+                # CRITICAL: Refresh course to get ACTUAL generation_progress from database
+                # This MUST be done here because weeks were updated in parallel above
+                course.refresh_from_db()
+                days_completed = course.generation_progress
 
-                # Update progress for coding test completion
-                tasks_done = days_completed + test_count
-                progress_percent = round((tasks_done / total_tasks) * 100)
-                
-                logger.info(" [TEST PROGRESS] Coding Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
-                           week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
-                
-                broadcast_progress_update(course_id, {
-                    "progress": int(progress_percent),
-                    "completed_days": days_completed,
-                    "total_days": total_days_to_update,
-                    "generation_status": "updating",
-                    "current_stage": f"Generating coding test for Week {week_num}...",
-                })
+                # Verify the calculation
+                expected_days = len(weeks_to_update) * 5
+                logger.info(" [TEST PHASE] Starting test generation:")
+                logger.info("   - Weeks to update: %s", weeks_to_update)
+                logger.info("   - Expected days completed: %d", expected_days)
+                logger.info("   - Actual days_completed from DB: %d", days_completed)
+                logger.info("   - Total tasks (days+tests): %d", total_tasks)
+                logger.info("   - Expected progress after days: %d%%", round((days_completed / total_tasks) * 100))
 
-        logger.info("=" * 80)
-        logger.info(" COURSE UPDATE COMPLETE")
-        logger.info(f"   Course ID: {course_id}")
-        logger.info(f"   Status: {course.generation_status}")
-        logger.info(f"   Weeks Updated: {weeks_to_update}")
-        logger.info(f"   Total Tasks: {total_tasks} (100%)")
-        logger.info("=" * 80)
+                # Progress calculation for tests:
+                # Days completed = days_completed (already done, ~70% of total_tasks)
+                # Each test adds: (1 / total_tasks) * 100 percent
+                # Final progress should reach 100% after all tests complete
 
-        # Broadcast final completion status to frontend
-        from apps.courses.sse import broadcast_generation_complete
-        broadcast_generation_complete(course_id, {
-            "progress": 100,
-            "completed_days": total_days_to_update,
-            "total_days": total_days_to_update,
-            "generation_status": "ready",
-            "current_stage": "Update complete!",
-        })
+                for week_num in weeks_to_update:
+                    logger.info(" [TEST] Regenerating weekly test for week %d", week_num)
+                    generate_weekly_test_task(course_id, week_num, True)  # skip_broadcast=True
+                    test_count += 1
 
-    except Exception as exc:
-        logger.exception("Error updating course %s: %s", course_id, exc)
-        try:
-            course.refresh_from_db()
-            course.generation_status = "failed"
-            course.save(update_fields=["generation_status"])
-        except Exception:
-            pass
-        raise self.retry(exc=exc)
+                    # Update progress for MCQ test completion
+                    # Start from days progress (~70%) and add test progress
+                    tasks_done = days_completed + test_count
+                    progress_percent = round((tasks_done / total_tasks) * 100)
+
+                    logger.info(" [TEST PROGRESS] MCQ Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
+                               week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
+
+                    broadcast_progress_update(course_id, {
+                        "progress": int(progress_percent),
+                        "completed_days": days_completed,
+                        "total_days": total_days_to_update,
+                        "generation_status": "updating",
+                        "current_stage": f"Generating tests for Week {week_num}...",
+                    })
+
+                    logger.info(" [TEST] Regenerating coding test for week %d", week_num)
+                    generate_coding_test_task(course_id, week_num, True)  # skip_broadcast=True
+                    test_count += 1
+
+                    # Update progress for coding test completion
+                    tasks_done = days_completed + test_count
+                    progress_percent = round((tasks_done / total_tasks) * 100)
+
+                    logger.info(" [TEST PROGRESS] Coding Test Week %d: days_completed=%d + test_count=%d = tasks_done=%d/%d = %d%%",
+                               week_num, days_completed, test_count, tasks_done, total_tasks, progress_percent)
+
+                    broadcast_progress_update(course_id, {
+                        "progress": int(progress_percent),
+                        "completed_days": days_completed,
+                        "total_days": total_days_to_update,
+                        "generation_status": "updating",
+                        "current_stage": f"Generating coding test for Week {week_num}...",
+                    })
+
+            logger.info("=" * 80)
+            logger.info(" COURSE UPDATE COMPLETE")
+            logger.info("   Course ID: %s", course_id)
+            logger.info("   Status: %s", course.generation_status)
+            logger.info("   Weeks Updated: %s", weeks_to_update)
+            logger.info("   Total Tasks: %s (100%%)", total_tasks)
+            logger.info("=" * 80)
+
+            # Broadcast final completion status to frontend
+            from apps.courses.sse import broadcast_generation_complete
+            broadcast_generation_complete(course_id, {
+                "progress": 100,
+                "completed_days": total_days_to_update,
+                "total_days": total_days_to_update,
+                "generation_status": "ready",
+                "current_stage": "Update complete!",
+            })
+            break
+
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1:
+                logger.exception("update_course_content_task FAILED after %d retries (course=%s)", MAX_RETRIES, course_id)
+                try:
+                    course.refresh_from_db()
+                    course.generation_status = "failed"
+                    course.save(update_fields=["generation_status"])
+                except Exception:
+                    pass
+                raise
+            logger.warning("update_course_content_task attempt %d failed, retrying in %ds: %s", attempt + 1, RETRY_DELAY, exc)
+            time.sleep(RETRY_DELAY)
 
 
 async def _update_course_async(
@@ -1982,9 +2107,10 @@ async def _update_single_week(
                 continue
             
             day, theory, code, quizzes, quiz_generated = result
-            
+
             # Save day content
-            day.theory_content = theory
+            from services.course.generator import _sanitize_mermaid
+            day.theory_content = _sanitize_mermaid(theory)
             day.code_content = code
             day.theory_generated = True
             day.code_generated = True

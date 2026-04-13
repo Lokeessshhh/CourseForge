@@ -127,48 +127,26 @@ export default function MermaidRenderer({ chart, className = '' }: MermaidRender
   if (error || !svg) {
     return (
       <div className={`mermaid-container ${className}`} style={{
-        minHeight: '120px',
+        minHeight: '80px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#fff3cd',
+        background: '#f8f9fa',
         borderRadius: '8px',
         margin: '16px 0',
-        border: '1px solid #ffc107',
-        padding: '16px',
+        border: '1px solid #dee2e6',
+        padding: '12px',
       }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '8px',
-          color: '#856404',
-          fontSize: '14px',
+          gap: '6px',
+          color: '#6c757d',
+          fontSize: '13px',
         }}>
-          <span style={{ fontSize: '20px' }}></span>
+          <span style={{ fontSize: '16px' }}></span>
           <span>Diagram could not be rendered</span>
-          <details style={{ 
-            fontSize: '12px', 
-            color: '#6c757d', 
-            marginTop: '8px',
-            maxWidth: '100%',
-            overflow: 'hidden',
-          }}>
-            <summary>View raw diagram code</summary>
-            <pre style={{ 
-              marginTop: '8px',
-              padding: '8px',
-              background: '#f8f9fa',
-              borderRadius: '4px',
-              fontSize: '11px',
-              maxHeight: '100px',
-              overflow: 'auto',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-            }}>
-              {chart}
-            </pre>
-          </details>
         </div>
       </div>
     );

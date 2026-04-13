@@ -40,10 +40,10 @@ LOGGING["loggers"]["django.db.backends"] = {  # type: ignore[name-defined]  # no
     "propagate": False,
 }
 
-# Enhanced logging for development - show INFO level for Celery
+# Enhanced logging for development - show INFO level for background tasks
 LOGGING["root"] = {  # type: ignore[name-defined]
     "handlers": ["console"],
-    "level": "INFO",  # Show INFO logs (needed for Celery task logs)
+    "level": "INFO",  # Show INFO logs (needed for task logs)
 }
 
 # Show Django server logs
@@ -81,8 +81,8 @@ LOGGING["loggers"]["apps.websockets"] = {  # type: ignore[name-defined]
     "propagate": False,
 }
 
-# Show Celery task logs (IMPORTANT - shows task start/complete)
-LOGGING["loggers"]["celery"] = {  # type: ignore[name-defined]
+# Show SSE and course tasks logs
+LOGGING["loggers"]["apps.courses.tasks"] = {  # type: ignore[name-defined]
     "handlers": ["console"],
     "level": "INFO",
     "propagate": False,
@@ -116,13 +116,6 @@ LOGGING["loggers"]["services.course.web_search"] = {  # type: ignore[name-define
 
 # Show LLM client logs (shows API calls)
 LOGGING["loggers"]["services.llm"] = {  # type: ignore[name-defined]
-    "handlers": ["console"],
-    "level": "INFO",
-    "propagate": False,
-}
-
-# Show course tasks logs (shows weekly test generation)
-LOGGING["loggers"]["apps.courses.tasks"] = {  # type: ignore[name-defined]
     "handlers": ["console"],
     "level": "INFO",
     "propagate": False,

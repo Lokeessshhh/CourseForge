@@ -205,8 +205,12 @@ class ProgressTracker:
                 week.save(update_fields=["test_unlocked"])
                 week_test_unlocked = True
                 # Trigger weekly test generation
-                from apps.courses.tasks import generate_weekly_test_task
-                generate_weekly_test_task.delay(course_id, week_number)
+                from apps.courses.tasks import generate_weekly_test_task, _start_background_task
+                _start_background_task(
+                    generate_weekly_test_task,
+                    (course_id, week_number),
+                    task_name="generate_weekly_test",
+                )
 
             # Unlock next day unconditionally (regardless of score)
             next_day_unlocked = self._unlock_next_day(course, week_number, day_number)
@@ -306,8 +310,12 @@ class ProgressTracker:
                 progress.completed_at = timezone.now()
                 progress.save(update_fields=["completed_at"])
                 # Trigger certificate generation
-                from apps.courses.tasks import generate_certificate_task
-                generate_certificate_task.delay(user_id, course_id)
+                from apps.courses.tasks import generate_certificate_task, _start_background_task
+                _start_background_task(
+                    generate_certificate_task,
+                    (user_id, course_id),
+                    task_name="generate_certificate",
+                )
                 certificate_generated = True
 
             return {

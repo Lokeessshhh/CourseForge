@@ -61,10 +61,10 @@ class Command(BaseCommand):
             
             if created:
                 self.stdout.write(self.style.SUCCESS(f" Created weekly test for week {week_number}"))
-                # Trigger test generation
+                # Trigger test generation (synchronous in management command)
                 from apps.courses.tasks import generate_weekly_test_task
-                generate_weekly_test_task.delay(str(course_id), week_number)
-                self.stdout.write(self.style.SUCCESS(f" Triggered weekly test generation (running in background)"))
+                generate_weekly_test_task(str(course_id), week_number)
+                self.stdout.write(self.style.SUCCESS(f" Weekly test generation complete"))
             else:
                 self.stdout.write(self.style.SUCCESS(f" Weekly test already exists for week {week_number}"))
             

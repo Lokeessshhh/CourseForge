@@ -73,23 +73,8 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
     }
   }, [isConnected, isDisconnected, error, data?.generation_status, isPolling, hasCompleted]);
 
-  // SAFETY TIMEOUT: Auto-dismiss after 30 seconds regardless of state
-  useEffect(() => {
-    if (hasCompleted || hasCompletedRef.current) return;
-
-    const safetyTimeout = setTimeout(() => {
-      console.log('[GenerationProgressToast] 30s safety timeout - auto-dismissing');
-      handleCompletion({
-        progress: 100,
-        completed_days: 0,
-        total_days: 0,
-        generation_status: 'ready',
-        current_stage: 'Completed (safety timeout)',
-      });
-    }, 30000);
-
-    return () => clearTimeout(safetyTimeout);
-  }, [hasCompleted]);
+  // SAFETY TIMEOUT removed — was auto-dismissing at 30s even when generation was only at 27%.
+  // The polling fallback handles SSE disconnection reliably.
 
   // Polling logic - fallback when SSE disconnects early
   useEffect(() => {

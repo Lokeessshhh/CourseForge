@@ -114,19 +114,23 @@ def course_generate(request):
                 quiz_generated=False,
             )
 
-    # Fire Celery task in background (returns immediately)
-    from apps.courses.tasks import generate_course_content_task
-    
+    # Fire background task (returns immediately)
+    from apps.courses.tasks import generate_course_content_task, _start_background_task
+
     try:
-        task = generate_course_content_task.delay(
-            course_id=str(course.id),
-            course_name=data["course_name"],
-            duration_weeks=duration_weeks,
-            level=data.get("level", "beginner"),
-            goals=data.get("goals", []),
-            description=data.get("description"),
+        _start_background_task(
+            generate_course_content_task,
+            (
+                str(course.id),
+                data["course_name"],
+                duration_weeks,
+                data.get("level", "beginner"),
+                data.get("goals", []),
+                data.get("description"),
+            ),
+            task_name="generate_course_content",
         )
-        logger.info("[OK] Course generation task queued: %s", task.id)
+        logger.info("[OK] Course generation queued in background: %s", course.id)
     except Exception as task_exc:
         logger.exception("[ERROR] Failed to queue course generation task: %s", task_exc)
         # Don't fail the request - course is already created
@@ -236,9 +240,17 @@ def course_detail(request, course_id):
 @permission_classes([IsAuthenticated])
 def course_delete(request, course_id):
     try:
-        course = Course.objects.get(id=course_id, user=request.user)
+        course = Course.objects.get(id=course_id)
     except Course.DoesNotExist:
         return _err("Course not found.", status.HTTP_404_NOT_FOUND)
+    # Verify ownership
+    if course.user_id != request.user.id:
+        logger.warning(
+            "Delete denied: user %s tried to delete course %s owned by %s",
+            request.user.id, course_id, course.user_id,
+        )
+        return _err("Permission denied.", status.HTTP_403_FORBIDDEN)
+    logger.info("Deleting course %s (%s) by user %s", course_id, course.course_name, request.user.id)
     course.delete()
     return _ok({"deleted": str(course_id)})
 
@@ -445,22 +457,28 @@ def course_update(request, course_id):
     # Calculate total days being updated (for frontend progress display)
     total_days_being_updated = len(weeks_to_update) * 5
 
-    # Fire Celery task for update
-    from apps.courses.tasks import update_course_content_task
-    update_course_content_task.delay(
-        course_id=str(course.id),
-        course_name=course.course_name,
-        topic=course.topic or course.course_name,
-        level=course.level,
-        goals=course.goals or [],
-        description=course.description,
-        update_type=update_type,
-        user_query=user_query,
-        weeks_to_update=weeks_to_update,
-        new_duration_weeks=new_duration_weeks,
-        web_search_enabled=web_search_enabled,
-        target_weeks=data.get("target_weeks"),  # Pass for compact update
-        percentage=data.get("percentage", 50),  # Pass for percentage update
+    # Fire background task for update
+    from apps.courses.tasks import update_course_content_task, _start_background_task_kwargs
+    _start_background_task_kwargs(
+        update_course_content_task,
+        (
+            str(course.id),
+            course.course_name,
+            course.topic or course.course_name,
+            course.level,
+            course.goals or [],
+            course.description,
+            update_type,
+            user_query,
+            weeks_to_update,
+            new_duration_weeks,
+        ),
+        {
+            "web_search_enabled": web_search_enabled,
+            "target_weeks": data.get("target_weeks"),
+            "percentage": data.get("percentage", 50),
+        },
+        task_name="update_course_content",
     )
 
     logger.info("Course update started: %s (ID: %s) - Type: %s, Weeks to update: %s",
@@ -588,9 +606,9 @@ def day_complete(request, course_id, week_number, day_number):
         week.is_completed = True
         week.save(update_fields=["is_completed"])
 
-    # Unlock next day
+    # Unlock next day (simple DB write, no async needed)
     from .tasks import unlock_next_day
-    unlock_next_day.delay(str(course.id), week_number, day_number)
+    unlock_next_day(str(course.id), week_number, day_number)
 
     return _ok(DayPlanSerializer(day).data)
 
@@ -920,8 +938,12 @@ def day_quiz_submit(request, course_id, week_number, day_number):
         week_test_unlocked = True
         
         # Trigger weekly test generation
-        from apps.courses.tasks import generate_weekly_test_task
-        generate_weekly_test_task.delay(str(course.id), week_number)
+        from apps.courses.tasks import generate_weekly_test_task, _start_background_task
+        _start_background_task(
+            generate_weekly_test_task,
+            (str(course.id), week_number),
+            task_name="generate_weekly_test",
+        )
         logger.info(
             f"Weekly test unlocked and generation triggered: course={course.id}, week={week_number}"
         )
@@ -1163,17 +1185,21 @@ def week_test_submit(request, course_id, week_number):
                     progress.save(update_fields=["completed_at"])
                     logger.info(f"Course completed! Triggering certificate generation: user={request.user.id}, course={course_id}")
 
-                    from apps.courses.tasks import generate_certificate_task
-                    generate_certificate_task.delay(str(request.user.id), str(course_id))
+                    from apps.courses.tasks import generate_certificate_task, _start_background_task
+                    _start_background_task(
+                        generate_certificate_task,
+                        (str(request.user.id), str(course_id)),
+                        task_name="generate_certificate",
+                    )
                 except CourseProgress.DoesNotExist:
                     logger.warning(f"CourseProgress not found for user={request.user.id}, course={course_id}")
 
         # Generate coding tests if not already generated
         if not week.coding_tests_generated:
-            from apps.courses.tasks import generate_coding_test_task
+            from apps.courses.tasks import generate_coding_test_task, _start_background_task
             # Generate both coding tests
-            generate_coding_test_task.delay(str(course.id), week_number, 1)  # Test 1
-            generate_coding_test_task.delay(str(course.id), week_number, 2)  # Test 2
+            _start_background_task(generate_coding_test_task, (str(course.id), week_number, 1), task_name="generate_coding_test_1")
+            _start_background_task(generate_coding_test_task, (str(course.id), week_number, 2), task_name="generate_coding_test_2")
             week.coding_tests_generated = True
             week.save(update_fields=["coding_tests_generated"])
             logger.info(f"Coding tests generation triggered: course={course_id}, week={week_number}")

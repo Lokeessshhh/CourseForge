@@ -349,8 +349,12 @@ def submit_coding_test(request, course_id, week_number, test_number=1):
                     progress.save(update_fields=["completed_at"])
                     logger.info(f"Course completed! Triggering certificate generation: user={request.user.id}, course={course_id}")
 
-                    from apps.courses.tasks import generate_certificate_task
-                    generate_certificate_task.delay(str(request.user.id), str(course_id))
+                    from apps.courses.tasks import generate_certificate_task, _start_background_task
+                    _start_background_task(
+                        generate_certificate_task,
+                        (str(request.user.id), str(course_id)),
+                        task_name="generate_certificate",
+                    )
                 except CourseProgress.DoesNotExist:
                     logger.warning(f"CourseProgress not found for user={request.user.id}, course={course_id}")
 

@@ -95,8 +95,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "corsheaders",
     "channels",
-    "django_celery_beat",
-    "django_celery_results",
     "django_extensions",
 ]
 
@@ -212,17 +210,6 @@ CACHES = {
 # ──────────────────────────────────────────────
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
-
-# ──────────────────────────────────────────────
-# Celery
-# ──────────────────────────────────────────────
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = "django-db"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 # ──────────────────────────────────────────────
 # Django REST Framework

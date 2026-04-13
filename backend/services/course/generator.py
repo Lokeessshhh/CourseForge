@@ -15,6 +15,36 @@ DAYS_PER_WEEK = 5
 WEEKS_PER_MONTH = 4
 
 
+def _sanitize_mermaid(text: str) -> str:
+    """
+    Sanitize mermaid code blocks to fix parse errors.
+    Mermaid fails when node labels contain parentheses, colons, or special chars.
+    Replaces problematic characters with safe HTML entities or removes them.
+    """
+    def sanitize_block(match):
+        code = match.group(1)
+        # Replace parentheses in node labels [label] and {label}
+        code = re.sub(
+            r'\[([^\]]*)\]',
+            lambda m: '[' + m.group(1).replace('(', '&#40;').replace(')', '&#41;').replace(':', '&#58;') + ']',
+            code,
+        )
+        code = re.sub(
+            r'\{([^}]*)\}',
+            lambda m: '{' + m.group(1).replace('(', '&#40;').replace(')', '&#41;').replace(':', '&#58;') + '}',
+            code,
+        )
+        # Replace parentheses in edge labels |label|
+        code = re.sub(
+            r'\|([^|]*)\|',
+            lambda m: '|' + m.group(1).replace('(', '&#40;').replace(')', '&#41;').replace(':', '&#58;') + '|',
+            code,
+        )
+        return f'```mermaid\n{code}\n```'
+
+    return re.sub(r'```mermaid\n(.*?)\n```', sanitize_block, text, flags=re.DOTALL)
+
+
 def parse_duration(duration_input: str) -> int:
     """
     Parse duration input string to number of weeks.
@@ -577,6 +607,18 @@ graph TD
 ```
 All nodes defined, all arrows complete, proper syntax, meaningful labels.
 
+CRITICAL LABEL RULES FOR MERMAID DIAGRAMS:
+- Node labels MUST be SHORT (2-5 words max): A[Calculate Average] NOT A[SELECT AVG(salary) FROM employees WHERE...]
+- NEVER put code, SQL queries, formulas, or parentheses () inside node labels [like this]
+- NEVER use colons : inside node labels
+- BAD: A[Window Function: SUM(order_id) OVER (PARTITION BY customer_id)]
+- BAD: B[SELECT * FROM employees WHERE manager_id = (SELECT manager_id FROM...)]
+- GOOD: A[Calculate Running Total]
+- GOOD: B[Filter by Manager]
+- If you need to show code or SQL, put it in a SEPARATE code block (```sql or ```python) OUTSIDE the diagram
+- Diagrams show CONCEPTS and FLOW, not code syntax
+- When in doubt: use shorter, simpler labels
+
 Structure your response like this:
 ## Introduction
 [Comprehensive introduction - 300+ words]
@@ -880,6 +922,7 @@ Return ONLY this exact JSON structure:
 
             # 2b: Generate theory content (no code)
             theory = await self._generate_theory_content(title, theme, topic, skill_level, description)
+            theory = _sanitize_mermaid(theory)  # Fix mermaid parse errors before saving
             day["theory_content"] = theory
             day["theory_generated"] = True
 
@@ -1508,14 +1551,18 @@ def generate_full_course(
                 quiz_generated=False,
             )
 
-    # Trigger async generation via Celery
-    from apps.courses.tasks import generate_course_content_task
-    generate_course_content_task.delay(
-        str(course.id),
-        course_name,
-        duration_weeks,
-        level,
-        goals,
+    # Trigger background generation
+    from apps.courses.tasks import generate_course_content_task, _start_background_task
+    _start_background_task(
+        generate_course_content_task,
+        (
+            str(course.id),
+            course_name,
+            duration_weeks,
+            level,
+            goals,
+        ),
+        task_name="generate_course_content",
     )
 
     # Return skeleton with course_id

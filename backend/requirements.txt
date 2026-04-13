@@ -18,7 +18,7 @@ psycopg2-binary>=2.9.9
 pgvector>=0.3.0
 
 # ──────────────────────────────────────────────
-# Cache / Broker
+# Cache (Redis-backed Django cache)
 # ──────────────────────────────────────────────
 redis>=5.0
 django-redis>=5.4
@@ -29,13 +29,6 @@ django-redis>=5.4
 channels[daphne]>=4.0
 channels-redis>=4.2
 daphne>=4.0
-
-# ──────────────────────────────────────────────
-# Celery (async task queue)
-# ──────────────────────────────────────────────
-celery[redis]>=5.3
-django-celery-beat>=2.6
-django-celery-results>=2.5
 
 # ──────────────────────────────────────────────
 # HTTP client

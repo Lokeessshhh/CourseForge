@@ -879,14 +879,19 @@ def chat_create_course(request):
                 quiz_generated=False,
             )
 
-    # Fire Celery task in background
-    generate_course_content_task.delay(
-        course_id=str(course.id),
-        course_name=course_name,
-        duration_weeks=duration_weeks,
-        level=level,
-        goals=[],
-        description=description,
+    # Fire background task
+    from apps.courses.tasks import generate_course_content_task, _start_background_task
+    _start_background_task(
+        generate_course_content_task,
+        (
+            str(course.id),
+            course_name,
+            duration_weeks,
+            level,
+            [],
+            description,
+        ),
+        task_name="generate_course_content",
     )
 
     # Add generating course to chat session (if session_id provided)

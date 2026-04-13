@@ -61,10 +61,10 @@ class Command(BaseCommand):
             
             if created:
                 self.stdout.write(self.style.SUCCESS(f" Created coding test for week {week_number}"))
-                # Trigger test generation
+                # Trigger test generation (synchronous in management command)
                 from apps.courses.tasks import generate_coding_test_task
-                generate_coding_test_task.delay(str(course_id), week_number)
-                self.stdout.write(self.style.SUCCESS(f" Triggered coding test generation (running in background)"))
+                generate_coding_test_task(str(course_id), week_number)
+                self.stdout.write(self.style.SUCCESS(f" Coding test generation complete"))
             else:
                 self.stdout.write(self.style.SUCCESS(f" Coding test already exists for week {week_number}"))
             

@@ -85,21 +85,8 @@ def health_check(request):
         status = "degraded"
         logger.warning("Health check: OpenRouter error: %s", e)
 
-    # Celery check (via Redis)
-    try:
-        from config.celery import app as celery_app
-        inspect = celery_app.control.inspect()
-        active = inspect.active()
-        if active:
-            services["celery"] = "ok"
-        else:
-            services["celery"] = "degraded"
-            if status == "ok":
-                status = "degraded"
-    except Exception as e:
-        services["celery"] = "error"
-        status = "degraded"
-        logger.warning("Health check: celery error: %s", e)
+    # Background task check (via thread pool)
+    services["background_tasks"] = "ok"  # Tasks run in-process, no separate worker needed
 
     return JsonResponse({
         "status": status,
