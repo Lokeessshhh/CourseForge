@@ -299,7 +299,7 @@ export default function CodingTestPage() {
                   <div key={index} className={styles.problemResult}>
                     <div className={styles.problemResultHeader}>
                       <span className={styles.problemNumber}>Problem {index + 1}</span>
-                      {submission?.is_correct ? (
+                      {(submission as any)?.is_correct ? (
                         <Check className={styles.passedIcon} />
                       ) : (
                         <X className={styles.failedIcon} />
