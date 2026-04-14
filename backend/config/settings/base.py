@@ -154,30 +154,85 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ──────────────────────────────────────────────
-# Database — PostgreSQL + pgvector
+# Database — PostgreSQL + pgvector (Neon)
 # ──────────────────────────────────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "learnai"),
-        "USER": os.environ.get("DB_USER", "postgres"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-        "OPTIONS": {
-            "options": "-c search_path=public",
-        },
+# Support both DATABASE_URL (Neon format) and individual DB_* variables
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # Parse DATABASE_URL if provided (Neon format)
+    import re
+    db_match = re.match(
+        r'postgresql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+)(?::(?P<port>\d+))?/(?P<dbname>[^?]+)(?P<params>.*)',
+        DATABASE_URL
+    )
+    if db_match:
+        db_params = db_match.groupdict()
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": db_params.get("dbname", "CourseForge"),
+                "USER": db_params.get("user", "neondb_owner"),
+                "PASSWORD": db_params.get("password", ""),
+                "HOST": db_params.get("host", "localhost"),
+                "PORT": db_params.get("port", "5432"),
+                "OPTIONS": {
+                    "sslmode": "require",
+                    "channel_binding": "require",
+                },
+                "CONN_MAX_AGE": 0,  # Required for Neon pooler compatibility
+                "CONN_HEALTH_CHECKS": True,  # Enable connection health checks
+            }
+        }
+    else:
+        # Fallback to individual variables if URL parsing fails
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ.get("DB_NAME", "CourseForge"),
+                "USER": os.environ.get("DB_USER", "neondb_owner"),
+                "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+                "HOST": os.environ.get("DB_HOST", "localhost"),
+                "PORT": os.environ.get("DB_PORT", "5432"),
+                "OPTIONS": {
+                    "sslmode": "require",
+                    "channel_binding": "require",
+                },
+                "CONN_MAX_AGE": 0,
+                "CONN_HEALTH_CHECKS": True,
+            }
+        }
+else:
+    # Use individual DB_* environment variables
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "CourseForge"),
+            "USER": os.environ.get("DB_USER", "neondb_owner"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+            "OPTIONS": {
+                "sslmode": "require",
+                "channel_binding": "require",
+            },
+            "CONN_MAX_AGE": 0,
+            "CONN_HEALTH_CHECKS": True,
+        }
     }
-}
 
 # ──────────────────────────────────────────────
-# Redis
+# Redis (Upstash)
 # ──────────────────────────────────────────────
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+# Upstash requires SSL connection
+REDIS_UPSTASH_SSL = REDIS_URL.startswith("rediss://")
 
 # ──────────────────────────────────────────────
 # Django Channels — Redis layer
 # ──────────────────────────────────────────────
+# For production with Upstash, use SSL connection
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -190,17 +245,21 @@ CHANNEL_LAYERS = {
 }
 
 # ──────────────────────────────────────────────
-# Cache — Redis
+# Cache — Redis (Upstash)
 # ──────────────────────────────────────────────
+# Upstash requires SSL with cert_reqs=None
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
+            "SOCKET_CONNECT_TIMEOUT": 10,  # Increased timeout for cloud
+            "SOCKET_TIMEOUT": 10,
             "RETRY_ON_TIMEOUT": True,
+            "RETRY_ON_TIMEOUT_SECONDS": 5,
+            # Required for Upstash SSL
+            "SSL_CERT_REQS": None,
         },
     }
 }
@@ -348,6 +407,11 @@ TAVILY_MAX_RESULTS = int(os.environ.get("TAVILY_MAX_RESULTS", "5"))
 
 JUDGE0_API_URL = os.environ.get("JUDGE0_API_URL", "https://judge0.example.com")
 JUDGE0_API_KEY = os.environ.get("JUDGE0_API_KEY", "")
+
+# ──────────────────────────────────────────────
+# Redis (for SSE pub/sub and caching)
+# ──────────────────────────────────────────────
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 # ──────────────────────────────────────────────
 # Logging

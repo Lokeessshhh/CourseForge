@@ -1351,12 +1351,9 @@ export default function ChatPage() {
         const newSessionId = await createSession({ course_id: courseId });
         if (newSessionId) {
           sessionIdToUse = newSessionId;
-          clearMessages();
-          setMessages([]);
-          setHasSentFirstMessage(false);
+          // DON'T clear messages - user message should stay visible
           setCurrentSessionId(newSessionId);
           isNewSessionRef.current = true;
-          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
 

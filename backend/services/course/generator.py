@@ -699,6 +699,61 @@ Return comprehensive markdown text. MINIMUM LENGTH: 3000 characters (approximate
             logger.error("Theory generation failed after %d retries, returning placeholder", max_retries)
             return f"## {day_title}\n\nTheory content could not be generated. Please refer to external resources for learning about this topic."
 
+    def _get_language_tag(self, topic: str) -> str:
+        """
+        Map course topic to appropriate language tag for code blocks.
+        """
+        topic_lower = topic.lower().strip()
+        
+        # SQL/Database topics
+        sql_keywords = ['sql', 'database', 'postgresql', 'mysql', 'sqlite', 'oracle', 'nosql', 'mongodb']
+        if any(kw in topic_lower for kw in sql_keywords):
+            return 'sql'
+        
+        # Web development topics
+        web_keywords = ['html', 'css', 'javascript', 'react', 'vue', 'angular', 'node', 'express', 'django', 'flask', 'fastapi']
+        if any(kw in topic_lower for kw in web_keywords):
+            if 'javascript' in topic_lower or 'react' in topic_lower or 'vue' in topic_lower or 'angular' in topic_lower or 'node' in topic_lower or 'express' in topic_lower:
+                return 'javascript'
+            elif 'html' in topic_lower or 'css' in topic_lower:
+                return 'html'
+            elif any(kw in topic_lower for kw in ['django', 'flask', 'fastapi']):
+                return 'python'
+        
+        # Data science topics
+        ds_keywords = ['python', 'pandas', 'numpy', 'matplotlib', 'seaborn', 'tensorflow', 'pytorch']
+        if any(kw in topic_lower for kw in ds_keywords):
+            return 'python'
+        
+        # C/C++ topics
+        c_keywords = ['c ', 'c++', 'c#', 'dotnet']
+        if any(kw in topic_lower for kw in c_keywords):
+            if 'c++' in topic_lower:
+                return 'cpp'
+            elif 'c#' in topic_lower or 'dotnet' in topic_lower:
+                return 'csharp'
+            else:
+                return 'c'
+        
+        # Java topics
+        if 'java' in topic_lower and 'javascript' not in topic_lower:
+            return 'java'
+        
+        # Go topics
+        if 'go' in topic_lower or 'golang' in topic_lower:
+            return 'go'
+        
+        # Rust topics
+        if 'rust' in topic_lower:
+            return 'rust'
+        
+        # Bash/Shell topics
+        if any(kw in topic_lower for kw in ['bash', 'shell', 'scripting', 'linux', 'terminal']):
+            return 'bash'
+        
+        # Default to generic 'code' or 'python' as fallback
+        return 'python'
+
     async def _generate_code_content(
         self,
         day_title: str,
@@ -714,12 +769,15 @@ Return comprehensive markdown text. MINIMUM LENGTH: 3000 characters (approximate
         """
         from services.llm.client import generate
 
+        # Determine the appropriate language tag based on topic
+        language_tag = self._get_language_tag(topic)
+
         prompt = f"""Generate code examples for "{day_title}" in a {skill_level} {topic} course.
 
 Week context: {week_theme}
 
 CRITICAL FORMATTING RULES:
-1. ONLY put actual code inside ```python``` code blocks
+1. ONLY put actual code inside ```{language_tag}``` code blocks (use `{language_tag}` as the language tag)
 2. All headings, explanations, examples, output, common mistakes, and practice exercises must be in NORMAL TEXT (outside code blocks)
 3. Use markdown headings (##) for section titles
 4. Use **bold** text for emphasis on key terms
@@ -729,7 +787,7 @@ CRITICAL FORMATTING RULES:
 
 Assign integer values to variables and print them.
 
-```python
+```{language_tag}
 age = 25
 height = 5.9
 print("Age:", age)
@@ -755,7 +813,8 @@ Requirements:
 3. Show expected output in NORMAL TEXT
 4. Point out common mistakes in NORMAL TEXT
 5. Include a practice exercise at the end in NORMAL TEXT
-6. ONLY code goes in ```python``` blocks, everything else is normal text
+6. ONLY code goes in ```{language_tag}``` blocks, everything else is normal text
+7. Use the correct language tag: {language_tag}
 
 Return markdown with properly formatted code blocks."""
 

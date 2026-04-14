@@ -172,6 +172,20 @@ export function useChat(courseId?: string, sessionId?: string) {
         pendingSendsRef.current = [];
         wsLog('send:flush_queue', { seq, queued: queued.length });
         for (const item of queued) {
+          // Add user message to state so it appears in chat
+          const userMessage: ChatMessage = {
+            id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+            role: 'user',
+            content: item.content,
+            timestamp: new Date(),
+          };
+          setMessages(prev => {
+            // Avoid duplicate if already present
+            const alreadyPresent = prev.some(m => m.content === item.content && m.role === 'user');
+            if (alreadyPresent) return prev;
+            return [...prev, userMessage];
+          });
+
           try {
             ws.send(JSON.stringify({
               message: item.content,

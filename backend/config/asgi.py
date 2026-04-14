@@ -9,8 +9,8 @@ from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 
-# Set development settings for ASGI
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+# Default to production settings for security
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
 
 # Configure logging - use Django's LOGGING configuration, not basicConfig
 logger = logging.getLogger(__name__)
@@ -31,8 +31,10 @@ from services.auth.clerk import ClerkWebSocketMiddleware   # noqa: E402
 
 logger.info("[ASGI] WebSocket patterns loaded")
 
-# For development, allow all origins
-if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.development":
+# For development, allow all origins; production uses AllowedHostsOriginValidator
+is_dev = os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith("development")
+
+if is_dev:
     WebSocketApp = ClerkWebSocketMiddleware(URLRouter(websocket_urlpatterns))
 else:
     WebSocketApp = AllowedHostsOriginValidator(

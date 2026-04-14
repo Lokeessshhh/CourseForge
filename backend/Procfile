@@ -1,0 +1,2 @@
+# Web server (HTTP + WebSocket via Daphne ASGI)
+web: python manage.py collectstatic --noinput && daphne config.asgi:application -b 0.0.0.0 -p $PORT

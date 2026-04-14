@@ -59,10 +59,12 @@ class SSEEventGenerator:
     async def _listen_to_redis(self):
         """Listen to Redis channel and forward messages to queue."""
         import redis.asyncio as redis
-        
+        from django.conf import settings
+
         try:
+            redis_url = getattr(settings, 'REDIS_URL', 'redis://localhost:6379/0')
             redis_client = redis.from_url(
-                'redis://localhost:6379/0',
+                redis_url,
                 decode_responses=True
             )
             
@@ -115,7 +117,7 @@ class SSEEventGenerator:
                     # Wait for event with timeout
                     event = await asyncio.wait_for(
                         self.queue.get(),
-                        timeout=120.0  # 2 minutes — handles long-running course generation
+                        timeout=25.0  # 25 seconds — shorter than Daphne's 30s timeout to keep connection alive
                     )
 
                     # Send progress event
@@ -137,8 +139,11 @@ class SSEEventGenerator:
 
         except asyncio.CancelledError:
             logger.info(" SSE connection cancelled for course %s", self.course_id)
+            # Graceful cancellation - don't raise error
+            return
         except GeneratorExit:
             logger.info(" SSE generator closed for course %s", self.course_id)
+            return
         except Exception as exc:
             logger.exception(" SSE error for course %s: %s", self.course_id, exc)
             yield self._format_sse_event("error", {

@@ -98,15 +98,27 @@ def create_session(request):
     # Use async_to_sync to call async save_async from sync view
     async_to_sync(session.save_async)()
 
-    # Save placeholder Conversation to database so session appears in list
+    # Save placeholder Conversation to database so session appears in list immediately
     from apps.conversations.models import Conversation
+
+    # System message for metadata
     Conversation.objects.create(
         user=request.user,
         session_id=session_id,
         role="system",
         content="[Session created]",
         course=course_id,
-        is_summarized=True,  # Mark as summarized so it won't be shown in chat
+        is_summarized=True,
+    )
+
+    # User-role placeholder so session appears in sidebar (conversation_list filters role="user")
+    Conversation.objects.create(
+        user=request.user,
+        session_id=session_id,
+        role="user",
+        content="[New chat started]",
+        course=course_id,
+        is_summarized=True,
     )
 
     logger.info(

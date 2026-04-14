@@ -90,6 +90,7 @@ AUTH_RATE_LIMIT_BLOCK_DURATION = 300
 MIDDLEWARE = [
     "utils.middleware.SecurityHeadersMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "utils.middleware.RateLimitMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -100,6 +101,15 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "utils.middleware.RequestLoggingMiddleware",
 ]
+
+# ──────────────────────────────────────────────
+# Static Files - WhiteNoise
+# ──────────────────────────────────────────────
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # ──────────────────────────────────────────────
 # Production REST Framework
