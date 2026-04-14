@@ -1,5 +1,4 @@
-# Environment variables
-.env
+# Environment variables (keeping .env for deployment config)
 .env.local
 .env.*.local
 
@@ -66,3 +65,6 @@ my.html
 my.md
 my.pdf
 backend/_*.py
+
+# Exception: frontend app lib IS tracked
+!frontend/app/lib/
