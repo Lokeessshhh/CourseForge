@@ -294,12 +294,12 @@ export default function CodingTestPage() {
 
             <div className={styles.problemResults}>
               {testData.problems.map((problem, index) => {
-                const submission = testResult.submissions[index];
+                const submission = testResult.submissions[index] as any;
                 return (
                   <div key={index} className={styles.problemResult}>
                     <div className={styles.problemResultHeader}>
                       <span className={styles.problemNumber}>Problem {index + 1}</span>
-                      {(submission as any)?.is_correct ? (
+                      {submission?.is_correct ? (
                         <Check className={styles.passedIcon} />
                       ) : (
                         <X className={styles.failedIcon} />
