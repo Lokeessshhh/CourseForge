@@ -11,7 +11,7 @@ export const WS_URL = WS_BASE;
 // Token getter — set by AuthTokenBridge / Clerk provider
 let _tokenGetter: (() => Promise<string | null>) | null = null;
 
-export function setAuthTokenGetter(getter: () => Promise<string | null>) {
+export function setAuthTokenGetter(getter: (() => Promise<string | null>) | null) {
   _tokenGetter = getter;
 }
 
