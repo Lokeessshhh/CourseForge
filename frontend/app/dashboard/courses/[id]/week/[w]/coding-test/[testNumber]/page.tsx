@@ -154,17 +154,18 @@ export default function CodingTestPage() {
 
       setExecutionResult(response);
 
+      const res = response as any;
       // Store the result for this problem
       setProblemResults(prev => ({
         ...prev,
         [selectedProblem]: {
           problem_index: selectedProblem,
-          is_correct: response.is_correct || response.status === 'accepted',
-          stdout: response.stdout || '',
-          stderr: response.stderr || '',
-          compile_output: response.compile_output || '',
-          status: response.status,
-          execution_time: response.execution_time,
+          is_correct: res.is_correct || res.status === 'accepted',
+          stdout: res.stdout || '',
+          stderr: res.stderr || '',
+          compile_output: res.compile_output || '',
+          status: res.status,
+          execution_time: res.execution_time,
         }
       }));
     } catch (err: any) {
