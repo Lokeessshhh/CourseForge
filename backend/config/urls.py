@@ -96,12 +96,25 @@ def health_check(request):
     })
 
 
+def simple_health_check(request):
+    """
+    Simple health check for load balancers - just returns 200 OK.
+    This is for platforms like Leapcell that need a fast response.
+    """
+    return JsonResponse({"status": "ok"}, status=200)
+
+
 urlpatterns = [
     # Django admin
     path("admin/", admin.site.urls),
 
-    # Health check (no auth)
+    # Health checks (no auth) - multiple paths for different platforms
     path("api/health/", health_check),
+    path("health", simple_health_check),
+    path("healthcheck", simple_health_check),
+    # Leapcell-specific misspelled health check paths
+    path("kaithhealthcheck", simple_health_check),
+    path("kaithheathcheck", simple_health_check),
 
     # OpenAPI schema + docs (optional)
     *(
