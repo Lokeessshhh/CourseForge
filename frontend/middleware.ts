@@ -1,7 +1,11 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-export default clerkMiddleware((auth, req) => {
+const hasClerkKeys = Boolean(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY
+);
+
+const clerk = clerkMiddleware((auth, req) => {
   const { pathname } = req.nextUrl;
 
   if (pathname === '/dashboard/certificates') {
@@ -10,6 +14,13 @@ export default clerkMiddleware((auth, req) => {
 
   return NextResponse.next();
 });
+
+export default async function middleware(req: Request) {
+  if (!hasClerkKeys) {
+    return NextResponse.next();
+  }
+  return clerk(req as Parameters<typeof clerk>[0]);
+}
 
 export const config = {
   matcher: [
