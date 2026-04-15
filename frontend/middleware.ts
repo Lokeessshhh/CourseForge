@@ -1,25 +1,14 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const hasClerkKeys = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY
-);
-
-const clerk = clerkMiddleware((auth, req) => {
-  const { pathname } = req.nextUrl;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   if (pathname === '/dashboard/certificates') {
-    return NextResponse.rewrite(new URL('/dashboard/certificates/', req.url));
+    return NextResponse.rewrite(new URL('/dashboard/certificates/', request.url));
   }
 
   return NextResponse.next();
-});
-
-export default async function middleware(req: Request, evt: { waitUntil: (p: Promise<unknown>) => void }) {
-  if (!hasClerkKeys) {
-    return NextResponse.next();
-  }
-  return clerk(req as Parameters<typeof clerk>[0], evt as Parameters<typeof clerk>[1]);
 }
 
 export const config = {
