@@ -11,6 +11,9 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
+# Disable trailing slash redirects to prevent 301 on API calls
+APPEND_SLASH = False
+
 # Allow any CORS origin in development
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True

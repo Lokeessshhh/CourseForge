@@ -4,13 +4,30 @@ Handles both HTTP requests and WebSocket connections.
 """
 import os
 import logging
+from pathlib import Path
 from django.core.asgi import get_asgi_application
 from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 
-# Default to production settings for security
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
+# Load .env file for local development
+try:
+    from dotenv import load_dotenv
+    # Load from backend/.env (project root)
+    env_path = Path(__file__).resolve().parent.parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"[ASGI] Loaded .env from {env_path}")
+except ImportError:
+    pass  # python-dotenv not installed, rely on system env vars
+
+# Load settings from environment variable (respects .env file)
+# Falls back to production only if not set
+settings_module = os.environ.get("DJANGO_SETTINGS_MODULE")
+if not settings_module:
+    # Default to production for deployment safety
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
+    settings_module = "config.settings.production"
 
 # Configure logging - use Django's LOGGING configuration, not basicConfig
 logger = logging.getLogger(__name__)
