@@ -1,15 +1,15 @@
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default clerkMiddleware((auth, req) => {
+  const { pathname } = req.nextUrl;
 
   if (pathname === '/dashboard/certificates') {
-    return NextResponse.rewrite(new URL('/dashboard/certificates/', request.url));
+    return NextResponse.rewrite(new URL('/dashboard/certificates/', req.url));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [

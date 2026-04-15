@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { ClerkProvider } from '@clerk/nextjs';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
+import { AuthTokenBridge } from '@/app/components/AuthTokenBridge';
 import { LoadingProvider } from '@/app/components/LoadingProvider';
 import { GenerationProgressProvider } from '@/app/components/GenerationProgressProvider/GenerationProgressProvider';
 import './globals.css';
@@ -15,16 +17,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <ErrorBoundary>
-          <LoadingProvider>
-            <GenerationProgressProvider>
-              {children}
-            </GenerationProgressProvider>
-          </LoadingProvider>
-        </ErrorBoundary>
-      </body>
-    </html>
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+      <html lang="en">
+        <body>
+          <ErrorBoundary>
+            <AuthTokenBridge />
+            <LoadingProvider>
+              <GenerationProgressProvider>
+                {children}
+              </GenerationProgressProvider>
+            </LoadingProvider>
+          </ErrorBoundary>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
