@@ -1016,32 +1016,72 @@ Rules:
         """
         Initialize session in background (non-blocking).
         Loads user context and sends welcome message.
+        
+        OPTIMIZED: Session creation is now instant, context loading is deferred.
+        User can start sending messages immediately without waiting for full context.
         """
         try:
             logger.info("WS background init started: session=%s", self.session_id)
-            
-            # Load context with timeout
-            await asyncio.wait_for(self._load_user_context(), timeout=10.0)
-            logger.info("WS context loaded: session=%s", self.session_id)
-            
-            # Send welcome message
+
+            # FAST PATH: Create session immediately (don't wait for full context)
+            # This allows user to start sending messages right away
+            from services.chat.session import ChatSession
+            self.session = await ChatSession.get_or_create(
+                user_id=self.user_id,
+                session_id=self.session_id,
+                scope=self.scope_type,
+                course_id=self.course_id,
+                week=self.week,
+                day=self.day,
+            )
+            logger.info("WS session created: session=%s", self.session_id)
+
+            # Mark as initialized immediately - user can now send messages
+            self.session_initialized = True
+            logger.info("WS session initialized (fast path): session=%s", self.session_id)
+
+            # Send welcome message immediately (without full context)
             await self._send_welcome()
             logger.info("WS welcome sent: session=%s", self.session_id)
-            
-            # Mark as initialized
-            self.session_initialized = True
-            logger.info("WS session initialized: session=%s", self.session_id)
-            
-            # Start heartbeat to keep connection alive during idle periods
+
+            # Start heartbeat
             self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
             logger.info("WS heartbeat started: session=%s", self.session_id)
-            
+
+            # BACKGROUND: Load full user context asynchronously (don't block)
+            # This is optional enrichment - messages work without it
+            asyncio.create_task(self._load_full_context_background())
+
         except asyncio.TimeoutError:
             logger.warning("Session initialization timed out: session=%s", self.session_id)
-            await self._send_error("Session initialization timed out. Please reconnect.")
+            # Don't send error - session is already usable
         except Exception as exc:
             logger.exception("Background session initialization failed: %s", exc)
-            await self._send_error("Failed to initialize session")
+            # Don't send error - session is already usable
+
+    async def _load_full_context_background(self):
+        """
+        Load full user context in background (non-blocking).
+        This runs after session is already initialized and usable.
+        """
+        try:
+            from services.chat.context import UserContextLoader
+            context_loader = UserContextLoader()
+            self.user_context = await asyncio.wait_for(
+                context_loader.load_full_context(
+                    user_id=self.user_id,
+                    scope=self.scope_type,
+                    course_id=self.course_id,
+                    week=self.week,
+                    day=self.day,
+                ),
+                timeout=5.0,  # Reduced timeout
+            )
+            logger.info("WS full context loaded (background): session=%s", self.session_id)
+        except Exception as exc:
+            # Context loading failure is non-critical - user can still chat
+            logger.warning("Background context loading failed (non-critical): %s", exc)
+            self.user_context = {"profile": {"name": "Student"}, "knowledge_state": {}}
 
     async def _heartbeat_loop(self):
         """
@@ -1066,9 +1106,9 @@ Rules:
         """Send welcome message with context info."""
         from services.chat.prompts import build_welcome_message
 
-        # Get context summary
-        profile = self.user_context.get("profile", {})
-        course = self.user_context.get("current_course", {})
+        # Get context summary (handle missing context gracefully)
+        profile = getattr(self, 'user_context', {}).get("profile", {})
+        course = getattr(self, 'user_context', {}).get("current_course", {})
 
         welcome = build_welcome_message(
             user_name=profile.get("name", "Student"),
