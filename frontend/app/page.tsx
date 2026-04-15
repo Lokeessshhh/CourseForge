@@ -1,4 +1,3 @@
-import { auth } from '@clerk/nextjs/server';
 import Navbar from './components/Navbar/Navbar';
 import Hero from './components/Hero/Hero';
 import ProblemSolution from './components/ProblemSolution/ProblemSolution';
@@ -16,20 +15,17 @@ import Cursor from './components/Cursor/Cursor';
 import LoadingScreen from './components/LoadingScreen/LoadingScreen';
 import EasterEgg from './components/EasterEgg/EasterEgg';
 
-export default async function Home() {
-  const { userId } = await auth();
-  const isAuthenticated = !!userId;
-
+export default function Home() {
   return (
     <main>
       <LoadingScreen />
       <Cursor />
       <StickyNav />
       <EasterEgg />
-      <Navbar isAuthenticated={isAuthenticated} />
+      <Navbar isAuthenticated={false} />
 
       <section id="hero">
-        <Hero isAuthenticated={isAuthenticated} />
+        <Hero isAuthenticated={false} />
       </section>
 
       <section id="problem">
@@ -63,10 +59,10 @@ export default async function Home() {
       </section>
 
       <section id="cta">
-        <CTA isAuthenticated={isAuthenticated} />
+        <CTA isAuthenticated={false} />
       </section>
 
-      <Footer isAuthenticated={isAuthenticated} />
+      <Footer isAuthenticated={false} />
     </main>
   );
 }
