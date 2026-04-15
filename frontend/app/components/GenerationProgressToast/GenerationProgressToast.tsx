@@ -33,6 +33,7 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasCompletedRef = useRef(false);
   const sseDidConnectRef = useRef(false);
+  const sseConnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use SSE for real-time progress updates - SSE is the source of truth
   const { data, isConnected, error, disconnect, reconnect } = useSSEProgress(courseId, true);
@@ -41,8 +42,38 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
   useEffect(() => {
     if (isConnected) {
       sseDidConnectRef.current = true;
+      // Clear timeout if SSE connected successfully
+      if (sseConnectTimeoutRef.current) {
+        clearTimeout(sseConnectTimeoutRef.current);
+        sseConnectTimeoutRef.current = null;
+      }
     }
   }, [isConnected]);
+
+  // SAFETY TIMEOUT: Switch to polling if SSE doesn't connect within 5 seconds
+  useEffect(() => {
+    if (hasCompleted || hasCompletedRef.current || isPolling) {
+      return;
+    }
+
+    // Set timeout to switch to polling if SSE hasn't connected
+    sseConnectTimeoutRef.current = setTimeout(() => {
+      if (!sseDidConnectRef.current && !hasCompletedRef.current) {
+        console.log('[GenerationProgressToast] SSE failed to connect within 5s, switching to polling...');
+        setIsPolling(true);
+        setIsDisconnected(true);
+      }
+      sseConnectTimeoutRef.current = null;
+    }, 5000);
+
+    // Cleanup timeout on unmount or when dependencies change
+    return () => {
+      if (sseConnectTimeoutRef.current) {
+        clearTimeout(sseConnectTimeoutRef.current);
+        sseConnectTimeoutRef.current = null;
+      }
+    };
+  }, [courseId, hasCompleted, isPolling]);
 
   // CRITICAL FIX: Detect SSE disconnection when NOT already completed
   useEffect(() => {
