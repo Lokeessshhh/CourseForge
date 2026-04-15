@@ -3,6 +3,35 @@
   flex-direction: column;
   height: 100%;
   padding: 24px 16px;
+  position: relative;
+}
+
+/* Close Button (Mobile Only) */
+.closeBtn {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  background: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 10;
+}
+
+.closeBtn:hover {
+  background: var(--yellow);
+}
+
+@media (max-width: 768px) {
+  .closeBtn {
+    display: flex;
+  }
 }
 
 /* Logo */
@@ -11,6 +40,13 @@
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 24px;
+  padding-right: 44px;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    padding-right: 50px;
+  }
 }
 
 .logo a {

@@ -348,3 +348,380 @@
     white-space: nowrap;
   }
 }
+
+/* ========================================
+   ADDITIONAL RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 600px) {
+  .card {
+    max-width: 100%;
+    margin: 6px 0;
+    border-radius: 6px;
+  }
+
+  .header {
+    padding: 10px 12px;
+  }
+
+  .headerContent {
+    gap: 2px;
+  }
+
+  .courseName {
+    font-size: 12px;
+  }
+
+  .weekDay {
+    font-size: 10px;
+  }
+
+  .dayTitle {
+    font-size: 11px;
+  }
+
+  .tabs {
+    gap: 0;
+  }
+
+  .tab {
+    padding: 8px 10px;
+    font-size: 9px;
+    letter-spacing: 0.3px;
+  }
+
+  .content {
+    padding: 12px;
+    max-height: 350px;
+  }
+
+  .theoryContent,
+  .codeContent {
+    font-size: 13px;
+  }
+
+  .theoryContent :global(h1),
+  .theoryContent :global(h2),
+  .theoryContent :global(h3),
+  .theoryContent :global(h4) {
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+
+  .theoryContent :global(p) {
+    margin-bottom: 12px;
+  }
+
+  .theoryContent :global(ul),
+  .theoryContent :global(ol) {
+    margin-bottom: 12px;
+    padding-left: 18px;
+  }
+
+  .theoryContent :global(li) {
+    margin-bottom: 6px;
+  }
+
+  .theoryContent :global(code) {
+    font-size: 12px;
+  }
+
+  .theoryContent :global(pre) {
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .codeContent :global(pre) {
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .codeContent :global(code) {
+    font-size: 12px;
+  }
+
+  .quizContent {
+    gap: 14px;
+  }
+
+  .quizQuestion {
+    padding: 12px;
+  }
+
+  .questionText {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .option {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .optionKey {
+    font-size: 11px;
+    min-width: 18px;
+  }
+
+  .optionText {
+    font-size: 12px;
+  }
+
+  .explanation {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .toggleAnswersBtn {
+    padding: 6px 12px;
+    font-size: 10px;
+    min-height: 44px;
+  }
+
+  .tasks {
+    padding: 12px 16px;
+  }
+
+  .tasksTitle {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .taskSection {
+    margin-bottom: 10px;
+  }
+
+  .taskSection strong {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .taskSection ul {
+    margin: 4px 0 4px 16px;
+  }
+
+  .taskSection li {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  .taskSection p {
+    font-size: 12px;
+  }
+
+  .loading {
+    padding: 30px 16px;
+    gap: 12px;
+  }
+
+  .loadingSpinner {
+    width: 28px;
+    height: 28px;
+    border-width: 2px;
+  }
+
+  .loading p {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    margin: 4px 0;
+    border-radius: 4px;
+    border-width: 1px;
+  }
+
+  .header {
+    padding: 8px 10px;
+  }
+
+  .courseName {
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+
+  .weekDay {
+    font-size: 9px;
+  }
+
+  .dayTitle {
+    font-size: 10px;
+  }
+
+  .tabs {
+    border-bottom-width: 1px;
+  }
+
+  .tab {
+    padding: 7px 8px;
+    font-size: 8px;
+    letter-spacing: 0.2px;
+    border-bottom-width: 2px;
+  }
+
+  .content {
+    padding: 10px;
+    max-height: 300px;
+  }
+
+  .theoryContent,
+  .codeContent {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .theoryContent :global(h1),
+  .theoryContent :global(h2),
+  .theoryContent :global(h3),
+  .theoryContent :global(h4) {
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  .theoryContent :global(p) {
+    margin-bottom: 10px;
+  }
+
+  .theoryContent :global(ul),
+  .theoryContent :global(ol) {
+    margin-bottom: 10px;
+    padding-left: 14px;
+  }
+
+  .theoryContent :global(li) {
+    margin-bottom: 4px;
+  }
+
+  .theoryContent :global(code) {
+    padding: 1px 4px;
+    font-size: 11px;
+  }
+
+  .theoryContent :global(pre) {
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  .codeContent :global(pre) {
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  .codeContent :global(code) {
+    font-size: 11px;
+  }
+
+  .quizContent {
+    gap: 10px;
+  }
+
+  .quizQuestion {
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .questionText {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .options {
+    gap: 5px;
+  }
+
+  .option {
+    padding: 6px 8px;
+    gap: 6px;
+    border-width: 1px;
+    border-radius: 3px;
+  }
+
+  .option.correct {
+    border-width: 1px;
+  }
+
+  .optionKey {
+    font-size: 10px;
+    min-width: 16px;
+  }
+
+  .optionText {
+    font-size: 11px;
+  }
+
+  .explanation {
+    padding: 8px;
+    font-size: 11px;
+    border-left-width: 2px;
+    border-radius: 3px;
+  }
+
+  .toggleAnswersBtn {
+    padding: 6px 10px;
+    font-size: 9px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .tasks {
+    padding: 10px 12px;
+    border-top-width: 1px;
+  }
+
+  .tasksTitle {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .taskSection {
+    margin-bottom: 8px;
+  }
+
+  .taskSection strong {
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+
+  .taskSection ul {
+    margin: 3px 0 3px 12px;
+  }
+
+  .taskSection li {
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  .taskSection p {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .loading {
+    padding: 24px 12px;
+    gap: 10px;
+  }
+
+  .loadingSpinner {
+    width: 24px;
+    height: 24px;
+  }
+
+  .loading p {
+    font-size: 10px;
+  }
+
+  .content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .content::-webkit-scrollbar-track {
+    background: #e0e0e0;
+  }
+}

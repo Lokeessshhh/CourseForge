@@ -187,24 +187,98 @@
 /* Mobile */
 @media (max-width: 768px) {
   .bottomBar {
-    padding: 0 16px;
+    padding: 0 12px;
+  }
+
+  .container {
+    gap: 10px;
   }
 
   .inputBar {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    gap: 10px;
   }
 
   .input {
     font-size: 13px;
   }
 
+  .icon {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
   .actionBtn {
     font-size: 11px;
-    padding: 6px 12px;
+    padding: 8px 14px;
+    white-space: nowrap;
   }
 
   .toggleBtn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
+    font-size: 12px;
+  }
+
+  .chatPreview {
+    right: 46px;
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bottomBar {
+    padding: 0 8px;
+  }
+
+  .container {
+    gap: 8px;
+  }
+
+  .inputBar {
+    padding: 6px 8px;
+    gap: 8px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .input {
+    font-size: 12px;
+  }
+
+  .icon {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .actionBtn {
+    font-size: 10px;
+    padding: 6px 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .toggleBtn {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .chatPreview {
+    right: 42px;
+    max-height: 120px;
+  }
+
+  .messagesPreview {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .previewMsg {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .expandBtn {
+    padding: 8px;
+    font-size: 10px;
   }
 }

@@ -468,6 +468,115 @@
   .statsRow {
     gap: 24px;
   }
+
+  .courseHeaderTop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .deleteCourseBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .breadcrumb {
+    font-size: 10px;
+  }
+
+  .weekNav {
+    padding: 16px;
+  }
+
+  .weeksList {
+    gap: 6px;
+  }
+
+  .weekHeader {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .dayItem {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  .testLink {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .mainContent {
+    gap: 20px;
+  }
+
+  .courseName {
+    font-size: 22px;
+  }
+
+  .progressSection {
+    padding: 16px;
+  }
+
+  .currentDayCard {
+    padding: 24px;
+  }
+
+  .currentDayTitle {
+    font-size: 20px;
+  }
+
+  .statsRow {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    gap: 6px;
+  }
+
+  .statValue {
+    font-size: 16px;
+  }
+
+  .statLabel {
+    font-size: 9px;
+  }
+
+  .goBtn {
+    font-size: 12px;
+    padding: 12px 28px;
+  }
+
+  .modal {
+    max-width: 90%;
+  }
+
+  .modalContent {
+    padding: 20px;
+  }
+
+  .modalTitle {
+    font-size: 16px;
+  }
+
+  .modalText {
+    font-size: 12px;
+  }
+
+  .modalActions {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .modalCancelBtn,
+  .modalDeleteBtn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 @media (max-width: 600px) {
@@ -480,8 +589,145 @@
   }
 
   .statsRow {
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 16px;
+  }
+
+  .courseName {
+    font-size: 20px;
+  }
+
+  .progressSection {
+    padding: 14px;
+  }
+
+  .progressLabel {
+    font-size: 10px;
+  }
+
+  .progressValue {
+    font-size: 16px;
+  }
+
+  .cardLabel {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .goBtn {
+    font-size: 11px;
+    padding: 10px 24px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .weekNav {
+    padding: 14px;
+  }
+
+  .navTitle {
+    font-size: 9px;
+    margin-bottom: 12px;
+  }
+
+  .weekHeader {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
+  .dayItem {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .dayBox {
+    width: 14px;
+  }
+
+  .testLink {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
+  .weeklyTestBadge {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .courseName {
+    font-size: 18px;
+  }
+
+  .currentDayCard {
+    padding: 16px;
+  }
+
+  .currentDayTitle {
+    font-size: 16px;
+  }
+
+  .statValue {
+    font-size: 14px;
+  }
+
+  .statLabel {
+    font-size: 8px;
+  }
+
+  .goBtn {
+    font-size: 10px;
+    padding: 8px 20px;
+  }
+
+  .progressSection {
+    padding: 12px;
+  }
+
+  .progressBar {
+    height: 10px;
+  }
+
+  .breadcrumb {
+    font-size: 9px;
+  }
+
+  .weekNav {
+    padding: 12px;
+  }
+
+  .weeksList {
+    gap: 4px;
+  }
+
+  .weekHeader {
+    padding: 5px 6px;
+    font-size: 8px;
+  }
+
+  .dayItem {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+
+  .daysList {
+    padding-left: 16px;
+  }
+
+  .testLink {
+    padding: 5px 6px;
+    font-size: 8px;
+  }
+
+  .weeklyTestBadge {
+    font-size: 7px;
+    padding: 2px 5px;
+  }
+
+  .deleteCourseBtn {
+    font-size: 10px;
+    padding: 8px 16px;
   }
 }
 

@@ -1011,16 +1011,43 @@
    ======================================== */
 @media (max-width: 768px) {
   .sidebar {
-    width: 260px;
-    min-width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    min-width: 280px;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
 
-  .mainChat:not(.sidebarOpen) {
-    margin-left: 0;
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebarOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 250;
+  }
+
+  .sidebarOverlay.open {
+    display: block;
+  }
+
+  .mainChat {
+    width: 100%;
   }
 
   .topBar {
     padding: 10px 16px;
+    padding-left: 60px;
   }
 
   .sessionTitleDisplay {
@@ -1037,7 +1064,7 @@
   }
 
   .messageInner {
-    max-width: 90%;
+    max-width: 95%;
   }
 
   .inputWrapper {
@@ -1054,6 +1081,163 @@
 
   .emptySubtitle {
     font-size: 13px;
+  }
+
+  .aiAvatar {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 9px;
+  }
+
+  .messageContent {
+    font-size: 13px;
+  }
+
+  .input {
+    font-size: 13px;
+  }
+
+  .sendBtn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 600px) {
+  .chatPage {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-width: 300px;
+    bottom: 0;
+  }
+
+  .topBar {
+    padding: 8px 12px;
+    padding-left: 56px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .topBarActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .messagesContainer {
+    padding: 12px;
+  }
+
+  .messageInner {
+    max-width: 100%;
+  }
+
+  .inputWrapper {
+    padding: 10px 12px 14px;
+  }
+
+  .inputContainer {
+    padding: 10px 12px;
+  }
+
+  .starterBtn {
+    padding: 12px 14px;
+    font-size: 9px;
+  }
+
+  .emptyTitle {
+    font-size: 20px;
+  }
+
+  .emptySubtitle {
+    font-size: 12px;
+  }
+
+  .messageContent {
+    font-size: 12px;
+  }
+
+  .message.user .messageContent {
+    padding: 10px 12px;
+  }
+
+  .actionBtn {
+    font-size: 8px;
+    padding: 3px 8px;
+  }
+
+  .clearBtn {
+    font-size: 8px;
+    padding: 5px 10px;
+  }
+
+  .courseBadge {
+    display: none;
+  }
+
+  .charCount {
+    font-size: 9px;
+  }
+
+  .footerToggles {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topBar {
+    padding: 6px 10px;
+    padding-left: 52px;
+  }
+
+  .sessionInfo {
+    gap: 6px;
+  }
+
+  .sessionTitleDisplay {
+    font-size: 9px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .messagesContainer {
+    padding: 10px;
+  }
+
+  .inputWrapper {
+    padding: 8px 10px 12px;
+  }
+
+  .inputContainer {
+    padding: 8px 10px;
+  }
+
+  .input {
+    font-size: 12px;
+    min-height: 20px;
+  }
+
+  .sendBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .sendIcon {
+    font-size: 12px;
+  }
+
+  .contextIndicator {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+  }
+
+  .contextText {
+    font-size: 8px;
   }
 }
 

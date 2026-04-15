@@ -76,3 +76,77 @@
 .statusText {
   white-space: nowrap;
 }
+
+/* ========================================
+   RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .statusBadge {
+    padding: 7px 12px;
+    font-size: 9px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .statusDot {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+@media (max-width: 600px) {
+  .statusBadge {
+    padding: 6px 10px;
+    font-size: 8px;
+    gap: 6px;
+    letter-spacing: 0.8px;
+  }
+
+  .statusDot {
+    width: 6px;
+    height: 6px;
+    border-width: 1px;
+  }
+
+  .statusBadge:hover {
+    box-shadow: 4px 4px 0 var(--black);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .statusBadge {
+    padding: 6px 8px;
+    font-size: 7px;
+    gap: 5px;
+    letter-spacing: 0.5px;
+    min-height: 44px;
+    box-shadow: 2px 2px 0 var(--black);
+  }
+
+  .statusBadge:hover {
+    box-shadow: 3px 3px 0 var(--black);
+  }
+
+  .statusDot {
+    width: 5px;
+    height: 5px;
+    border-width: 1px;
+  }
+
+  .statusBadge.connected {
+    box-shadow: 2px 2px 0 var(--black);
+  }
+
+  .statusBadge.disconnected {
+    box-shadow: 2px 2px 0 var(--black);
+  }
+}

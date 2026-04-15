@@ -10,6 +10,7 @@ interface NavbarProps {
 
 export default function Navbar({ isAuthenticated }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +19,8 @@ export default function Navbar({ isAuthenticated }: NavbarProps) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <motion.nav
@@ -54,7 +57,43 @@ export default function Navbar({ isAuthenticated }: NavbarProps) {
               START BUILDING →
             </motion.a>
           )}
+          <button
+            className={styles.mobileToggle}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span className={styles.mobileToggleLine} />
+            <span className={styles.mobileToggleLine} />
+            <span className={styles.mobileToggleLine} />
+          </button>
         </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`${styles.mobileMenu} ${mobileMenuOpen ? styles.open : ''}`}>
+        <a href="#how-it-works" className={styles.link} onClick={closeMobileMenu}>How it works</a>
+        <a href="#features" className={styles.link} onClick={closeMobileMenu}>Features</a>
+        {isAuthenticated ? (
+          <motion.a
+            href="/dashboard"
+            className={`${styles.cta} ${styles.dashboardCta}`}
+            onClick={closeMobileMenu}
+            whileHover={{ x: -3, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            GO TO DASHBOARD →
+          </motion.a>
+        ) : (
+          <motion.a
+            href="/login"
+            className={styles.cta}
+            onClick={closeMobileMenu}
+            whileHover={{ x: -3, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400 }}
+          >
+            START BUILDING →
+          </motion.a>
+        )}
       </div>
     </motion.nav>
   );

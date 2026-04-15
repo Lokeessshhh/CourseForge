@@ -2,32 +2,36 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--white);
+  position: relative;
 }
 
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
-  bottom: 60px; /* Space for bottom bar */
+  bottom: 60px;
   width: 240px;
   border-right: 2px solid var(--black);
   background-color: var(--white);
   z-index: 100;
   overflow-y: auto;
+  transition: transform 0.3s ease;
 }
 
 .main {
   margin-left: 240px;
-  margin-bottom: 60px; /* Space for bottom bar */
+  margin-bottom: 60px;
   flex: 1;
   min-height: calc(100vh - 60px);
   overflow-y: auto;
+  width: calc(100% - 240px);
 }
 
 .content {
   padding: 32px;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .bottomBar {
@@ -41,13 +45,58 @@
   z-index: 200;
 }
 
+/* Mobile menu overlay backdrop */
+.sidebarOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 250;
+}
+
+/* Mobile menu toggle button */
+.mobileMenuToggle {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 150;
+  width: 44px;
+  height: 44px;
+  background: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0px var(--black);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  padding: 0;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .mobileMenuToggle {
+    display: flex;
+  }
+
+  .sidebarOverlay {
+    display: none;
+  }
+
+  .sidebarOverlay.open {
+    display: block;
+  }
+
   .sidebar {
     transform: translateX(-100%);
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     z-index: 300;
+    bottom: 0;
+    transition: transform 0.3s ease;
   }
 
   .sidebar.open {
@@ -56,13 +105,27 @@
 
   .main {
     margin-left: 0;
+    width: 100%;
+    margin-bottom: 70px;
   }
 
   .content {
     padding: 16px;
+    padding-top: 60px;
   }
 
   .bottomBar {
     height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 12px;
+    padding-top: 60px;
+  }
+
+  .sidebar {
+    max-width: 100%;
   }
 }

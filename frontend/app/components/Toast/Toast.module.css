@@ -36,6 +36,7 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--black);
+  word-break: break-word;
 }
 
 .success .icon {
@@ -48,4 +49,53 @@
 
 .info .icon {
   color: #3b82f6;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .container {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: calc(100% - 32px);
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    padding: 10px 14px;
+  }
+
+  .message {
+    font-size: 13px;
+  }
+
+  .icon {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: calc(100% - 24px);
+    gap: 6px;
+  }
+
+  .toast {
+    padding: 10px 12px;
+    gap: 10px;
+    box-shadow: 3px 3px 0 var(--black);
+  }
+
+  .message {
+    font-size: 12px;
+  }
+
+  .icon {
+    font-size: 14px;
+  }
 }

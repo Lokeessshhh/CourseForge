@@ -377,3 +377,530 @@
 .infoList li {
   margin-bottom: 3px;
 }
+
+/* ========================================
+   RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    padding: 8px 10px;
+  }
+
+  .header {
+    gap: 6px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+  }
+
+  .icon {
+    font-size: 10px;
+  }
+
+  .title {
+    font-size: 9px;
+  }
+
+  .courseName {
+    font-size: 8px;
+  }
+
+  .requestBox {
+    padding: 5px 6px;
+    font-size: 7px;
+  }
+
+  .requestLabel {
+    font-size: 7px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .optionCard {
+    padding: 6px 8px;
+  }
+
+  .optionNumber {
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
+  }
+
+  .optionLabel {
+    font-size: 8px;
+  }
+
+  .optionDescription {
+    font-size: 7px;
+  }
+
+  .toggleBtn {
+    padding: 6px 8px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .inputLabel {
+    font-size: 8px;
+  }
+
+  .numberInput {
+    padding: 8px 6px;
+    font-size: 10px;
+    min-height: 44px;
+  }
+
+  .selectBtn {
+    padding: 8px 10px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .selectBtnDisabled {
+    padding: 8px 10px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cancelBtn {
+    padding: 8px 10px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .confirmBox {
+    padding: 6px 8px;
+  }
+
+  .confirmIcon {
+    font-size: 10px;
+  }
+
+  .confirmTitle {
+    font-size: 8px;
+  }
+
+  .confirmText {
+    font-size: 7px;
+  }
+
+  .confirmNote {
+    padding: 4px 5px;
+    font-size: 6px;
+  }
+
+  .confirmActions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .confirmBtn {
+    padding: 8px 10px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .backBtn {
+    padding: 8px 10px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .infoBox {
+    padding: 5px 6px;
+  }
+
+  .infoIcon {
+    font-size: 8px;
+  }
+
+  .infoTitle {
+    font-size: 7px;
+  }
+
+  .infoList {
+    font-size: 6px;
+  }
+
+  .comingSoonBadge {
+    font-size: 6px;
+    padding: 1px 4px;
+  }
+
+  .infoBadge {
+    font-size: 6px;
+    padding: 2px 6px;
+  }
+
+  .toggleContainer {
+    padding: 2px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 6px 8px;
+    margin: 3px auto;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .title {
+    font-size: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .courseName {
+    font-size: 7px;
+  }
+
+  .requestBox {
+    padding: 4px 5px;
+    font-size: 6px;
+    margin-bottom: 6px;
+  }
+
+  .options {
+    gap: 5px;
+  }
+
+  .optionCard {
+    padding: 5px 6px;
+    gap: 4px;
+  }
+
+  .optionHeader {
+    gap: 6px;
+  }
+
+  .optionNumber {
+    width: 14px;
+    height: 14px;
+    font-size: 7px;
+  }
+
+  .optionLabel {
+    font-size: 7px;
+  }
+
+  .optionDescription {
+    font-size: 6px;
+    line-height: 1.3;
+  }
+
+  .toggleBtn {
+    padding: 6px;
+    font-size: 8px;
+  }
+
+  .inputContainer {
+    gap: 3px;
+  }
+
+  .inputLabel {
+    font-size: 7px;
+  }
+
+  .numberInput {
+    padding: 6px 5px;
+    font-size: 8px;
+  }
+
+  .selectBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .selectBtnDisabled {
+    width: 100%;
+    text-align: center;
+  }
+
+  .cancelBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .confirmHeader {
+    gap: 6px;
+  }
+
+  .confirmIcon {
+    font-size: 9px;
+  }
+
+  .confirmTitle {
+    font-size: 7px;
+  }
+
+  .confirmText {
+    font-size: 6px;
+    margin-bottom: 6px;
+  }
+
+  .confirmNote {
+    font-size: 5px;
+    padding: 3px 4px;
+  }
+
+  .confirmBtn {
+    width: 100%;
+  }
+
+  .backBtn {
+    width: 100%;
+  }
+
+  .infoHeader {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .infoIcon {
+    font-size: 7px;
+  }
+
+  .infoTitle {
+    font-size: 6px;
+  }
+
+  .infoList {
+    font-size: 5px;
+    padding-left: 10px;
+  }
+
+  .infoList li {
+    margin-bottom: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 5px 6px;
+    border-width: 1px;
+    box-shadow: 1px 1px 0px var(--black);
+  }
+
+  .header {
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom-width: 1px;
+  }
+
+  .icon {
+    font-size: 9px;
+  }
+
+  .title {
+    font-size: 7px;
+    letter-spacing: 0.2px;
+  }
+
+  .courseName {
+    font-size: 6px;
+  }
+
+  .requestBox {
+    padding: 3px 4px;
+    font-size: 5px;
+    border-width: 1px;
+    margin-bottom: 5px;
+  }
+
+  .requestLabel {
+    font-size: 6px;
+  }
+
+  .requestValue {
+    font-size: 6px;
+  }
+
+  .options {
+    gap: 4px;
+  }
+
+  .optionCard {
+    padding: 4px 5px;
+    border-width: 1px;
+    gap: 3px;
+  }
+
+  .optionCardDisabled {
+    opacity: 0.5;
+  }
+
+  .optionHeader {
+    gap: 5px;
+  }
+
+  .optionNumber {
+    width: 12px;
+    height: 12px;
+    font-size: 6px;
+    border-width: 1px;
+  }
+
+  .optionLabel {
+    font-size: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  .comingSoonBadge {
+    font-size: 5px;
+    padding: 1px 3px;
+  }
+
+  .optionDescription {
+    font-size: 5px;
+    line-height: 1.2;
+  }
+
+  .toggleContainer {
+    padding: 2px;
+    border-width: 1px;
+  }
+
+  .toggleBtn {
+    padding: 5px 4px;
+    font-size: 7px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .inputLabel {
+    font-size: 6px;
+  }
+
+  .numberInput {
+    padding: 5px 4px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .infoBadge {
+    font-size: 5px;
+    padding: 2px 4px;
+    border-width: 1px;
+  }
+
+  .selectBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .selectBtnDisabled {
+    padding: 6px 8px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .actions {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top-width: 1px;
+  }
+
+  .cancelBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .confirmBox {
+    padding: 5px 6px;
+    border-width: 1px;
+  }
+
+  .confirmHeader {
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .confirmIcon {
+    font-size: 8px;
+  }
+
+  .confirmTitle {
+    font-size: 6px;
+  }
+
+  .confirmText {
+    font-size: 5px;
+    line-height: 1.3;
+    margin-bottom: 5px;
+  }
+
+  .confirmNote {
+    font-size: 4px;
+    padding: 2px 3px;
+    border-width: 1px;
+    margin-bottom: 6px;
+  }
+
+  .confirmActions {
+    gap: 4px;
+  }
+
+  .confirmBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .backBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .infoBox {
+    padding: 4px 5px;
+    border-width: 1px;
+    margin-top: 6px;
+  }
+
+  .infoHeader {
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+
+  .infoIcon {
+    font-size: 6px;
+  }
+
+  .infoTitle {
+    font-size: 5px;
+    letter-spacing: 0.2px;
+  }
+
+  .infoList {
+    font-size: 4px;
+    padding-left: 8px;
+    line-height: 1.4;
+  }
+
+  .infoList li {
+    margin-bottom: 2px;
+  }
+}

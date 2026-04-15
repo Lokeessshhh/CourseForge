@@ -393,3 +393,277 @@
     font-size: 10px;
   }
 }
+
+/* Additional responsive enhancements */
+@media (max-width: 768px) {
+  .page {
+    padding-top: 16px;
+  }
+
+  .sectionLabel {
+    font-size: 10px;
+    margin-bottom: 12px;
+  }
+
+  .formView {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+
+  .formCard {
+    padding: 24px;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .options {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .optionBtn {
+    flex: 1;
+    min-width: calc(50% - 4px);
+    padding: 10px 16px;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .goalsList {
+    gap: 6px;
+  }
+
+  .goalTag {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .submitBtn {
+    padding: 14px 20px;
+    font-size: 12px;
+  }
+
+  .generationView {
+    padding: 0 16px;
+  }
+
+  .progressBarContainer {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .progressLabel span {
+    font-size: 10px;
+  }
+
+  .progressLabel span:last-child {
+    font-size: 12px;
+  }
+
+  .progressBar {
+    height: 16px;
+  }
+
+  .progressDetails span {
+    font-size: 9px;
+  }
+
+  .currentStage {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .skeletonGrid {
+    gap: 12px;
+  }
+
+  .weekHeader {
+    font-size: 9px;
+    padding: 6px;
+  }
+
+  .daysGrid {
+    gap: 4px;
+  }
+
+  .dayCell {
+    padding: 10px;
+    min-height: 40px;
+  }
+
+  .dayTitle {
+    font-size: 8px;
+  }
+
+  .pulseAnimation {
+    font-size: 12px;
+  }
+
+  .successBox {
+    padding: 24px;
+  }
+
+  .successTitle {
+    font-size: 24px;
+  }
+
+  .successText {
+    font-size: 12px;
+  }
+
+  .startBtn {
+    padding: 12px 28px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding-top: 12px;
+  }
+
+  .formView {
+    padding: 0 12px;
+  }
+
+  .formCard {
+    padding: 20px;
+    box-shadow: 4px 4px 0px var(--black);
+  }
+
+  .label {
+    font-size: 8px;
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .optionBtn {
+    min-width: 100%;
+    padding: 8px 14px;
+    font-size: 9px;
+  }
+
+  .goalTag {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .submitBtn {
+    padding: 12px 16px;
+    font-size: 11px;
+  }
+
+  .courseTopic {
+    font-size: 20px;
+  }
+
+  .progressInfo {
+    font-size: 10px;
+  }
+
+  .progressBarContainer {
+    padding: 16px;
+  }
+
+  .progressLabel span {
+    font-size: 9px;
+  }
+
+  .progressLabel span:last-child {
+    font-size: 11px;
+  }
+
+  .progressBar {
+    height: 14px;
+  }
+
+  .progressDetails span {
+    font-size: 8px;
+  }
+
+  .currentStage {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+
+  .weekHeader {
+    font-size: 8px;
+  }
+
+  .dayCell {
+    padding: 8px;
+    min-height: 35px;
+  }
+
+  .dayTitle {
+    font-size: 7px;
+  }
+
+  .pulseAnimation {
+    font-size: 11px;
+  }
+
+  .successBox {
+    padding: 20px;
+  }
+
+  .successTitle {
+    font-size: 20px;
+  }
+
+  .successText {
+    font-size: 11px;
+  }
+
+  .startBtn {
+    padding: 10px 24px;
+    font-size: 11px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .formCard {
+    padding: 16px;
+  }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .optionBtn {
+    padding: 6px 12px;
+    font-size: 8px;
+  }
+
+  .submitBtn {
+    padding: 10px 14px;
+    font-size: 10px;
+  }
+
+  .courseTopic {
+    font-size: 18px;
+  }
+
+  .successTitle {
+    font-size: 18px;
+  }
+}

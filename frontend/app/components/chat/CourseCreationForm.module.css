@@ -210,3 +210,174 @@ select.input:disabled {
     width: 100%;
   }
 }
+
+/* ========================================
+   ADDITIONAL RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 600px) {
+  .formContainer {
+    padding: 14px;
+    max-width: 100%;
+    border-radius: 6px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .formHeader {
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .formIcon {
+    font-size: 16px;
+  }
+
+  .formTitle {
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+
+  .form {
+    gap: 14px;
+  }
+
+  .field {
+    gap: 5px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .textarea {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-width: 1px;
+    min-height: 60px;
+  }
+
+  select.input {
+    padding-right: 32px;
+  }
+
+  .errorText {
+    font-size: 8px;
+    margin: 1px 0 0 0;
+  }
+
+  .formActions {
+    margin-top: 6px;
+    padding-top: 12px;
+    gap: 10px;
+  }
+
+  .cancelBtn {
+    padding: 8px 16px;
+    font-size: 10px;
+    min-height: 44px;
+  }
+
+  .submitBtn {
+    padding: 8px 16px;
+    font-size: 10px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .formContainer {
+    padding: 12px;
+    border-radius: 4px;
+    border-width: 1px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .formHeader {
+    gap: 5px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom-width: 1px;
+  }
+
+  .formIcon {
+    font-size: 14px;
+  }
+
+  .formTitle {
+    font-size: 10px;
+    letter-spacing: 0.2px;
+  }
+
+  .form {
+    gap: 12px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .label {
+    font-size: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .input {
+    padding: 8px 8px;
+    font-size: 11px;
+    border-width: 1px;
+    border-radius: 3px;
+    min-height: 44px;
+  }
+
+  .textarea {
+    padding: 8px 8px;
+    font-size: 11px;
+    border-width: 1px;
+    border-radius: 3px;
+    min-height: 50px;
+  }
+
+  select.input {
+    padding-right: 30px;
+    background-position: right 10px center;
+  }
+
+  .errorText {
+    font-size: 7px;
+  }
+
+  .formActions {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top-width: 1px;
+    gap: 8px;
+  }
+
+  .cancelBtn {
+    padding: 8px 14px;
+    font-size: 9px;
+    border-width: 1px;
+    border-radius: 3px;
+    min-height: 44px;
+  }
+
+  .submitBtn {
+    padding: 8px 14px;
+    font-size: 9px;
+    border-width: 1px;
+    border-radius: 3px;
+    min-height: 44px;
+  }
+
+  .submitBtn:hover:not(:disabled) {
+    box-shadow: 2px 2px 0px var(--black);
+  }
+}

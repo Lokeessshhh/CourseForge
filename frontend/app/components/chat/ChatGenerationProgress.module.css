@@ -205,3 +205,273 @@
     transform: translateX(100%);
   }
 }
+
+/* ========================================
+   RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px 12px;
+  }
+
+  .header {
+    margin-bottom: 8px;
+  }
+
+  .headerLeft {
+    gap: 8px;
+  }
+
+  .headerRight {
+    gap: 10px;
+  }
+
+  .cancelBtn {
+    padding: 8px 12px;
+    font-size: 9px;
+    min-height: 44px;
+  }
+
+  .icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+
+  .title {
+    font-size: 10px;
+    letter-spacing: 0.6px;
+  }
+
+  .stage {
+    font-size: 8px;
+  }
+
+  .progressBar {
+    height: 6px;
+    margin: 6px 0;
+  }
+
+  .footer {
+    margin-top: 6px;
+  }
+
+  .details {
+    font-size: 9px;
+  }
+
+  .status {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  .progressPercent {
+    font-size: 10px;
+    min-width: 36px;
+  }
+
+  .successMessage {
+    margin-top: 8px;
+    padding: 6px 10px;
+  }
+
+  .successMessage p {
+    font-size: 9px;
+  }
+
+  .pollingIndicator {
+    font-size: 7px;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 8px 10px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    gap: 6px;
+  }
+
+  .headerLeft {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .cancelBtn {
+    padding: 6px 10px;
+    font-size: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .icon {
+    font-size: 10px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .title {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .stage {
+    font-size: 7px;
+  }
+
+  .progressBar {
+    height: 5px;
+    margin: 5px 0;
+    border-width: 1px;
+  }
+
+  .progressFill {
+    height: 100%;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    margin-top: 5px;
+  }
+
+  .details {
+    font-size: 8px;
+  }
+
+  .status {
+    font-size: 7px;
+    padding: 2px 5px;
+    letter-spacing: 0.3px;
+  }
+
+  .progressPercent {
+    font-size: 9px;
+    min-width: 32px;
+  }
+
+  .successMessage {
+    margin-top: 6px;
+    padding: 5px 8px;
+    border-width: 1px;
+  }
+
+  .successMessage p {
+    font-size: 8px;
+  }
+
+  .pollingIndicator {
+    font-size: 6px;
+    margin-top: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 6px 8px;
+    border-width: 2px;
+    box-shadow: 1px 1px 0px var(--black);
+  }
+
+  .container.complete {
+    box-shadow: 1px 1px 0px #00aa00;
+  }
+
+  .container.failed {
+    box-shadow: 1px 1px 0px #ff4444;
+  }
+
+  .container.initializing {
+    box-shadow: 1px 1px 0px #f59e0b;
+  }
+
+  .header {
+    margin-bottom: 5px;
+    gap: 4px;
+  }
+
+  .headerLeft {
+    gap: 5px;
+  }
+
+  .headerRight {
+    gap: 6px;
+  }
+
+  .cancelBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+    letter-spacing: 0.2px;
+    border-width: 1px;
+    min-height: 44px;
+  }
+
+  .icon {
+    font-size: 9px;
+    width: 9px;
+    height: 9px;
+  }
+
+  .title {
+    font-size: 8px;
+    letter-spacing: 0.4px;
+  }
+
+  .stage {
+    font-size: 6px;
+  }
+
+  .progressBar {
+    height: 4px;
+    margin: 4px 0;
+    border-width: 1px;
+    border-radius: 2px;
+  }
+
+  .footer {
+    margin-top: 4px;
+  }
+
+  .details {
+    font-size: 7px;
+  }
+
+  .status {
+    font-size: 6px;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  .progressPercent {
+    font-size: 8px;
+    min-width: 28px;
+  }
+
+  .successMessage {
+    margin-top: 5px;
+    padding: 4px 6px;
+    border-width: 1px;
+    border-radius: 2px;
+  }
+
+  .successMessage p {
+    font-size: 7px;
+  }
+
+  .pollingIndicator {
+    font-size: 5px;
+    margin-top: 2px;
+  }
+}

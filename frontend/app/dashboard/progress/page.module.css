@@ -491,3 +491,269 @@
     padding: 10px 12px;
   }
 }
+
+/* Additional responsive enhancements */
+@media (max-width: 768px) {
+  .page {
+    gap: 24px;
+  }
+
+  .section {
+    gap: 12px;
+  }
+
+  .sectionLabel {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .statsGrid {
+    gap: 12px;
+  }
+
+  .statBox {
+    padding: 16px;
+  }
+
+  .statLabel {
+    font-size: 9px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .calendarCard {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendarGrid {
+    min-width: fit-content;
+  }
+
+  .coursesList {
+    gap: 12px;
+  }
+
+  .courseCard {
+    padding: 16px;
+  }
+
+  .courseName {
+    font-size: 16px;
+  }
+
+  .courseTopic {
+    font-size: 10px;
+  }
+
+  .courseProgressBar {
+    height: 8px;
+  }
+
+  .courseProgressText {
+    font-size: 10px;
+  }
+
+  .weekBreakdown {
+    gap: 12px;
+  }
+
+  .weekItem {
+    gap: 6px;
+  }
+
+  .weekNum {
+    font-size: 9px;
+    width: 18px;
+  }
+
+  .weekMiniBar {
+    width: 50px;
+    height: 5px;
+  }
+
+  .weekTestScore {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+
+  .conceptList {
+    padding: 16px;
+  }
+
+  .conceptName {
+    width: 80px;
+    font-size: 10px;
+  }
+
+  .conceptBar {
+    height: 6px;
+  }
+
+  .conceptFill {
+    height: 100%;
+  }
+
+  .conceptPercent {
+    width: 35px;
+    font-size: 10px;
+  }
+
+  .conceptPracticed {
+    font-size: 9px;
+    width: 80px;
+  }
+
+  .quizTabs {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quizTab {
+    font-size: 9px;
+    padding: 6px 12px;
+    flex: 1;
+    text-align: center;
+    min-width: 100px;
+  }
+
+  .loadingMessage,
+  .emptyQuizMessage,
+  .emptyConceptMessage {
+    padding: 30px 16px;
+    font-size: 12px;
+  }
+
+  .quizTable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tableHeader,
+  .tableRow {
+    min-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 20px;
+  }
+
+  .sectionLabel {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .statBox {
+    padding: 14px;
+  }
+
+  .statLabel {
+    font-size: 8px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
+  .calendarCard {
+    padding: 12px;
+  }
+
+  .monthLabels {
+    padding-left: 26px;
+    font-size: 8px;
+  }
+
+  .calendarDay {
+    width: 10px;
+    height: 10px;
+  }
+
+  .dayLabels span {
+    font-size: 7px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .courseCard {
+    padding: 14px;
+  }
+
+  .courseName {
+    font-size: 14px;
+  }
+
+  .courseTopic {
+    font-size: 9px;
+  }
+
+  .courseProgressText {
+    font-size: 9px;
+  }
+
+  .weekBreakdown {
+    gap: 10px;
+  }
+
+  .weekNum {
+    font-size: 8px;
+    width: 16px;
+  }
+
+  .weekMiniBar {
+    width: 40px;
+  }
+
+  .weekTestScore {
+    font-size: 7px;
+    padding: 2px 4px;
+  }
+
+  .conceptList {
+    padding: 12px;
+  }
+
+  .conceptName {
+    width: 70px;
+    font-size: 9px;
+  }
+
+  .conceptPercent {
+    width: 30px;
+    font-size: 9px;
+  }
+
+  .conceptPracticed {
+    font-size: 8px;
+    width: 70px;
+  }
+
+  .quizTab {
+    font-size: 8px;
+    padding: 5px 10px;
+  }
+
+  .loadingMessage,
+  .emptyQuizMessage,
+  .emptyConceptMessage {
+    padding: 24px 12px;
+    font-size: 11px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 70px 70px 50px 45px 50px;
+    font-size: 9px;
+    padding: 8px 10px;
+  }
+
+  .passed,
+  .failed {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+}

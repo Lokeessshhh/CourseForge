@@ -1259,3 +1259,438 @@
   color: var(--black);
   opacity: 0.6;
 }
+
+/* ========================================
+   RESPONSIVE ENHANCEMENTS
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .heroStrip {
+    padding: 24px;
+  }
+
+  .greeting {
+    font-size: 24px;
+  }
+
+  .statValue {
+    font-size: 32px;
+  }
+
+  .chartContainer {
+    height: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    gap: 24px;
+  }
+
+  .heroStrip {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .greeting {
+    font-size: 22px;
+  }
+
+  .statsGrid {
+    gap: 16px;
+  }
+
+  .statBox {
+    padding: 20px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  .chartsGrid {
+    gap: 20px;
+  }
+
+  .courseRow {
+    padding: 16px 20px;
+  }
+
+  .activeCourseCard {
+    gap: 24px;
+    padding: 16px;
+  }
+
+  .activeCourseName {
+    font-size: 20px;
+  }
+
+  .widget {
+    padding: 20px;
+  }
+
+  .activityAndProgressGrid,
+  .scoresAndGamesGrid {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .heroStrip {
+    padding: 16px;
+  }
+
+  .heroLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .greeting {
+    font-size: 20px;
+  }
+
+  .levelBadge {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .levelTitle {
+    font-size: 12px;
+  }
+
+  .levelXp {
+    font-size: 10px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .statBox {
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .statLabel {
+    font-size: 9px;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .chartContainer {
+    height: 200px;
+    padding: 12px;
+  }
+
+  .courseRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .courseRowName {
+    font-size: 14px;
+  }
+
+  .courseRowTopic {
+    font-size: 11px;
+  }
+
+  .courseRowPercent {
+    width: auto;
+    text-align: left;
+  }
+
+  .courseRowActions {
+    justify-content: flex-start;
+  }
+
+  .activeCourseCard {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 16px;
+  }
+
+  .activeCourseName {
+    font-size: 18px;
+  }
+
+  .coursesContinueGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .courseContinueCard {
+    padding: 16px;
+  }
+
+  .courseContinueName {
+    font-size: 14px;
+  }
+
+  .aiQuotesWidget {
+    padding: 16px;
+  }
+
+  .aiQuoteCard {
+    padding: 16px;
+  }
+
+  .quoteText {
+    font-size: 12px;
+  }
+
+  .widget {
+    padding: 16px;
+  }
+
+  .widgetTitle {
+    font-size: 11px;
+  }
+
+  .emptyBox {
+    padding: 60px 24px;
+  }
+
+  .errorBox {
+    padding: 60px 24px;
+  }
+
+  .coursesTable {
+    overflow-x: auto;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    min-width: 600px;
+  }
+
+  .tableCol {
+    font-size: 9px;
+  }
+
+  .tableCell {
+    font-size: 11px;
+  }
+
+  .tableAction {
+    font-size: 9px;
+  }
+
+  .modal {
+    max-width: 90%;
+  }
+
+  .modalContent {
+    padding: 20px;
+  }
+
+  .modalTitle {
+    font-size: 16px;
+  }
+
+  .modalText {
+    font-size: 12px;
+  }
+
+  .modalActions {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .modalCancelBtn,
+  .modalDeleteBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .activityAndProgressGrid,
+  .scoresAndGamesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .compactGameContainer {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 600px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statBox {
+    padding: 14px;
+  }
+
+  .statValue {
+    font-size: 22px;
+  }
+
+  .greeting {
+    font-size: 18px;
+  }
+
+  .heroStrip {
+    padding: 14px;
+  }
+
+  .courseRow {
+    padding: 14px;
+  }
+
+  .courseRowName {
+    font-size: 13px;
+  }
+
+  .courseRowBtn,
+  .deleteBtn {
+    font-size: 10px;
+    padding: 8px 16px;
+  }
+
+  .activeCourseCard {
+    padding: 14px;
+  }
+
+  .activeCourseName {
+    font-size: 16px;
+  }
+
+  .resumeButton {
+    font-size: 10px;
+    padding: 12px 20px;
+  }
+
+  .coursesContinueGrid {
+    gap: 12px;
+  }
+
+  .courseContinueCard {
+    padding: 14px;
+  }
+
+  .courseContinueName {
+    font-size: 13px;
+  }
+
+  .chartContainer {
+    height: 180px;
+  }
+
+  .emptyBox {
+    padding: 50px 20px;
+  }
+
+  .emptyText {
+    font-size: 12px;
+  }
+
+  .emptySubtext {
+    font-size: 10px;
+  }
+
+  .actionButton {
+    font-size: 9px;
+    padding: 10px 20px;
+  }
+
+  .errorBox {
+    padding: 50px 20px;
+  }
+
+  .errorText {
+    font-size: 12px;
+  }
+
+  .retryBtn {
+    font-size: 10px;
+    padding: 10px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroStrip {
+    padding: 12px;
+  }
+
+  .greeting {
+    font-size: 16px;
+  }
+
+  .levelBadge {
+    padding: 5px 10px;
+  }
+
+  .levelTitle {
+    font-size: 11px;
+  }
+
+  .statBox {
+    padding: 12px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
+  .statLabel {
+    font-size: 8px;
+  }
+
+  .chartContainer {
+    height: 160px;
+    padding: 10px;
+  }
+
+  .courseRow {
+    padding: 12px;
+  }
+
+  .courseRowName {
+    font-size: 12px;
+  }
+
+  .activeCourseCard {
+    padding: 12px;
+  }
+
+  .activeCourseName {
+    font-size: 14px;
+  }
+
+  .courseContinueCard {
+    padding: 12px;
+  }
+
+  .courseContinueName {
+    font-size: 12px;
+  }
+
+  .widget {
+    padding: 12px;
+  }
+
+  .aiQuotesWidget {
+    padding: 12px;
+  }
+
+  .aiQuoteCard {
+    padding: 12px;
+  }
+
+  .quoteText {
+    font-size: 11px;
+  }
+}

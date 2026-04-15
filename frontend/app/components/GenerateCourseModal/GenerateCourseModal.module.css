@@ -361,3 +361,190 @@
 .modal::-webkit-scrollbar-thumb:hover {
   background: var(--yellow-light);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 16px;
+  }
+
+  .modal {
+    max-width: 90vw;
+    max-height: 85vh;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .modalHeader {
+    padding: 16px 20px;
+  }
+
+  .modalTitle {
+    font-size: 16px;
+  }
+
+  .closeBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+
+  .modalBody {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
+
+  .input {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .textarea {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 70px;
+  }
+
+  .durationContainer {
+    gap: 6px;
+  }
+
+  .durationInput {
+    width: 45px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  .durationSelect {
+    max-width: 120px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .optionBtn {
+    padding: 8px 12px;
+    font-size: 9px;
+    min-width: 50px;
+  }
+
+  .modalFooter {
+    padding: 16px 20px;
+  }
+
+  .submitBtn {
+    padding: 10px 20px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalOverlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: 90vh;
+    width: 100%;
+    box-shadow: 4px 4px 0px var(--black);
+  }
+
+  .modalHeader {
+    padding: 14px 16px;
+  }
+
+  .modalTitle {
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .closeBtn {
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
+  }
+
+  .modalBody {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .label {
+    font-size: 8px;
+  }
+
+  .input {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .textarea {
+    padding: 9px 12px;
+    font-size: 11px;
+    min-height: 60px;
+  }
+
+  .durationContainer {
+    gap: 5px;
+  }
+
+  .durationInput {
+    width: 40px;
+    padding: 7px 5px;
+    font-size: 12px;
+  }
+
+  .durationSelect {
+    max-width: 110px;
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+
+  .durationHint {
+    font-size: 9px;
+  }
+
+  .errorText {
+    font-size: 9px;
+  }
+
+  .options {
+    gap: 5px;
+  }
+
+  .optionBtn {
+    padding: 7px 10px;
+    font-size: 8px;
+    min-width: 45px;
+    flex: 1;
+  }
+
+  .goalTag {
+    padding: 5px 10px;
+    font-size: 9px;
+  }
+
+  .goalTag button {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .modalFooter {
+    padding: 14px 16px;
+  }
+
+  .submitBtn {
+    padding: 9px 16px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+}

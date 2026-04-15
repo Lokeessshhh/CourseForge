@@ -14,7 +14,7 @@ import { SidebarSkeleton } from '../components/Skeleton';
 import styles from './layout.module.css';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -63,15 +63,29 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <GenerationProgressProvider>
         <GenerationProgressBridge />
         <div className={styles.layout}>
-          {/* Left Sidebar */}
-          <motion.aside
-            className={styles.sidebar}
-            initial={{ x: -240 }}
-            animate={{ x: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          {/* Mobile Menu Toggle Button */}
+          <button
+            className={styles.mobileMenuToggle}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle menu"
           >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+
+          {/* Mobile Overlay Backdrop */}
+          <div
+            className={`${styles.sidebarOverlay} ${sidebarOpen ? styles.open : ''}`}
+            onClick={() => setSidebarOpen(false)}
+          />
+
+          {/* Left Sidebar */}
+          <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}>
             <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-          </motion.aside>
+          </aside>
 
           {/* Main Content Area */}
           <main className={styles.main}>

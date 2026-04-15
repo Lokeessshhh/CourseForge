@@ -259,6 +259,56 @@
 
   .popup {
     padding: 20px;
+    max-width: 450px;
+  }
+
+  .header {
+    margin-bottom: 16px;
+    gap: 6px;
+  }
+
+  .headerIcon {
+    font-size: 11px;
+  }
+
+  .headerTitle {
+    font-size: 11px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .textarea {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 70px;
+  }
+
+  .durationContainer {
+    gap: 6px;
+  }
+
+  .durationInput {
+    width: 45px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  .durationSelect {
+    max-width: 120px;
+    padding: 8px 10px;
+    font-size: 12px;
   }
 
   .options {
@@ -267,6 +317,130 @@
 
   .optionBtn {
     padding: 8px 12px;
+    font-size: 9px;
+  }
+
+  .createBtn {
+    padding: 12px 20px;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    bottom: 70px;
+    padding: 0 12px;
+  }
+
+  .popup {
+    padding: 16px;
+    max-width: 100%;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .header {
+    margin-bottom: 14px;
+    gap: 5px;
+  }
+
+  .headerIcon {
+    font-size: 10px;
+  }
+
+  .headerTitle {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .label {
+    font-size: 8px;
+    margin-bottom: 5px;
+  }
+
+  .input {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .textarea {
+    padding: 9px 12px;
+    font-size: 11px;
+    min-height: 60px;
+  }
+
+  .durationContainer {
+    gap: 5px;
+  }
+
+  .durationInput {
+    width: 40px;
+    padding: 7px 5px;
+    font-size: 12px;
+  }
+
+  .durationSelect {
+    max-width: 110px;
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+
+  .durationHint {
+    font-size: 9px;
+  }
+
+  .errorText {
+    font-size: 9px;
+  }
+
+  .options {
+    gap: 5px;
+  }
+
+  .optionBtn {
+    padding: 7px 10px;
+    font-size: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .createBtn {
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .overlay {
+    padding: 0 8px;
+  }
+
+  .popup {
+    padding: 14px;
+  }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .textarea {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .optionBtn {
+    padding: 6px 8px;
+    font-size: 7px;
+  }
+
+  .createBtn {
+    padding: 9px 14px;
     font-size: 10px;
   }
 }

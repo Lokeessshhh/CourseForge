@@ -264,3 +264,343 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ========================================
+   RESPONSIVE MEDIA QUERIES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .container {
+    margin-bottom: 12px;
+  }
+
+  .searchingState {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .searchingContent {
+    gap: 10px;
+  }
+
+  .searchingIcon {
+    font-size: 18px;
+  }
+
+  .searchingText {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .searchingQuery {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .queryLabel {
+    font-size: 8px;
+  }
+
+  .queryText {
+    font-size: 11px;
+  }
+
+  .resultsState {
+    padding: 10px 14px;
+    min-width: 180px;
+  }
+
+  .resultsHeader {
+    gap: 8px;
+  }
+
+  .resultsIcon {
+    font-size: 14px;
+  }
+
+  .resultsTitle {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+
+  .resultsCount {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+
+  .toggleIcon {
+    font-size: 9px;
+  }
+
+  .resultsList {
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .resultItem {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .resultIndex {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  .resultContent {
+    gap: 5px;
+  }
+
+  .resultTitle {
+    font-size: 12px;
+  }
+
+  .resultSnippet {
+    font-size: 10px;
+  }
+
+  .resultSource {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    margin-bottom: 10px;
+  }
+
+  .searchingState {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .searchingContent {
+    gap: 8px;
+  }
+
+  .searchingIcon {
+    font-size: 16px;
+  }
+
+  .searchingText {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .searchingQuery {
+    gap: 5px;
+    padding-top: 5px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .queryLabel {
+    font-size: 7px;
+  }
+
+  .queryText {
+    font-size: 10px;
+  }
+
+  .resultsState {
+    padding: 8px 12px;
+    min-width: 160px;
+  }
+
+  .resultsHeader {
+    gap: 6px;
+  }
+
+  .resultsIcon {
+    font-size: 12px;
+  }
+
+  .resultsTitle {
+    font-size: 8px;
+    letter-spacing: 0.8px;
+  }
+
+  .resultsCount {
+    font-size: 7px;
+    padding: 2px 4px;
+  }
+
+  .toggleIcon {
+    font-size: 8px;
+  }
+
+  .resultsList {
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .resultItem {
+    gap: 8px;
+    padding: 8px;
+    flex-direction: column;
+  }
+
+  .resultItem:hover {
+    transform: translate(-1px, -1px);
+  }
+
+  .resultIndex {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .resultContent {
+    gap: 4px;
+  }
+
+  .resultTitle {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .resultSnippet {
+    font-size: 9px;
+    line-height: 1.4;
+    -webkit-line-clamp: 1;
+  }
+
+  .resultSource {
+    font-size: 7px;
+    letter-spacing: 0.3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    margin-bottom: 8px;
+  }
+
+  .searchingState {
+    padding: 10px;
+    gap: 6px;
+    border-width: 1px;
+    box-shadow: 1px 1px 0 var(--black);
+  }
+
+  .searchingContent {
+    gap: 6px;
+  }
+
+  .searchingIcon {
+    font-size: 14px;
+  }
+
+  .searchingText {
+    font-size: 8px;
+    letter-spacing: 0.8px;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .searchingQuery {
+    gap: 4px;
+    padding-top: 4px;
+    border-top-width: 1px;
+  }
+
+  .queryLabel {
+    font-size: 6px;
+  }
+
+  .queryText {
+    font-size: 9px;
+  }
+
+  .resultsState {
+    padding: 6px 10px;
+    min-width: 140px;
+    border-width: 1px;
+    box-shadow: 1px 1px 0 var(--black);
+  }
+
+  .resultsState.expanded {
+    padding: 6px 10px;
+  }
+
+  .resultsHeader {
+    gap: 5px;
+  }
+
+  .resultsIcon {
+    font-size: 11px;
+  }
+
+  .resultsTitle {
+    font-size: 7px;
+    letter-spacing: 0.5px;
+  }
+
+  .resultsCount {
+    font-size: 6px;
+    padding: 1px 3px;
+  }
+
+  .toggleIcon {
+    font-size: 7px;
+  }
+
+  .resultsList {
+    gap: 5px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top-width: 1px;
+  }
+
+  .resultItem {
+    gap: 6px;
+    padding: 6px;
+    border-width: 1px;
+  }
+
+  .resultItem:hover {
+    transform: none;
+    box-shadow: 1px 1px 0 var(--black);
+  }
+
+  .resultIndex {
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+
+  .resultContent {
+    gap: 3px;
+  }
+
+  .resultTitle {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .resultSnippet {
+    font-size: 8px;
+    line-height: 1.3;
+  }
+
+  .resultSource {
+    font-size: 6px;
+    letter-spacing: 0.2px;
+  }
+}

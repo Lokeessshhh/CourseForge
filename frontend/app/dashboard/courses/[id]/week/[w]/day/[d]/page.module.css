@@ -660,3 +660,854 @@
     font-size: 32px;
   }
 }
+
+/* Tablet - 900px */
+@media (max-width: 900px) {
+  .page {
+    gap: 16px;
+  }
+
+  .questionCard {
+    padding: 24px;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .resultsCard {
+    padding: 32px;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .scoreTitle {
+    font-size: 40px;
+  }
+
+  .exampleCard {
+    padding: 24px;
+    box-shadow: 6px 6px 0px var(--black);
+  }
+
+  .exampleTitle {
+    font-size: 20px;
+  }
+
+  .practiceCard {
+    padding: 20px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+}
+
+/* Enhanced Mobile - 768px */
+@media (max-width: 768px) {
+  .page {
+    gap: 14px;
+  }
+
+  .breadcrumb {
+    font-size: 10px;
+  }
+
+  .separator {
+    margin: 0 6px;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 12px 14px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .navButtons {
+    margin-top: 24px;
+  }
+
+  .nextBtn {
+    font-size: 11px;
+    padding: 10px 20px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .editorSection {
+    gap: 12px;
+  }
+
+  .editor {
+    min-height: 250px;
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .outputBox {
+    padding: 12px;
+  }
+
+  .outputBox pre {
+    font-size: 12px;
+    overflow-x: auto;
+  }
+
+  .practiceSection {
+    margin-top: 24px;
+  }
+
+  .practiceCard {
+    padding: 16px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .practicePrompt {
+    font-size: 13px;
+  }
+
+  .practiceEditor {
+    font-size: 12px;
+    min-height: 100px;
+  }
+
+  .questionCard {
+    padding: 16px;
+    box-shadow: 5px 5px 0px var(--black);
+  }
+
+  .questionText {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .option {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .optionLetter {
+    width: 20px;
+  }
+
+  .explanation {
+    padding: 12px;
+  }
+
+  .explanation p {
+    font-size: 13px;
+  }
+
+  .submitBtn {
+    font-size: 11px;
+    padding: 10px 20px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .resultsCard {
+    padding: 20px;
+    box-shadow: 5px 5px 0px var(--black);
+  }
+
+  .scoreTitle {
+    font-size: 32px;
+  }
+
+  .passTag {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .breakdownRow {
+    gap: 12px;
+    grid-template-columns: 35px 35px 35px 35px;
+  }
+
+  .continueBtn {
+    font-size: 12px;
+    padding: 12px 24px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .backBtn {
+    font-size: 11px;
+    padding: 10px 20px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .generatingCard {
+    padding: 32px;
+  }
+
+  .generatingIcon {
+    font-size: 40px;
+  }
+
+  .generatingTitle {
+    font-size: 18px;
+  }
+
+  .generatingText {
+    font-size: 13px;
+    max-width: 300px;
+  }
+
+  .structuredCodeSection {
+    gap: 24px;
+  }
+
+  .exampleCard {
+    padding: 20px;
+    box-shadow: 5px 5px 0px var(--black);
+  }
+
+  .exampleTitle {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .exampleDescription {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .explanationSection {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .mistakesSection {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+
+  .expectedOutput {
+    padding: 10px;
+  }
+
+  .expectedOutput pre {
+    font-size: 11px;
+  }
+
+  .hints {
+    font-size: 12px;
+  }
+
+  .hints li {
+    font-size: 12px;
+  }
+}
+
+/* Small Mobile - 600px */
+@media (max-width: 600px) {
+  .page {
+    gap: 12px;
+  }
+
+  .breadcrumb {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .tabContent {
+    min-height: 300px;
+  }
+
+  .navButtons {
+    margin-top: 20px;
+    justify-content: center;
+  }
+
+  .nextBtn {
+    font-size: 10px;
+    padding: 10px 16px;
+    box-shadow: 2px 2px 0px var(--black);
+    width: 100%;
+    text-align: center;
+  }
+
+  .editorSection {
+    gap: 10px;
+  }
+
+  .editorHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .editorLabel {
+    font-size: 10px;
+  }
+
+  .runBtn {
+    font-size: 10px;
+    padding: 8px 16px;
+    width: 100%;
+  }
+
+  .editor {
+    min-height: 200px;
+    padding: 10px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .outputSection {
+    gap: 6px;
+  }
+
+  .outputLabel {
+    font-size: 9px;
+  }
+
+  .outputBox {
+    padding: 10px;
+    min-height: 60px;
+  }
+
+  .outputBox pre {
+    font-size: 11px;
+  }
+
+  .practiceSection {
+    margin-top: 20px;
+  }
+
+  .practiceLabel {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+
+  .practiceCard {
+    padding: 14px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .practicePrompt {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .practiceEditor {
+    font-size: 11px;
+    padding: 10px;
+    min-height: 80px;
+  }
+
+  .quizHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .quizLabel {
+    font-size: 10px;
+  }
+
+  .progressDots {
+    gap: 6px;
+  }
+
+  .questionCard {
+    padding: 14px;
+    border-width: 2px;
+    box-shadow: 4px 4px 0px var(--black);
+  }
+
+  .questionText {
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  .options {
+    gap: 8px;
+  }
+
+  .option {
+    padding: 10px 12px;
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .option:hover:not(:disabled) {
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .option.selected {
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .optionLetter {
+    width: 18px;
+    font-size: 12px;
+  }
+
+  .explanation {
+    margin-top: 16px;
+    padding: 10px;
+  }
+
+  .resultTag {
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 8px;
+  }
+
+  .explanation p {
+    font-size: 12px;
+  }
+
+  .quizActions {
+    margin-top: 16px;
+  }
+
+  .submitBtn {
+    font-size: 10px;
+    padding: 10px 16px;
+    box-shadow: 2px 2px 0px var(--black);
+    width: 100%;
+  }
+
+  .resultsCard {
+    padding: 16px;
+    border-width: 2px;
+    box-shadow: 4px 4px 0px var(--black);
+  }
+
+  .scoreTitle {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .passTag {
+    font-size: 10px;
+    padding: 6px 10px;
+    margin-bottom: 16px;
+  }
+
+  .breakdown {
+    display: block;
+    text-align: center;
+  }
+
+  .breakdownRow {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding: 6px 0;
+    font-size: 11px;
+  }
+
+  .continueBtn {
+    font-size: 11px;
+    padding: 10px 20px;
+    box-shadow: 2px 2px 0px var(--black);
+    width: 100%;
+  }
+
+  .resultsActions {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .backBtn {
+    font-size: 10px;
+    padding: 10px 16px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .generatingCard {
+    padding: 24px;
+  }
+
+  .generatingIcon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .generatingTitle {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .generatingText {
+    font-size: 12px;
+    max-width: 250px;
+  }
+
+  .structuredCodeSection {
+    gap: 20px;
+  }
+
+  .exampleCard {
+    padding: 16px;
+    border-width: 2px;
+    box-shadow: 4px 4px 0px var(--black);
+  }
+
+  .exampleTitle {
+    font-size: 18px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .exampleDescription {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .explanationSection {
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+
+  .explanationTitle {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .explanationPoint {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .mistakesSection {
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+
+  .mistakesTitle {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .mistakePoint {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .expectedOutput {
+    margin-top: 12px;
+    padding: 8px;
+  }
+
+  .expectedOutput pre {
+    font-size: 10px;
+  }
+
+  .hints {
+    margin-top: 12px;
+    font-size: 11px;
+  }
+
+  .hints li {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+}
+
+/* Extra Small Mobile - 480px */
+@media (max-width: 480px) {
+  .page {
+    gap: 10px;
+  }
+
+  .breadcrumb {
+    font-size: 8px;
+    letter-spacing: 0.25px;
+    word-break: break-word;
+  }
+
+  .separator {
+    margin: 0 4px;
+  }
+
+  .tab {
+    padding: 8px 10px;
+    font-size: 9px;
+    letter-spacing: 0.25px;
+  }
+
+  .tabContent {
+    min-height: 250px;
+  }
+
+  .navButtons {
+    margin-top: 16px;
+  }
+
+  .nextBtn {
+    font-size: 9px;
+    padding: 8px 14px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .editorSection {
+    gap: 8px;
+  }
+
+  .editorLabel,
+  .runBtn {
+    font-size: 9px;
+  }
+
+  .runBtn {
+    padding: 8px 12px;
+  }
+
+  .editor {
+    min-height: 180px;
+    padding: 8px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .outputLabel {
+    font-size: 8px;
+  }
+
+  .outputBox {
+    padding: 8px;
+    min-height: 50px;
+  }
+
+  .outputBox pre {
+    font-size: 10px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .practiceSection {
+    margin-top: 16px;
+  }
+
+  .practiceLabel {
+    font-size: 9px;
+    margin-bottom: 8px;
+  }
+
+  .practiceCard {
+    padding: 12px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .practicePrompt {
+    font-size: 11px;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+
+  .practiceEditor {
+    font-size: 10px;
+    padding: 8px;
+    min-height: 70px;
+  }
+
+  .quizHeader {
+    margin-bottom: 12px;
+  }
+
+  .quizLabel {
+    font-size: 9px;
+    gap: 6px;
+  }
+
+  .progressDots {
+    gap: 4px;
+  }
+
+  .dot {
+    font-size: 8px;
+  }
+
+  .questionCard {
+    padding: 12px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .questionText {
+    font-size: 14px;
+    margin-bottom: 12px;
+    word-break: break-word;
+  }
+
+  .options {
+    gap: 6px;
+  }
+
+  .option {
+    padding: 8px 10px;
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .optionLetter {
+    width: 16px;
+    font-size: 11px;
+  }
+
+  .explanation {
+    margin-top: 12px;
+    padding: 8px;
+  }
+
+  .resultTag {
+    font-size: 9px;
+    padding: 4px 8px;
+    margin-bottom: 6px;
+  }
+
+  .explanation p {
+    font-size: 11px;
+  }
+
+  .quizActions {
+    margin-top: 12px;
+  }
+
+  .submitBtn {
+    font-size: 9px;
+    padding: 8px 14px;
+  }
+
+  .resultsCard {
+    padding: 12px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .scoreTitle {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .passTag {
+    font-size: 9px;
+    padding: 4px 8px;
+    margin-bottom: 12px;
+  }
+
+  .breakdown {
+    margin-bottom: 16px;
+  }
+
+  .breakdownRow {
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 10px;
+  }
+
+  .continueBtn {
+    font-size: 10px;
+    padding: 8px 16px;
+    box-shadow: 2px 2px 0px var(--black);
+  }
+
+  .resultsActions {
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .backBtn {
+    font-size: 9px;
+    padding: 8px 14px;
+  }
+
+  .generatingCard {
+    padding: 16px;
+  }
+
+  .generatingIcon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .generatingTitle {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .generatingText {
+    font-size: 11px;
+    max-width: 200px;
+  }
+
+  .structuredCodeSection {
+    gap: 16px;
+  }
+
+  .exampleCard {
+    padding: 12px;
+    box-shadow: 3px 3px 0px var(--black);
+  }
+
+  .exampleTitle {
+    font-size: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .exampleDescription {
+    font-size: 11px;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .explanationSection {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .explanationTitle {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .explanationPoint {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .mistakesSection {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .mistakesTitle {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .mistakePoint {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .expectedOutput {
+    margin-top: 8px;
+    padding: 6px;
+  }
+
+  .expectedOutput pre {
+    font-size: 9px;
+  }
+
+  .hints {
+    margin-top: 8px;
+    font-size: 10px;
+  }
+
+  .hints li {
+    margin-bottom: 3px;
+    font-size: 10px;
+  }
+}

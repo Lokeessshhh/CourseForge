@@ -310,6 +310,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3001",
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://course-forge.*\.vercel\.app$",  # Allow all Vercel preview deployments
+]
+# Additional origins from environment variable (comma-separated)
 CORS_EXTRA_ORIGINS = os.environ.get("CORS_EXTRA_ORIGINS", "")
 if CORS_EXTRA_ORIGINS:
     CORS_ALLOWED_ORIGINS += [o.strip() for o in CORS_EXTRA_ORIGINS.split(",") if o.strip()]

@@ -348,4 +348,156 @@
     font-size: 12px;
     padding: 12px 20px;
   }
+
+  .liveCounter {
+    margin-top: 12px;
+  }
+
+  .scrollIndicator {
+    font-size: 10px;
+    padding: 5px 12px;
+    bottom: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding-top: 80px;
+    padding-bottom: 60px;
+  }
+
+  .container {
+    padding: 0 12px;
+    gap: 24px;
+  }
+
+  .headline {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+  }
+
+  .subtext {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .buttons {
+    gap: 10px;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    font-size: 11px;
+    padding: 10px 18px;
+    width: 100%;
+  }
+
+  .left {
+    gap: 12px;
+  }
+
+  .badges {
+    gap: 10px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+
+  .liveCounter {
+    font-size: 11px;
+    padding: 6px 12px;
+    margin-top: 10px;
+  }
+
+  .counterValue {
+    font-size: 12px;
+  }
+
+  .terminal {
+    padding: 16px;
+  }
+
+  .terminalHeader {
+    font-size: 10px;
+  }
+
+  .terminalBody {
+    font-size: 11px;
+  }
+
+  .scrollIndicator {
+    font-size: 9px;
+    padding: 4px 10px;
+    bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 70px;
+    padding-bottom: 50px;
+  }
+
+  .container {
+    padding: 0 10px;
+    gap: 20px;
+  }
+
+  .headline {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+
+  .subtext {
+    font-size: 12px;
+  }
+
+  .buttons {
+    gap: 8px;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    font-size: 10px;
+    padding: 9px 16px;
+  }
+
+  .badges {
+    gap: 8px;
+  }
+
+  .badge {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+
+  .liveCounter {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .counterValue {
+    font-size: 11px;
+  }
+
+  .terminal {
+    padding: 14px;
+  }
+
+  .terminalHeader {
+    font-size: 9px;
+  }
+
+  .terminalBody {
+    font-size: 10px;
+  }
+
+  .scrollIndicator {
+    font-size: 8px;
+    padding: 3px 8px;
+    bottom: 16px;
+  }
 }

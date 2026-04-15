@@ -363,3 +363,166 @@
     flex-direction: column;
   }
 }
+
+/* Additional responsive enhancements for smaller screens */
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 0;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  .section {
+    margin-bottom: 16px;
+  }
+
+  .sectionLabel {
+    padding: 12px 16px;
+    font-size: 10px;
+  }
+
+  .labelIcon {
+    font-size: 9px;
+  }
+
+  .sectionContent {
+    padding: 16px;
+  }
+
+  .label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .hint {
+    font-size: 9px;
+  }
+
+  .optionBtn {
+    padding: 10px 14px;
+    font-size: 10px;
+  }
+
+  .saveBtn {
+    padding: 12px 20px;
+    font-size: 11px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .toggleRow {
+    padding: 12px 0;
+    gap: 10px;
+  }
+
+  .toggle {
+    width: 48px;
+    height: 24px;
+  }
+
+  .toggleSlider {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle.on .toggleSlider {
+    transform: translateX(24px);
+  }
+
+  .accountButtons {
+    gap: 10px;
+  }
+
+  .accountBtn {
+    padding: 12px 16px;
+    font-size: 11px;
+  }
+
+  .dangerContent {
+    padding: 16px;
+  }
+
+  .dangerTitle {
+    font-size: 16px;
+  }
+
+  .dangerText {
+    font-size: 12px;
+  }
+
+  .deleteBtn {
+    padding: 10px 16px;
+    font-size: 11px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .deleteConfirm {
+    padding: 16px;
+  }
+
+  .confirmText {
+    font-size: 10px;
+  }
+
+  .confirmInput {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .confirmButtons {
+    gap: 10px;
+  }
+
+  .cancelBtn,
+  .confirmDeleteBtn {
+    padding: 10px 14px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .sectionLabel {
+    padding: 10px 14px;
+    font-size: 9px;
+  }
+
+  .sectionContent {
+    padding: 14px;
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .optionBtn {
+    padding: 8px 12px;
+    font-size: 9px;
+  }
+
+  .saveBtn {
+    padding: 10px 18px;
+    font-size: 10px;
+  }
+
+  .accountBtn {
+    padding: 10px 14px;
+    font-size: 10px;
+  }
+
+  .dangerTitle {
+    font-size: 14px;
+  }
+
+  .dangerText {
+    font-size: 11px;
+  }
+}
