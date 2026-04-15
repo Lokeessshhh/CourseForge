@@ -283,17 +283,11 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
                     />
                   </div>
                   <div className={styles.progressFooter}>
-                    {activeData.total_days && activeData.total_days > 0 && (() => {
-                      // Use total_days directly from backend (already includes days + tests calculation)
-                      const totalDayTasks = activeData.total_days;
-                      const totalWeeks = Math.ceil(totalDayTasks / 5);
-                      const totalTestTasks = totalWeeks * 2;
-                      return (
-                        <span>
-                          {activeData.completed_days || 0} / {totalDayTasks} days + {totalTestTasks} tests
-                        </span>
-                      );
-                    })()}
+                    {activeData.total_days && activeData.total_days > 0 && (
+                      <span>
+                        {activeData.completed_days || 0} / {activeData.total_days} days
+                      </span>
+                    )}
                     <span className={`${styles.status} ${isAt100Percent ? styles.statusComplete : ''}`}>
                       {isAt100Percent || hasCompleted ? ' READY' : activeData.generation_status || 'generating'}
                     </span>

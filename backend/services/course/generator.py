@@ -334,10 +334,13 @@ Return ONLY valid JSON:
         if description and isinstance(description, str) and description.strip():
             description_str = f"\n\nUSER REQUIREMENTS:\n{description.strip()}\n\nIMPORTANT: Tailor the daily content to meet these specific user requirements."
 
+        # Build previous context line (avoid backslash in f-string expression)
+        prev_line = f"Previously covered:\n{prev_context}" if prev_context else ""
+
         prompt = f"""You are a curriculum designer for a {skill_level} {topic} course.
 
 Week {week_number} theme: {week_theme}
-{f"Previously covered:\n{prev_context}" if prev_context else ""}{description_str}
+{prev_line}{description_str}
 
 Generate titles and tasks for ALL 5 days of this week.
 Each day should build progressively on the previous one.

@@ -674,14 +674,23 @@ export function useChatHistory(sessionId: string) {
 export function useSessionTitlePoll(sessionId: string, onTitleUpdate?: (title: string) => void) {
   const [isPolling, setIsPolling] = useState(false);
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pollCountRef = useRef(0);
+  const MAX_POLL_ATTEMPTS = 10; // Stop after 10 attempts (~20 seconds)
 
   const pollTitle = useCallback(async () => {
     if (!sessionId) return;
+    if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
+      wsLog('poll_title:max_attempts_reached', { sessionId });
+      setIsPolling(false);
+      return;
+    }
     try {
+      pollCountRef.current += 1;
       const result = await chatSessionsApi.getSessionTitle(sessionId);
       if (result.title && result.title !== '[Session created]' && result.title !== 'New Chat') {
         onTitleUpdate?.(result.title);
         setIsPolling(false);
+        pollCountRef.current = 0;
         return;
       }
       // Continue polling if title is still placeholder
@@ -689,18 +698,21 @@ export function useSessionTitlePoll(sessionId: string, onTitleUpdate?: (title: s
     } catch (err) {
       wsLog('poll_title:error', err);
       setIsPolling(false);
+      pollCountRef.current = 0;
     }
   }, [sessionId, onTitleUpdate]);
 
   const startPolling = useCallback(() => {
     if (!isPolling) {
       setIsPolling(true);
+      pollCountRef.current = 0;
       pollTitle();
     }
   }, [isPolling, pollTitle]);
 
   const stopPolling = useCallback(() => {
     setIsPolling(false);
+    pollCountRef.current = 0;
     if (pollTimeoutRef.current) {
       clearTimeout(pollTimeoutRef.current);
       pollTimeoutRef.current = null;

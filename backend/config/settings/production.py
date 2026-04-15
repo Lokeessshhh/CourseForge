@@ -4,8 +4,8 @@ import os
 
 DEBUG = False
 
-# Disable SSL redirect for local testing (can be overridden via env var)
-SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "False") == "True"
+# SSL redirect - enabled for production deployments
+SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
 
 # Disable trailing slash redirects to prevent 301 on API calls
 APPEND_SLASH = False
