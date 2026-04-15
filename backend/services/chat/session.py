@@ -1,19 +1,10 @@
-"""
-ChatSession management for LearnAI AI Tutor.
-
-Handles session lifecycle:
-- Creation and retrieval from Redis
-- Message history management
-- Session state persistence
-- Scope tracking (global/course/day)
-"""
 import json
 import logging
 import uuid
 from datetime import datetime, date
 from typing import Any, Dict, List, Optional
 
-import redis
+import redis.asyncio as redis
 from django.conf import settings
 from django.utils import timezone
 
@@ -24,27 +15,18 @@ _redis_client = None
 
 
 def get_redis() -> redis.Redis:
-    """Get or create Redis client."""
+    """Get or create async Redis client."""
     global _redis_client
     if _redis_client is None:
         redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379/0")
+        # Use async Redis client
         _redis_client = redis.from_url(redis_url, decode_responses=True)
     return _redis_client
 
 
 class ChatSession:
     """
-    Manages a chat session with Redis-backed persistence.
-    
-    Session scopes:
-    - global: All courses visible, general tutor mode
-    - course: Single course context, week/day aware
-    - day: Specific day content + quiz context
-    
-    Redis keys:
-    - chat:session:{user_id}:{session_id} → session data (24hr TTL)
-    - chat:active:{user_id} → list of active session IDs
-    - chat:history:{user_id}:{course_id} → course-specific history
+    Manages a chat session with Redis-backed persistence (Async).
     """
     
     SESSION_TTL = 86400  # 24 hours
@@ -89,18 +71,7 @@ class ChatSession:
         day: Optional[int] = None,
     ) -> "ChatSession":
         """
-        Get existing session from Redis or create new one.
-        
-        Args:
-            user_id: User UUID
-            session_id: Optional session ID (generates new if None)
-            scope: Session scope (global/course/day)
-            course_id: Course UUID for course/day scope
-            week: Week number for day scope
-            day: Day number for day scope
-            
-        Returns:
-            ChatSession instance
+        Get existing session from Redis or create new one (Async).
         """
         if session_id is None:
             session_id = str(uuid.uuid4())
@@ -109,15 +80,18 @@ class ChatSession:
         key = f"chat:session:{user_id}:{session_id}"
         
         # Try to get existing session
-        data = redis_client.get(key)
-        if data:
-            try:
-                parsed = json.loads(data)
-                session = cls.from_dict(parsed)
-                session.last_activity = timezone.now()
-                return session
-            except (json.JSONDecodeError, KeyError) as exc:
-                logger.warning("Failed to parse session data: %s", exc)
+        try:
+            data = await redis_client.get(key)
+            if data:
+                try:
+                    parsed = json.loads(data)
+                    session = cls.from_dict(parsed)
+                    session.last_activity = timezone.now()
+                    return session
+                except (json.JSONDecodeError, KeyError) as exc:
+                    logger.warning("Failed to parse session data: %s", exc)
+        except Exception as exc:
+            logger.error("Redis error in get_or_create: %s", exc)
         
         # Create new session
         session = cls(
@@ -132,10 +106,13 @@ class ChatSession:
         )
         
         # Add to active sessions list
-        active_key = f"chat:active:{user_id}"
-        redis_client.lpush(active_key, session_id)
-        redis_client.ltrim(active_key, 0, 9)  # Keep last 10 active sessions
-        redis_client.expire(active_key, cls.SESSION_TTL)
+        try:
+            active_key = f"chat:active:{user_id}"
+            await redis_client.lpush(active_key, session_id)
+            await redis_client.ltrim(active_key, 0, 9)  # Keep last 10 active sessions
+            await redis_client.expire(active_key, cls.SESSION_TTL)
+        except Exception as exc:
+            logger.error("Redis error updating active sessions: %s", exc)
         
         await session.save_async()
         return session
@@ -145,11 +122,17 @@ class ChatSession:
         """Create session from dictionary."""
         created_at = data.get("created_at")
         if isinstance(created_at, str):
-            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            try:
+                created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            except ValueError:
+                created_at = timezone.now()
         
         last_activity = data.get("last_activity")
         if isinstance(last_activity, str):
-            last_activity = datetime.fromisoformat(last_activity.replace("Z", "+00:00"))
+            try:
+                last_activity = datetime.fromisoformat(last_activity.replace("Z", "+00:00"))
+            except ValueError:
+                last_activity = timezone.now()
         
         return cls(
             user_id=data["user_id"],
@@ -175,22 +158,19 @@ class ChatSession:
             "day": self.day,
             "messages": self.messages,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "last_activity": timezone.now().isoformat(),
+            "last_activity": self.last_activity.isoformat() if self.last_activity else timezone.now().isoformat(),
             "metadata": self.metadata,
         }
     
     async def save_async(self) -> bool:
         """
-        Save session to Redis with TTL.
-        
-        Returns:
-            True if saved successfully
+        Save session to Redis with TTL (Async).
         """
         redis_client = get_redis()
         key = f"chat:session:{self.user_id}:{self.session_id}"
         
         try:
-            redis_client.set(
+            await redis_client.set(
                 key,
                 json.dumps(self.to_dict()),
                 ex=self.SESSION_TTL,
@@ -201,21 +181,27 @@ class ChatSession:
             return False
     
     def save(self) -> bool:
-        """Synchronous save for use in non-async contexts."""
-        redis_client = get_redis()
+        """
+        Synchronous save wrapper. 
+        Note: This is now dangerous in async contexts if it blocks.
+        Prefer save_async.
+        """
+        import redis as sync_redis
+        redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379/0")
+        client = sync_redis.from_url(redis_url, decode_responses=True)
         key = f"chat:session:{self.user_id}:{self.session_id}"
         
         try:
-            redis_client.set(
+            client.set(
                 key,
                 json.dumps(self.to_dict()),
                 ex=self.SESSION_TTL,
             )
             return True
         except Exception as exc:
-            logger.exception("Failed to save session: %s", exc)
+            logger.exception("Failed to save session (sync): %s", exc)
             return False
-    
+
     async def add_message(self, role: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """
         Add a message to the session history.
@@ -240,7 +226,7 @@ class ChatSession:
         
         self.last_activity = timezone.now()
         await self.save_async()
-    
+
     def get_recent_messages(self, n: int = 10) -> List[Dict[str, Any]]:
         """
         Get the N most recent messages.
@@ -356,11 +342,11 @@ class ChatSession:
         key = f"chat:session:{self.user_id}:{self.session_id}"
         
         try:
-            redis_client.delete(key)
+            await redis_client.delete(key)
             
             # Remove from active sessions
             active_key = f"chat:active:{self.user_id}"
-            redis_client.lrem(active_key, 0, self.session_id)
+            await redis_client.lrem(active_key, 0, self.session_id)
             
             return True
         except Exception as exc:
@@ -382,12 +368,12 @@ class ChatSession:
         active_key = f"chat:active:{user_id}"
         
         # Get session IDs
-        session_ids = redis_client.lrange(active_key, 0, 9)
+        session_ids = await redis_client.lrange(active_key, 0, 9)
         sessions = []
         
         for sid in session_ids:
             key = f"chat:session:{user_id}:{sid}"
-            data = redis_client.get(key)
+            data = await redis_client.get(key)
             if data:
                 try:
                     parsed = json.loads(data)
@@ -457,7 +443,7 @@ class DailySessionTracker:
         key = f"chat:daily:{user_id}:{today}"
         
         # Get existing data
-        data = redis_client.get(key)
+        data = await redis_client.get(key)
         daily = json.loads(data) if data else {"messages": [], "message_count": 0}
         
         # Add new interaction
@@ -471,7 +457,7 @@ class DailySessionTracker:
         daily["last_activity"] = timezone.now().isoformat()
         
         # Save with TTL
-        redis_client.set(key, json.dumps(daily), ex=cls.TTL)
+        await redis_client.set(key, json.dumps(daily), ex=cls.TTL)
         
         return daily
     
@@ -490,16 +476,16 @@ class DailySessionTracker:
         today = date.today().isoformat()
         key = f"chat:daily:{user_id}:{today}"
         
-        data = redis_client.get(key)
+        data = await redis_client.get(key)
         if data:
             return json.loads(data)
         
         return {"messages": [], "message_count": 0}
     
     @classmethod
-    def get_message_count(cls, user_id: str) -> int:
+    async def get_message_count(cls, user_id: str) -> int:
         """
-        Get message count for current day (synchronous).
+        Get message count for current day (Async).
         
         Args:
             user_id: User UUID
@@ -511,7 +497,7 @@ class DailySessionTracker:
         today = date.today().isoformat()
         key = f"chat:daily:{user_id}:{today}"
         
-        data = redis_client.get(key)
+        data = await redis_client.get(key)
         if data:
             return json.loads(data).get("message_count", 0)
         return 0

@@ -1387,9 +1387,8 @@ def _execute_code_tests(code: str, test_cases: list, language: str) -> dict:
     """
     Execute code against test cases with sandboxing.
     Returns dict with passed status, counts, output, and errors.
-    
-    Security: Uses Docker container for isolation when available,
-    falls back to restricted subprocess when Docker is not available.
+
+    Security: Uses restricted subprocess execution with isolation.
     """
     import subprocess
     import tempfile
@@ -1401,22 +1400,15 @@ def _execute_code_tests(code: str, test_cases: list, language: str) -> dict:
     outputs = []
     errors = []
 
-    # Check if Docker is available for sandboxing
-    docker_available = shutil.which("docker") is not None
-
     try:
-        if docker_available:
-            # Use Docker for secure execution
-            return _execute_code_docker(code, test_cases, language)
-        
-        # Fallback: Restricted subprocess execution (less secure)
+        # Restricted subprocess execution
         # Create temporary file with code in isolated directory
         temp_dir = tempfile.mkdtemp(prefix="code_exec_")
         temp_file = os.path.join(temp_dir, f"code.{language}")
-        
+
         with open(temp_file, 'w') as f:
             f.write(code)
-        
+
         # Restrict permissions
         os.chmod(temp_dir, 0o700)
         os.chmod(temp_file, 0o600)
@@ -1472,131 +1464,6 @@ def _execute_code_tests(code: str, test_cases: list, language: str) -> dict:
         "output": "\n".join(outputs),
         "error": "\n".join(errors) if errors else "",
     }
-
-
-def _execute_code_docker(code: str, test_cases: list, language: str) -> dict:
-    """
-    Execute code in Docker container for secure sandboxing.
-    """
-    import subprocess
-    import json
-
-    total = len(test_cases)
-
-    # Docker image mapping
-    image_map = {
-        'python': 'python:3.11-slim',
-        'javascript': 'node:18-slim',
-    }
-    image = image_map.get(language, 'python:3.11-slim')
-    
-    # Create execution payload
-    exec_payload = {
-        'code': code,
-        'test_cases': test_cases,
-        'language': language,
-    }
-
-    try:
-        # Run in Docker with strict resource limits
-        result = subprocess.run(
-            [
-                'docker', 'run', '--rm',
-                '--network', 'none',  # No network access
-                '--memory', '128m',   # Memory limit
-                '--cpus', '0.5',      # CPU limit
-                '--timeout', '10',    # Timeout
-                '-i', image,
-                'python', '-c',
-                _get_executor_script(language),
-            ],
-            input=json.dumps(exec_payload),
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
-
-        if result.returncode == 0:
-            exec_result = json.loads(result.stdout)
-            return exec_result
-        else:
-            return {
-                "passed": False,
-                "passed_count": 0,
-                "total": total,
-                "output": "",
-                "error": f"Docker execution failed: {result.stderr}",
-            }
-
-    except subprocess.TimeoutExpired:
-        return {
-            "passed": False,
-            "passed_count": 0,
-            "total": total,
-            "output": "",
-            "error": "Execution timeout",
-        }
-    except Exception as e:
-        return {
-            "passed": False,
-            "passed_count": 0,
-            "total": total,
-            "output": "",
-            "error": str(e),
-        }
-
-
-def _get_executor_script(language: str) -> str:
-    """Get the executor script for the given language."""
-    return '''
-import json
-import sys
-
-def execute_tests(payload):
-    code = payload['code']
-    test_cases = payload['test_cases']
-    language = payload['language']
-    
-    passed_count = 0
-    outputs = []
-    errors = []
-    
-    # Safe execution environment
-    safe_globals = {'__builtins__': __builtins__}
-    
-    for tc in test_cases:
-        try:
-            # Execute code with input
-            local_vars = {}
-            exec(code, safe_globals, local_vars)
-            
-            # Get output from main function if exists
-            if 'main' in local_vars:
-                output = str(local_vars['main'](tc.get('input', '')))
-            else:
-                output = ""
-            
-            outputs.append(output)
-            if output == tc.get('expected_output', ''):
-                passed_count += 1
-            else:
-                errors.append(f"Expected: {tc.get('expected_output')}, Got: {output}")
-        except Exception as e:
-            errors.append(str(e))
-    
-    return {
-        'passed': passed_count == len(test_cases),
-        'passed_count': passed_count,
-        'total': len(test_cases),
-        'output': '\\n'.join(outputs),
-        'error': '\\n'.join(errors) if errors else '',
-    }
-
-if __name__ == '__main__':
-    payload = json.load(sys.stdin)
-    result = execute_tests(payload)
-    print(json.dumps(result))
-'''
 
 
 # ──────────────────────────────────────────────

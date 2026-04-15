@@ -516,7 +516,7 @@ async def _generate_in_blocks_with_web_search(
 
             if rag_context:
                 from services.rag_pipeline.reranker import reranker
-                rag_context = reranker.rerank(rag_query, rag_context, top_k=10)
+                rag_context = await reranker.rerank(rag_query, rag_context, top_k=10)
                 print(f"[BLOCK {block_num}] RAG retrieved {len(rag_context)} chunks from knowledge base")
             else:
                 print(f"[BLOCK {block_num}] No RAG documents found for topic: {topic}")

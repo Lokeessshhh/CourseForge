@@ -44,7 +44,35 @@ def index_document_task(document_id: str, content: str, title: str):
                 )
 
             Chunk.objects.bulk_create(chunk_objects, batch_size=100)
-            logger.info("Indexed %d chunks for document %s", len(raw_chunks), document_id)
+            logger.info("Indexed %d chunks for document %s in Postgres", len(raw_chunks), document_id)
+
+            # --- Push to Zilliz Cloud ---
+            try:
+                from services.rag_pipeline.zilliz_client import zilliz
+                import json
+                from datetime import datetime
+
+                zilliz_entities = []
+                for i, (chunk_obj, embedding) in enumerate(zip(chunk_objects, embeddings)):
+                    zilliz_entities.append({
+                        "doc_id": str(chunk_obj.id),
+                        "document_id": str(chunk_obj.document_id),
+                        "content": chunk_obj.content,
+                        "chunk_index": chunk_obj.chunk_index,
+                        "level": chunk_obj.level,
+                        "parent_id": "",  # Base chunks have no parent
+                        "embedding": embedding,
+                        "meta_json": json.dumps(chunk_obj.metadata or {}),
+                        "created_at": datetime.now().isoformat()
+                    })
+                
+                if zilliz_entities:
+                    zilliz.insert(zilliz_entities)
+                    logger.info("Pushed %d chunks to Zilliz Cloud", len(zilliz_entities))
+            except Exception as zilliz_exc:
+                logger.warning("Failed to push to Zilliz Cloud (non-fatal): %s", zilliz_exc)
+                # Continue even if Zilliz fails, as Postgres is the source of truth for now
+
             break  # Success
         except Exception as exc:
             if attempt == MAX_RETRIES - 1:

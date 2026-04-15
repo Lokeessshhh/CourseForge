@@ -528,7 +528,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if rag_chunks:
                     # Rerank
                     from services.rag_pipeline.reranker import reranker
-                    rag_chunks = reranker.rerank(query, rag_chunks, top_k=10)
+                    rag_chunks = await reranker.rerank(query, rag_chunks, top_k=10)
                     logger.info("WS RAG retrieved %d chunks for: %s", len(rag_chunks), query[:80])
                 else:
                     logger.info("WS RAG returned no chunks for: %s", query[:80])
@@ -1129,7 +1129,7 @@ Rules:
         hour_key = f"chat:ratelimit:{self.user_id}:hour:{now // 3600}"
 
         # Check minute limit
-        minute_count = int(redis_client.get(minute_key) or 0)
+        minute_count = int(await redis_client.get(minute_key) or 0)
         if minute_count >= RATE_LIMIT_MESSAGES_PER_MINUTE:
             return {
                 "allowed": False,
@@ -1137,7 +1137,7 @@ Rules:
             }
 
         # Check hour limit
-        hour_count = int(redis_client.get(hour_key) or 0)
+        hour_count = int(await redis_client.get(hour_key) or 0)
         if hour_count >= RATE_LIMIT_MESSAGES_PER_HOUR:
             return {
                 "allowed": False,
@@ -1150,7 +1150,7 @@ Rules:
         pipe.expire(minute_key, 60)
         pipe.incr(hour_key)
         pipe.expire(hour_key, 3600)
-        pipe.execute()
+        await pipe.execute()
 
         return {"allowed": True}
 

@@ -126,7 +126,7 @@ async def rag_query(request):
 
         # 3. Rerank
         from services.rag_pipeline.reranker import reranker
-        reranked = reranker.rerank(query, chunks, top_k=top_k)
+        reranked = await reranker.rerank(query, chunks, top_k=top_k)
 
         results = [
             {

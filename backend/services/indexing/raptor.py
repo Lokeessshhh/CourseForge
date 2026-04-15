@@ -6,6 +6,7 @@ Builds a 4-level hierarchical summary tree:
   Level 2 → document summary (summary of all L1)
   Level 3 → course-level summary across all documents
 """
+import json
 import logging
 import uuid
 from typing import List, Dict
@@ -135,6 +136,23 @@ async def build_raptor_levels(
                     vec_str,
                 ],
             )
+        
+        # Push Level 1 to Zilliz
+        try:
+            from services.rag_pipeline.zilliz_client import zilliz
+            zilliz.insert([{
+                "doc_id": chunk_id,
+                "document_id": document_id,
+                "content": summary,
+                "chunk_index": i // group_size,
+                "level": 1,
+                "parent_id": parent_id or "",
+                "embedding": embedding,
+                "meta_json": "{}",
+                "created_at": ""
+            }])
+        except Exception:
+            pass
 
         level1_ids.append(chunk_id)
         level1_summaries.append(summary)
@@ -196,6 +214,23 @@ async def build_raptor_levels(
                 vec_str,
             ],
         )
+    
+    # Push Level 2 to Zilliz
+    try:
+        from services.rag_pipeline.zilliz_client import zilliz
+        zilliz.insert([{
+            "doc_id": doc_summary_id,
+            "document_id": document_id,
+            "content": doc_summary,
+            "chunk_index": 0,
+            "level": 2,
+            "parent_id": level1_ids[0] if level1_ids else "",
+            "embedding": embedding,
+            "meta_json": json.dumps({"type": "doc_summary"}),
+            "created_at": ""
+        }])
+    except Exception:
+        pass
 
     return {
         "level0_chunks": len(raw_chunks),
@@ -246,6 +281,23 @@ async def build_level3_course_summary(
                 % (topic, len(document_ids)),
             ],
         )
+
+    # Push Level 3 to Zilliz
+    try:
+        from services.rag_pipeline.zilliz_client import zilliz
+        zilliz.insert([{
+            "doc_id": chunk_id,
+            "document_id": document_ids[0],
+            "content": course_summary,
+            "chunk_index": 0,
+            "level": 3,
+            "parent_id": "",
+            "embedding": embedding,
+            "meta_json": json.dumps({"topic": topic, "type": "course_summary"}),
+            "created_at": ""
+        }])
+    except Exception:
+        pass
 
     logger.info("Level 3 course summary created for '%s'", topic)
     return course_summary

@@ -1,0 +1,27 @@
+Collecting pymilvus
+  Downloading pymilvus-2.6.12-py3-none-any.whl.metadata (6.9 kB)
+Requirement already satisfied: setuptools>69 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (81.0.0)
+Collecting grpcio!=1.68.0,!=1.68.1,!=1.69.0,!=1.70.0,!=1.70.1,!=1.71.0,!=1.72.1,!=1.73.0,>=1.66.2 (from pymilvus)
+  Downloading grpcio-1.80.0-cp312-cp312-win_amd64.whl.metadata (3.9 kB)
+Requirement already satisfied: orjson>=3.10.15 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (3.11.7)
+Requirement already satisfied: protobuf>=5.27.2 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (7.34.1)
+Requirement already satisfied: python-dotenv<2.0.0,>=1.0.1 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (1.2.2)
+Requirement already satisfied: pandas>=1.2.4 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (3.0.1)
+Collecting cachetools>=5.0.0 (from pymilvus)
+  Using cached cachetools-7.0.5-py3-none-any.whl.metadata (5.6 kB)
+Requirement already satisfied: requests>=2.20.0 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pymilvus) (2.32.5)
+Requirement already satisfied: typing-extensions~=4.12 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from grpcio!=1.68.0,!=1.68.1,!=1.69.0,!=1.70.0,!=1.70.1,!=1.71.0,!=1.72.1,!=1.73.0,>=1.66.2->pymilvus) (4.15.0)
+Requirement already satisfied: numpy>=1.26.0 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pandas>=1.2.4->pymilvus) (2.4.3)
+Requirement already satisfied: python-dateutil>=2.8.2 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pandas>=1.2.4->pymilvus) (2.9.0.post0)
+Requirement already satisfied: tzdata in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from pandas>=1.2.4->pymilvus) (2025.3)
+Requirement already satisfied: charset_normalizer<4,>=2 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from requests>=2.20.0->pymilvus) (3.4.6)
+Requirement already satisfied: idna<4,>=2.5 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from requests>=2.20.0->pymilvus) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from requests>=2.20.0->pymilvus) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from requests>=2.20.0->pymilvus) (2026.2.25)
+Requirement already satisfied: six>=1.5 in c:\users\rosha\documents\projects\ai course generator\backend\.venv\lib\site-packages (from python-dateutil>=2.8.2->pandas>=1.2.4->pymilvus) (1.17.0)
+Downloading pymilvus-2.6.12-py3-none-any.whl (315 kB)
+Using cached cachetools-7.0.5-py3-none-any.whl (13 kB)
+Downloading grpcio-1.80.0-cp312-cp312-win_amd64.whl (4.9 MB)
+   ---------------------------------------- 4.9/4.9 MB 2.4 MB/s eta 0:00:00
+Installing collected packages: grpcio, cachetools, pymilvus
+Successfully installed cachetools-7.0.5 grpcio-1.80.0 pymilvus-2.6.12

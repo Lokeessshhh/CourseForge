@@ -175,11 +175,15 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = []
 
 # Use in-memory channel layer for development (no Redis required)
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
-}
+# Comment out to use Upstash Redis in development
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer"
+#     }
+# }
+
+# To use Upstash Redis in development, inherit from base.py:
+# (base.py already has Upstash SSL configuration)
 
 # Note: Logging is configured via Django's LOGGING dict above.
 # Do NOT call logging.basicConfig() here as it will override the proper configuration.
