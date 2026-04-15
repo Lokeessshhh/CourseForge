@@ -385,11 +385,12 @@ export function useChat(courseId?: string, sessionId?: string) {
   const hasInitializedRef = useRef(false);
   const wsInstanceSeqRef = useRef(0); // Track current WebSocket instance
 
-  // Update refs when values change - DON'T clear messages here anymore
+  // Update refs when values change - DO NOT close WebSocket on session change
+  // The backend handles session switching via session_id in message payload
   useEffect(() => {
     const oldSessionId = sessionIdRef.current;
     const sessionIdChanged = oldSessionId !== sessionId && hasInitializedRef.current;
-    
+
     // Update refs AFTER checking for change
     sessionIdRef.current = sessionId || null;
     courseIdRef.current = courseId;
@@ -398,23 +399,19 @@ export function useChat(courseId?: string, sessionId?: string) {
     if (sessionIdChanged) {
       wsLog('session:changed', { oldSession: oldSessionId, newSession: sessionId });
 
-      // Set session switching state
+      // Set session switching state for UI feedback
       setIsSessionSwitching(true);
-      
+
       // Ensure switching state is visible for at least 300ms
       setTimeout(() => {
         setIsSessionSwitching(false);
       }, 300);
 
-      // Increment sequence to invalidate old WebSocket's message handlers
-      wsInstanceSeqRef.current += 1;
-      console.log('[useChat] Session changed, incremented wsInstanceSeq to:', wsInstanceSeqRef.current);
+      // DO NOT close WebSocket - backend handles session switching via message payload
+      // Just log the switch for debugging
+      console.log('[useChat] Session changed from', oldSessionId, 'to', sessionId, '- keeping WebSocket connection alive');
+      wsLog('session:keeping_connection', { sessionId, connectionReady: wsRef.current?.readyState === WebSocket.OPEN });
 
-      // Close the old WebSocket to force reconnect with new session
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsLog('session:closing_for_reconnect', { sessionId });
-        wsRef.current.close();
-      }
       // NOTE: Messages are now cleared in handleSend before session change
     }
   }, [sessionId, courseId]);
@@ -451,13 +448,17 @@ export function useChat(courseId?: string, sessionId?: string) {
 
   const send = useCallback((content: string, outgoingSessionId?: string, webSearch?: boolean, ragEnabled?: boolean) => {
     const ws = wsRef.current;
+    // Use provided sessionId, or fall back to current session from ref
+    const sessionIdToSend = outgoingSessionId || sessionIdRef.current;
+
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       // Queue the send to be flushed on next open. This prevents losing the first
       // message during session switches/reconnect churn.
-      pendingSendsRef.current.push({ content, sessionId: outgoingSessionId });
-      wsLog('send:queued', { sessionId: outgoingSessionId, queued: pendingSendsRef.current.length, preview: content.slice(0, 80) });
+      pendingSendsRef.current.push({ content, sessionId: sessionIdToSend });
+      wsLog('send:queued', { sessionId: sessionIdToSend, queued: pendingSendsRef.current.length, preview: content.slice(0, 80) });
       // Trigger a reconnect attempt if we're not connected
       if (!isConnectingRef.current) {
+        console.log('[useChat] WebSocket not connected, triggering reconnect for queued message');
         connect();
       }
       return true;
@@ -476,12 +477,12 @@ export function useChat(courseId?: string, sessionId?: string) {
       message: content,
       message_id: crypto.randomUUID(),
       include_sources: true,
-      session_id: outgoingSessionId,
+      session_id: sessionIdToSend,
       web_search: webSearch || false,
       rag_enabled: ragEnabled || false,
     }));
 
-    wsLog('send:sent', { sessionId: outgoingSessionId, webSearch, ragEnabled, preview: content.slice(0, 80) });
+    wsLog('send:sent', { sessionId: sessionIdToSend, webSearch, ragEnabled, preview: content.slice(0, 80) });
 
     return true;
   }, [connect]);
