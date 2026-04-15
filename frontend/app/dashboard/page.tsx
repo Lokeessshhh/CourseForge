@@ -572,10 +572,12 @@ export default function DashboardPage() {
         // For now, distribute based on completion percentage
         const dayIndex = 29 - i;
         const isActiveDay = dayIndex < activeDays && dayIndex % 2 === 0; // Every other day until all active days used
-        
-        days.push({ 
-          date: dateStr, 
-          minutes: isActiveDay ? minutesPerActiveDay : 0 
+
+        days.push({
+          date: dateStr,
+          minutes: isActiveDay ? minutesPerActiveDay : 0,
+          days_completed: isActiveDay ? 1 : 0,
+          quizzes_taken: isActiveDay ? Math.round(Math.random()) : 0
         });
       }
 
