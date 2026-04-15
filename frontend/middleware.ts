@@ -15,11 +15,11 @@ const clerk = clerkMiddleware((auth, req) => {
   return NextResponse.next();
 });
 
-export default async function middleware(req: Request) {
+export default async function middleware(req: Request, evt: { waitUntil: (p: Promise<unknown>) => void }) {
   if (!hasClerkKeys) {
     return NextResponse.next();
   }
-  return clerk(req as Parameters<typeof clerk>[0]);
+  return clerk(req as Parameters<typeof clerk>[0], evt as Parameters<typeof clerk>[1]);
 }
 
 export const config = {
