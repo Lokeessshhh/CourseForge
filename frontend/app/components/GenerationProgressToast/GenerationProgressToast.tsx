@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@clerk/nextjs';
 import { useSSEProgress } from '@/app/hooks/api/useSSEProgress';
 import styles from './GenerationProgressToast.module.css';
 
@@ -28,12 +29,15 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
   const [isDisconnected, setIsDisconnected] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingData, setPollingData] = useState<PollingData | null>(null);
-  
+
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasCompletedRef = useRef(false);
   const sseDidConnectRef = useRef(false);
   const sseConnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get Clerk auth token for polling requests
+  const { getToken } = useAuth();
 
   // Use SSE for real-time progress updates - SSE is the source of truth
   const { data, isConnected, error, disconnect, reconnect } = useSSEProgress(courseId, true);
@@ -118,10 +122,20 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
     const poll = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${baseUrl}/api/courses/${courseId}/generation-progress/`);
+        const token = await getToken();
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
         
+        const response = await fetch(`${baseUrl}/api/courses/${courseId}/generation-progress/`, {
+          headers,
+        });
+
         if (!response.ok) {
-          console.log('[GenerationProgressToast] Polling failed, will retry...');
+          console.log('[GenerationProgressToast] Polling failed, will retry...', response.status);
           return;
         }
 
@@ -132,10 +146,10 @@ export default function GenerationProgressToast({ courseId, onDismiss, onGenerat
         setPollingData(progressData);
 
         // Check for completion
-        if (progressData.generation_status === 'ready' || 
+        if (progressData.generation_status === 'ready' ||
             progressData.progress === 100 ||
             progressData.generation_status === 'failed') {
-          
+
           console.log('[GenerationProgressToast] Polling detected completion!');
           handleCompletion(progressData);
         }
