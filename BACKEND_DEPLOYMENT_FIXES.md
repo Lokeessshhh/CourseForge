@@ -1,5 +1,18 @@
 # Backend Deployment Fixes
 
+## Current Status (Latest Update)
+
+✅ **Backend is working correctly!**
+- Health checks passing
+- OpenRouter API functional
+- Authentication working (JWT validation successful)
+- WebSocket connections working
+- Database & Redis connected
+
+✅ **Clerk keys are VALID** - they were never truncated
+
+❌ **Vercel frontend using OLD builds** - needs redeployment with latest middleware fix
+
 ## Issues Found & Fixed
 
 ### 1. ✅ Health Check Endpoints (FIXED)
@@ -18,25 +31,28 @@ All these endpoints now return a simple 200 OK response immediately, preventing 
 
 **Fix**: Removed the trailing backtick from the Clerk publishable key.
 
-### 3. ⚠️ Clerk Keys Need Verification (ACTION REQUIRED)
-**Problem**: The Clerk publishable key appears incomplete or invalid.
+### 3. ✅ Clerk Keys Verified (VALID)
+**Keys**:
+- Publishable: `pk_test_dHJ1ZS10ZWFsLTg4LmNsZXJrLmFjY291bnRzLmRldiQ`
+- Secret: `sk_test_Kvy7TmZX98zvenwseUkN2kZhfjOPSlPhssIgnRnCK4`
 
-**Current Key**: `pk_test_dHJ1ZS10ZWFsLTg4LmNsZXJrLmFjY291bnRzLmRldiQ`
+**Status**: ✅ These keys are COMPLETE and VALID
 
-**Issue**: Frontend logs show `[Error: Publishable key not valid.]`
+**Issue**: Frontend Vercel deployments showing 500 errors because they're running **old builds** from before the middleware fix was committed.
 
-**Next Steps**:
-1. Go to https://dashboard.clerk.com/
-2. Navigate to your project: `true-teal-88`
-3. Go to **API Keys** in the sidebar
-4. Copy the **full** Publishable Key (it should be much longer)
-5. Update these files with the correct key:
-   - `backend/.env` → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - `frontend/.env.local` → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - Leapcell environment variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - Vercel environment variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+### 4. ⚠️ Vercel Deployment Needs Rebuild (ACTION REQUIRED)
+**Problem**: Vercel is serving old builds that don't have the correct Clerk middleware.
 
-### 4. ⚠️ OpenRouter API Key (VERIFY)
+**Solution**: 
+1. Go to https://vercel.com/dashboard
+2. Find your CourseForge project
+3. Click **Deployments** tab
+4. Click the latest deployment → **Redeploy**
+5. OR manually trigger a new deployment
+
+**Alternative**: Push any code change to trigger automatic rebuild (done - see latest commit).
+
+### 5. ⚠️ OpenRouter API Key (VERIFY)
 **Current Status**: Backend logs show successful OpenRouter API calls (200 OK).
 
 **Log Evidence**:
