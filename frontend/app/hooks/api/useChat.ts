@@ -449,7 +449,7 @@ export function useChat(courseId?: string, sessionId?: string) {
   const send = useCallback((content: string, outgoingSessionId?: string, webSearch?: boolean, ragEnabled?: boolean) => {
     const ws = wsRef.current;
     // Use provided sessionId, or fall back to current session from ref
-    const sessionIdToSend = outgoingSessionId || sessionIdRef.current;
+    const sessionIdToSend = outgoingSessionId || sessionIdRef.current || undefined;
 
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       // Queue the send to be flushed on next open. This prevents losing the first
