@@ -4,6 +4,12 @@ import os
 
 DEBUG = False
 
+# Disable SSL redirect for local testing (can be overridden via env var)
+SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "False") == "True"
+
+# Disable trailing slash redirects to prevent 301 on API calls
+APPEND_SLASH = False
+
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 if not ALLOWED_HOSTS:
     raise RuntimeError("ALLOWED_HOSTS must be set in production")
