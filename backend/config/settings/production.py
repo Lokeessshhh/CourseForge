@@ -79,11 +79,13 @@ SECURITY_HEADERS_CSP = (
 )
 
 # ──────────────────────────────────────────────
-# Rate Limiting - Enabled in production
+# Rate Limiting - Configurable via env var for production
 # ──────────────────────────────────────────────
-RATE_LIMIT_ENABLED = True
-RATE_LIMIT_REQUESTS_PER_HOUR = 1000
-RATE_LIMIT_BLOCK_DURATION = 3600
+# Can be overridden via RATE_LIMIT_ENABLED env var (True/False)
+# Default: False (disabled) - use Django REST Framework throttling instead
+RATE_LIMIT_ENABLED = os.environ.get("RATE_LIMIT_ENABLED", "False") == "True"
+RATE_LIMIT_REQUESTS_PER_HOUR = int(os.environ.get("RATE_LIMIT_REQUESTS_PER_HOUR", "50000"))
+RATE_LIMIT_BLOCK_DURATION = int(os.environ.get("RATE_LIMIT_BLOCK_DURATION", "3600"))
 
 AUTH_RATE_LIMIT_ENABLED = True
 AUTH_RATE_LIMIT_MAX_FAILURES = 10
