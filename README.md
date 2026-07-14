@@ -2,7 +2,7 @@
 
 > Generate complete, production-ready coding courses from a single topic name — powered by LLMs, RAG, and real-time streaming.
 
-CourseForge is a full-stack AI platform that creates personalized multi-week coding courses on demand. Type a topic (e.g., "Java Spring Boot", "Machine Learning with Python") and CourseForge generates a complete course with daily lessons, theory content, code examples, MCQs, coding tests, progress tracking, and PDF certificates — all AI-generated in parallel.
+CourseForge is a full-stack AI platform that creates personalized multi-week coding courses on demand. Type a topic (e.g., "Java Spring Boot", "Machine Learning with Python") and CourseForge generates a complete course with daily lessons, theory content, code examples, MCQs, coding tests, progress tracking, and PDF certificates — all AI-generated in parallel
 
 ---
 
